@@ -1,0 +1,137 @@
+{
+  "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
+  "identifiers": [],
+  "creators": [
+    {
+      "name": "Toker, Michael",
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "tok@cs.technion.ac.il",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "Technion − Israel Institute of Technology"
+        }
+      ]
+    },
+    {
+      "name": "Mishali, Oren",
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "omishali@cs.technion.ac.il",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "Technion − Israel Institute of Technology"
+        }
+      ]
+    },
+    {
+      "name": "Cohen, Adir",
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "adircohen@campus.technion.ac.il",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "Technion − Israel Institute of Technology"
+        }
+      ]
+    },
+    {
+      "name": "Münz-Manor, Ophir",
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "ophirmm@openu.ac.il",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "The Open University of Israel"
+        }
+      ]
+    },
+    {
+      "name": "Kimelfeld, Benny",
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "bennyk@cs.technion.ac.il",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "Technion − Israel Institute of Technology"
+        }
+      ]
+    },
+    {
+      "name": "Belinkov, Yonatan",
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "belinkov@technion.ac.il",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "Technion − Israel Institute of Technology"
+        }
+      ]
+    }
+  ],
+  "titles": [
+    {
+      "title": "A Dataset for Metaphor Detection in Early Medieval Hebrew Poetry"
+    }
+  ],
+  "posterContent": {
+    "posterTitle": "A Dataset for Metaphor Detection in Early Medieval Hebrew Poetry",
+    "sections": [
+      {
+        "sectionTitle": "Introduction",
+        "sectionContent": "The corpus of late antique and medieval Hebrew is vast and represents a crucial linguistic and cultural bridge between Biblical and modern Hebrew. Poetry is prominent in texts from these time periods and one of its characteristics is the use of metaphor. Distinguishing figurative and literal words or phrases is a major task for scholars in the Humanities, especially in the fields of literature, linguistics, and hermeneutics. We present a new, challenging dataset of early medieval Hebrew poetry with expert annotations of metaphors with baseline results."
+      },
+      {
+        "sectionTitle": "The Dataset",
+        "sectionContent": "• Early medieval Hebrew poems.\n• 180 labeled texts, 7,000 sentences, 45,000 words.\n• 15% of the words are metaphors."
+      },
+      {
+        "sectionTitle": "Inter Annotator Agreement",
+        "sectionContent": "Inter-annotator agreement evaluates how consistently different annotators label data for NLP research (measured in Cohen's kappa). The score for our dataset is 0.618 (considered substantial)."
+      },
+      {
+        "sectionTitle": "Methods",
+        "sectionContent": "Fine-tuning for metaphor detection\n\nLM adaptation\n\nLanguage models (pre-trained & adapted)\n\nTrained on additional prose and poetic medieval texts (Project Ben-Yehuda*) + Piyyut dataset\n\n*Project Ben-Yehuda is a volunteer-based online library of free Hebrew literature."
+      },
+      {
+        "sectionTitle": "Results",
+        "sectionContent": "• AlephBERT is outperformed by AlephBERT Adapted.\n• BEREL, pre-trained on medieval texts, shows the best results.\n\nf1 Score on test set"
+      },
+      {
+        "sectionTitle": "Error Analysis",
+        "sectionContent": "ילד לניחוח חשקתיו\n\n(A child for a scent - I have desired)\n\nBerel\n\nExpert explanation: The child is a non-metaphorical epithet for Isaac. \"Scent\" is a metonymic term for \"sacrifice\"."
+      }
+    ]
+  },
+  "imageCaption": [
+    {
+      "caption1": "A medieval Hebrew poem from the Worms Prayerbook, Germany, 13th Century, The National Library of Israel, \"Ktiv\" Project",
+      "caption2": ""
+    }
+  ],
+  "tableCaption": []
+}

@@ -1,0 +1,348 @@
+{
+  "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
+  "identifiers": [
+    {
+      "identifier": "10.5281/zenodo.10890106",
+      "identifierType": "DOI"
+    },
+    {
+      "identifier": "PS-2024-WUR-SOT-001",
+      "identifierType": "Other"
+    },
+    {
+      "identifier": "SOT_poster_2024_WFSR.pdf",
+      "identifierType": "Other"
+    }
+  ],
+  "creators": [
+    {
+      "name": "van der Zande, Meike",
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "https://orcid.org/0000-0002-2810-3787",
+          "nameIdentifierScheme": "ORCID",
+          "schemeURI": "https://orcid.org"
+        },
+        {
+          "nameIdentifier": "meike.vanderzande@wur.nl",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "Wageningen Food Safety Research, Wageningen, The Netherlands",
+          "affiliationIdentifier": "https://ror.org/04qw24q55",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    },
+    {
+      "name": "Duivenvoorde, Loes PM",
+      "nameType": "Personal",
+      "affiliation": [
+        {
+          "name": "Wageningen Food Safety Research, Wageningen, The Netherlands",
+          "affiliationIdentifier": "https://ror.org/04qw24q55",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    },
+    {
+      "name": "Jansen Holleboom, Wendy",
+      "nameType": "Personal",
+      "affiliation": [
+        {
+          "name": "Wageningen Food Safety Research, Wageningen, The Netherlands",
+          "affiliationIdentifier": "https://ror.org/04qw24q55",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    },
+    {
+      "name": "Fabrizi, Benedetta",
+      "nameType": "Personal",
+      "affiliation": [
+        {
+          "name": "Wageningen Food Safety Research, Wageningen, The Netherlands",
+          "affiliationIdentifier": "https://ror.org/04qw24q55",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    },
+    {
+      "name": "Vos, A Paul",
+      "nameType": "Personal",
+      "affiliation": [
+        {
+          "name": "Wageningen Food & Biobased Research, Wageningen, The Netherlands",
+          "affiliationIdentifier": "https://ror.org/04qw24q55",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    },
+    {
+      "name": "Bastiaan-Net, Shanna",
+      "nameType": "Personal",
+      "affiliation": [
+        {
+          "name": "Wageningen Food & Biobased Research, Wageningen, The Netherlands",
+          "affiliationIdentifier": "https://ror.org/04qw24q55",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    },
+    {
+      "name": "Tomassen, Monic MM",
+      "nameType": "Personal",
+      "affiliation": [
+        {
+          "name": "Wageningen Food & Biobased Research, Wageningen, The Netherlands",
+          "affiliationIdentifier": "https://ror.org/04qw24q55",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    },
+    {
+      "name": "Janssen, Aafke WF",
+      "nameType": "Personal",
+      "affiliation": [
+        {
+          "name": "Wageningen Food Safety Research, Wageningen, The Netherlands",
+          "affiliationIdentifier": "https://ror.org/04qw24q55",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    }
+  ],
+  "titles": [
+    {
+      "title": "Development and application of an immunocompetent human induced pluripotent stem cell-derived intestinal epithelial cell model for hazard assessment of the oral exposure route"
+    }
+  ],
+  "publisher": {
+    "name": "Zenodo",
+    "publisherIdentifier": "https://ror.org/04wxnsj81",
+    "publisherIdentifierScheme": "ROR",
+    "schemeURI": "https://ror.org"
+  },
+  "publicationYear": 2024,
+  "subjects": [
+    {
+      "subject": "Human induced pluripotent stem cells"
+    },
+    {
+      "subject": "Intestinal epithelial cells"
+    },
+    {
+      "subject": "Dendritic cells"
+    },
+    {
+      "subject": "Immunocompetence"
+    },
+    {
+      "subject": "Hazard assessment"
+    },
+    {
+      "subject": "Food safety"
+    },
+    {
+      "subject": "Microplastics"
+    },
+    {
+      "subject": "Nanoplastics"
+    },
+    {
+      "subject": "In vitro models"
+    },
+    {
+      "subject": "Toxicology"
+    },
+    {
+      "subject": "MUTZ-3 cells"
+    },
+    {
+      "subject": "Co-culture"
+    }
+  ],
+  "dates": [
+    {
+      "date": "2024-03-10",
+      "dateType": "Created"
+    },
+    {
+      "date": "2024-03-10",
+      "dateType": "Available",
+      "dateInformation": "Published on Zenodo"
+    },
+    {
+      "date": "2024-03-10",
+      "dateType": "Issued"
+    },
+    {
+      "date": "2024-03-11",
+      "dateType": "Presented",
+      "dateInformation": "Poster #734 presented at SOT 2024, Abstract #4185"
+    },
+    {
+      "date": "2024-03-10/2024-03-14",
+      "dateType": "Coverage",
+      "dateInformation": "63rd Annual Meeting of the Society of Toxicology dates"
+    },
+    {
+      "date": "2024-07-06",
+      "dateType": "Updated",
+      "dateInformation": "Technical metadata last modified"
+    }
+  ],
+  "language": "en",
+  "types": {
+    "resourceType": "Conference Poster",
+    "resourceTypeGeneral": "Image"
+  },
+  "relatedIdentifiers": [
+    {
+      "relatedIdentifier": "https://www.wur.nl/en/research-results/research-institutes/food-safety-research.htm",
+      "relatedIdentifierType": "URL",
+      "relationType": "IsDocumentedBy",
+      "resourceTypeGeneral": "Text"
+    },
+    {
+      "relatedIdentifier": "10.5281/zenodo.10890105",
+      "relatedIdentifierType": "DOI",
+      "relationType": "IsVersionOf",
+      "resourceTypeGeneral": "Image"
+    }
+  ],
+  "sizes": [
+    "1.2 MB PDF"
+  ],
+  "formats": [
+    "application/pdf"
+  ],
+  "version": "v1",
+  "rightsList": [
+    {
+      "rights": "Creative Commons Attribution 4.0 International",
+      "rightsUri": "https://creativecommons.org/licenses/by/4.0/",
+      "rightsIdentifier": "CC-BY-4.0",
+      "rightsIdentifierScheme": "SPDX",
+      "schemeUri": "https://spdx.org/licenses/"
+    }
+  ],
+  "descriptions": [
+    {
+      "description": "Human induced pluripotent stem cell (hiPSC)-derived intestinal epithelial cell (IEC) layers have the potential to provide an increasingly improved alternative to cell lines as they differentiate into multiple intestinal cell types that are also present in vivo. However, these models currently lack immunocompetence, as they do not contain immune cells like for instance dendritic cells (DCs) that play an important role in intestinal immune responses. This poster presents the development and characterization of an immunocompetent hiPSC-derived IEC model by co-culturing IEC layers with MUTZ-3 derived DCs. The poster demonstrates that hiPSC-derived IEC layers consist of multiple cell types present in the intestine in vivo and have the capacity to induce pro-inflammatory responses when exposed to a pro-inflammatory stimulus. MUTZ-3-derived DCs express immature and mature DC markers when differentiated. Co-culture of separately differentiated IECs and DCs was successful using an inverted IEC culture technique. 24h co-culture of IECs and DCs did not negatively affect the differentiation status of the cells and significantly increased cytokine expression in both cell models. As a case study, the model was tested with microplastics exposure, showing that 24h and 48h exposure of immature DCs to micro/nanoplastics did not result in strong immunomodulatory effects of any of the materials tested (HDPE269, PET_c000, PS394Eu).",
+      "descriptionType": "Abstract"
+    },
+    {
+      "description": "hiPSCs and MUTZ-3 cells were differentiated into IECs and mature dendritic cells (mDCs) separately and co-cultured when fully differentiated. After 24h of co-culture, the differentiation status of the IECs and DCs and the expression of cytokines was evaluated and compared to their respective monocultures before co-culture. For the microplastics exposure study, immature DCs were exposed to three different micro/nanoplastics (HDPE269, PET_c000, PS394Eu) at concentrations of 25, 50, and 100 μg/ml for 24h and 48h. Gene expression of maturation markers and cytokines was measured.",
+      "descriptionType": "Methods"
+    },
+    {
+      "description": "Presented at the 63rd Annual Meeting and ToxExpo of the Society of Toxicology, March 10-14, 2024, Salt Lake City, Utah, USA. Abstract number: 4185, Poster number: 734.",
+      "descriptionType": "Other"
+    }
+  ],
+  "fundingReferences": [
+    {
+      "funderName": "Dutch Ministry of Agriculture, Nature and Food Quality",
+      "awardNumber": "KB-37-001-019"
+    },
+    {
+      "funderName": "European Commission",
+      "funderIdentifier": "https://doi.org/10.13039/501100000780",
+      "funderIdentifierType": "Crossref Funder ID",
+      "schemeUri": "https://www.crossref.org/services/funder-registry/",
+      "awardNumber": "965367",
+      "awardUri": "https://cordis.europa.eu/project/id/965367",
+      "awardTitle": "PlasticsFatE - Plastics fate and effects in the human body"
+    }
+  ],
+  "conference": {
+    "conferenceName": "63rd Annual Meeting and ToxExpo of the Society of Toxicology",
+    "conferenceLocation": "Salt Lake City, Utah, USA",
+    "conferenceUri": "https://www.toxicology.org/events/am/AM2024/",
+    "conferenceStartDate": "2024-03-10",
+    "conferenceEndDate": "2024-03-14",
+    "conferenceAcronym": "SOT 2024"
+  },
+  "posterContent": {
+    "posterTitle": "Development and application of an immunocompetent human induced pluripotent stem cell-derived intestinal epithelial cell model for hazard assessment of the oral exposure route",
+    "sections": [
+      {
+        "sectionTitle": "Background",
+        "sectionContent": "Human induced pluripotent stem cell (hiPSC)-derived intestinal epithelial cell (IEC) layers have the potential to provide an increasingly improved alternative to cell lines as they differentiate into multiple intestinal cell types that are also present in vivo. However, these models currently lack immunocompetence, as they do not contain immune cells like for instance dendritic cells (DCs) that play an important role in intestinal immune responses."
+      },
+      {
+        "sectionTitle": "Objective",
+        "sectionContent": "To develop and characterize an immunocompetent hiPSC-derived IEC model, by co-culturing IEC layers with MUTZ-3 derived DCs."
+      },
+      {
+        "sectionTitle": "Study design",
+        "sectionContent": "Characterization IECs (derived from hiPSCs)\nCharacterization DCs (derived from MUTZ-3 cells)\nCo-culture and characterization of IECs and DCs\nCase study micro/nanoplastics\n  - Maturation / differentiation markers, cytokines\n  - Cytotoxicity"
+      },
+      {
+        "sectionTitle": "Results: characterization hiPSC-derived IECs",
+        "sectionContent": "Figure 1. A) Differentiation protocol hiPSC-derived IECs B) Immunohistochemistry showing the presence of multiple IEC types. Immune responsiveness of IECs after stimulation with a proinflammatory cocktail of INFγ, IL1β and TNFα shown as C) expression of genes in the \"cytokine storm pathway\", as D) barrier integrity (TEER and permeability of lucifer yellow), and as E) IL-8 excretion (ELISA) in comparison with Caco-2 cells.\n\nDifferentiation protocol stages:\niPSC → DE → ISC → IEC\nActivin A + BMP4 (day 0-3) → FGF2 → EGF + Forskolin → EGF + Forskolin + PD0325901 + ROCKi (cryopreserved)\n\nCell type markers:\nLGR5: intestinal stem cells\nGLP-1: enteroendocrine cells\nUEA-1: Paneth cells and goblet cells including secreted mucins\nTFF3: glycosylated mucus proteins present in mature goblet cells"
+      },
+      {
+        "sectionTitle": "Results: characterization MUTZ-3 dendritic cells",
+        "sectionContent": "Figure 2. A) Differentiation protocol of MUTZ-3-derived DCs B) Gene expression of markers for progenitors cells and mature DCs (mDCs) measured at D0, D7 and D9. Expression is relative to the progenitor cells which were set at 1. Expression of progenitor markers decreased whereas expression of mDCs increased in time.\n\nDifferentiation protocol:\nCD34+ progenitor cells → GM-CSF + IL-4 (D0 → D7) → Immature DCs (iDC) → GM-CSF + IL-4 + TNFα + IL1β (D7 → D9) → Mature DCs (mDC)\n\nGene expression markers:\nMarkers progenitor cells:\nCD14: Relative expression vs progenitor (decreased from progenitor to iDC to mDC)\nCD34: Relative expression vs progenitor (decreased from progenitor to iDC to mDC)\n\nMarkers mDCs:\nCD80: Relative expression vs progenitor (increased in mDC)\nCD11c: Relative expression vs progenitor (increased in iDC and mDC)\nDC LAMP: Relative expression vs progenitor (increased in mDC)\nOX40L: Relative expression vs progenitor (increased in mDC)\nCCR7: Relative expression vs progenitor (increased in mDC)"
+      },
+      {
+        "sectionTitle": "Results: characterization co-culture model",
+        "sectionContent": "Figure 3. A) hiPSCs and MUTZ-3 cells were differentiated into IECs and mDCs separately and cocultured when fully differentiated. After 24h of co-culture the differentiation status of the IECs and DCs and the expression of cytokines was evaluated and compared to their respective monocultures before co-culture. B) Barrier integrity of the IEC layer. C) Gene expression of various markers for differentiation and cellular composition and cytokine expression in the IEC layer. D) Gene expression of maturation markers and cytokines in mDCs. In general, co-culturing has little effect on cellular composition, but increases cytokine expression.\n\nCo-culture setup:\nCD34+ cells → iDC → mDC\niPSC → IEC\nCo-culture after 24h\n\nMeasurements:\nB) IEC barrier integrity\n- TEER measurements\n- Permeability (lucifer yellow)\n\nC) IEC differentiation and cellular composition\n- Gene expression markers\n\nD) IEC cytokine expression\n- Various cytokines measured"
+      },
+      {
+        "sectionTitle": "Results: exposure of iDCs to microplastics",
+        "sectionContent": "Table 1. Physicochemical data of the micro/nanoplastics for the cell exposure experiment.\n\nAbbreviation | Main polymer composition | Additives | Particle size distribution | Particle shape\nHDPE269 | High density polyethylene | No | X₁₀;₃ 1.8 μm / X₅₀;₃ 4.9 μm / X₉₀;₃ 8.7 μm | Round\nPET_c000 | Polyethylene terephthalate | No | X₁₀;₃ 57 nm / X₅₀;₃ 90 nm / X₉₀;₃ 144 nm | Round\nPS394Eu | Europium doped polystyrene | No | 300 nm | Round\n\nFigure 4. Gene expression in iDCs after 48h exposure to micro/nano plastics at three different concentrations. A) Effects of the micro/nanoplastics on gene expression of markers for maturation of iDCs into mDCs and B) on cytokine expression. No significant effects were observed after 24h exposure to the micro/nanoplastics and no cytotoxicity was observed (data not shown). After 48h exposure to the PS394Eu plastics mild effects on cytokine expression were observed.\n\nExperimental groups:\nProgenitor cells\n-CTRL (iDC)\n+CTRL (mDC)\nPET_c000 (25, 50, 100 μg/ml)\nHDPE296 (25, 50, 100 μg/ml)\nPS394Eu (25, 50, 100 μg/ml)\n\nA) Maturation markers measured:\nCD14, CD34, CD80, CD83, OX40L, CCR7, DC-LAMP\n\nB) Cytokine expression measured:\nIL-6, IL-8, IL-12β, IL-15, IL-18, IL-23, TNFα"
+      },
+      {
+        "sectionTitle": "Conclusions",
+        "sectionContent": "• hiPSC-derived IEC layers consist of multiple cell types that are present in the intestine in vivo\n\n• hiPSC-derived IEC layers have the capacity to induce pro-inflammatory responses when exposed to a pro-inflammatory stimulus\n\n• MUTZ-3-derived DCs express (immature/mature) DC markers when differentiated\n\n• Co-culture of separately differentiated IECs and DCs was successful using an inverted IEC culture technique\n\n• 24h co-culture of IECs and DCs did not appear to negatively affect the differentiation status of the cells and significantly increased cytokine expression in both cell models\n\n• 24h and 48h exposure of iDCs to micro/nanoplastics did not result in strong immunomodulatory effects of any of the materials tested"
+      },
+      {
+        "sectionTitle": "Acknowledgements",
+        "sectionContent": "This research was supported by the Dutch Ministry of Agriculture, Nature and Food Quality (KB-37-001-019) and received funding from the European Union's Horizon2020 Research and Innovation programme (Grant Agreement number 965367; PlasticsFatE)."
+      },
+      {
+        "sectionTitle": "Contact",
+        "sectionContent": "Wageningen University & Research\nP.O. Box 123, 6700 AB Wageningen\nContact: meike.vanderzande@wur.nl\nhttps://www.wur.nl/en/research-results/research-institutes/food-safety-research.htm"
+      }
+    ]
+  },
+  "tableCaption": [
+    {
+      "caption1": "Table 1. Physicochemical data of the micro/nanoplastics for the cell exposure experiment",
+      "caption2": "Shows abbreviation, main polymer composition, additives, particle size distribution, and particle shape for HDPE269 (high density polyethylene, 1.8-8.7 μm, round), PET_c000 (polyethylene terephthalate, 57-144 nm, round), and PS394Eu (Europium doped polystyrene, 300 nm, round)"
+    }
+  ],
+  "imageCaption": [
+    {
+      "caption1": "Figure 1. A) Differentiation protocol hiPSC-derived IECs",
+      "caption2": "B) Immunohistochemistry showing the presence of multiple IEC types (LGR5: intestinal stem cells, GLP-1: enteroendocrine cells, UEA-1: Paneth cells and goblet cells including secreted mucins, TFF3: glycosylated mucus proteins present in mature goblet cells). C) Expression of genes in the cytokine storm pathway after stimulation with a proinflammatory cocktail. D) Barrier integrity (TEER and permeability of lucifer yellow). E) IL-8 excretion (ELISA) in comparison with Caco-2 cells."
+    },
+    {
+      "caption1": "Figure 2. A) Differentiation protocol of MUTZ-3-derived DCs",
+      "caption2": "B) Gene expression of markers for progenitor cells and mature DCs (mDCs) measured at D0, D7 and D9. Expression is relative to the progenitor cells which were set at 1. Expression of progenitor markers (CD14, CD34) decreased whereas expression of mDCs markers (CD80, CD11c, DC-LAMP, OX40L, CCR7) increased in time."
+    },
+    {
+      "caption1": "Figure 3. Co-culture characterization",
+      "caption2": "A) hiPSCs and MUTZ-3 cells were differentiated into IECs and mDCs separately and co-cultured when fully differentiated. After 24h of co-culture the differentiation status and cytokine expression was evaluated. B) Barrier integrity of the IEC layer. C) Gene expression in IEC layer. D) Gene expression in mDCs. In general, co-culturing has little effect on cellular composition, but increases cytokine expression."
+    },
+    {
+      "caption1": "Figure 4. Gene expression in iDCs after 48h exposure to micro/nano plastics",
+      "caption2": "A) Effects of the micro/nanoplastics on gene expression of markers for maturation of iDCs into mDCs (CD14, CD34, CD80, CD83, OX40L, CCR7, DC-LAMP). B) Effects on cytokine expression (IL-6, IL-8, IL-12β, IL-15, IL-18, IL-23, TNFα). No significant effects were observed after 24h exposure to the micro/nanoplastics and no cytotoxicity was observed. After 48h exposure to the PS394Eu plastics mild effects on cytokine expression were observed."
+    }
+  ],
+  "domain": "Toxicology"
+}

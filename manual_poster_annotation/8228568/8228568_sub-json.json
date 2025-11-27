@@ -1,0 +1,64 @@
+{
+  "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
+  "identifiers": [],
+  "creators": [
+    {
+      "name": "Ma, Rongqian",
+      "nameType": "Personal",
+      "affiliation": [
+        {
+          "name": "Indiana University Bloomington"
+        }
+      ]
+    }
+  ],
+  "titles": [
+    {
+      "title": "Revisiting Connotations of Digital Humanists: Exploratory Interviews"
+    }
+  ],
+  "posterContent": {
+    "posterTitle": "Revisiting Connotations of Digital Humanists: Exploratory Interviews",
+    "sections": [
+      {
+        "sectionTitle": "Abstract",
+        "sectionContent": "This ongoing study revisits the connotations of \"digital humanists\" and explores the reasons why a researcher does or does not self-identify as a digital humanist. Building on semi-structured interview data collected from fourteen researchers and practitioners engaging in digital humanities (DH) projects, this poster illustrates researchers' various understandings of \"digital humanist\" as a term and highlights the complexity of \"digital humanists\" as a research community. This study provides insights into the collective imaginations of \"digital humanist\" as a research community."
+      },
+      {
+        "sectionTitle": "Background: Who is in and who is out? Early deliberations of digital humanists",
+        "sectionContent": "Alvarado (2012): Someone who (1) aims to develop the deep domain knowledge of the traditional humanist, (2) learns a wide variety of technologies and programming languages, and (3) critically situates the technologies as cultural artifacts \"participating in the production of social and cognitive structures.\n\nRamsay (2011): A (humanities) scholar who can build something with digital methods.\n\nJänicke (2016): Inclusive conception of digital humanists, advocating for active participation from researchers of various knowledge domains, especially those from scientific fields."
+      },
+      {
+        "sectionTitle": "Research Questions",
+        "sectionContent": "RQ 1: How do researchers currently understand the connotations of \"digital humanists\" as a research identity?\n\nRQ 2: Why do (or do not) researchers self-identify as a digital humanist?"
+      },
+      {
+        "sectionTitle": "Qualitative Semi-structured Interviews",
+        "sectionContent": "1 Do you self-identify as a digital humanist, depending on your personal understanding of the term?\n\n2 Why or why not?"
+      },
+      {
+        "sectionTitle": "Participants (n=14)",
+        "sectionContent": "Inclusive screening criterion: Any researcher or practitioner who has been actively engaging in DH projects\n\n8 DOMAINS: History, religious studies, English, art history, sociology, information science, math, anthropology\n\n6 LEVELS OF TRAINING: Master's students (n=2), PhD candidates (n=5), postdoc (n=1), assistant professors (n=4), associate professors (n=1), and curator (n=1)."
+      },
+      {
+        "sectionTitle": "Results",
+        "sectionContent": "Researchers' self-confidence in technical literacy and the nature of research questions affect their self-identification as a digital humanist."
+      },
+      {
+        "sectionTitle": "References",
+        "sectionContent": "Alvarado, R. C. (2012). The digital humanities situation. In M. Gold (Ed.), Debates in the Digital Humanities. University of Minnesota Press.\n\nJänicke, S. (2016). Valuable Research for Visualization and Digital Humanities: A Balancing Act. Workshop on Visualization for the Digital Humanities, IEEE VIS 2016, Baltimore, Maryland, USA.\n\nRamsay, S. (2011). Who's in and who's out. In M. Terras, J. Nyhan, & E. Vanhoutte (Eds.), Defining digital humanities: A reader. Ashgate."
+      }
+    ]
+  },
+  "imageCaption": [],
+  "tableCaption": [
+    {
+      "caption1": "Table 1. Why do researchers self-identify as digital humanists?",
+      "caption2": ""
+    },
+    {
+      "caption1": "Table 2. Why do researchers NOT self-identify as digital humanists?",
+      "caption2": ""
+    }
+  ]
+}

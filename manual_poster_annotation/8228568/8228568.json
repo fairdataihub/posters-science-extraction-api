@@ -1,0 +1,237 @@
+{
+  "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
+  "identifiers": [
+    {
+      "identifier": "10.5281/zenodo.8228568",
+      "identifierType": "DOI"
+    },
+    {
+      "identifier": "PS-2023-DH-001",
+      "identifierType": "Other"
+    },
+    {
+      "identifier": "Ma_Rongqian_Revisiting-connotations-of-Digital-Humanists.pdf",
+      "identifierType": "Other"
+    }
+  ],
+  "creators": [
+    {
+      "name": "Ma, Rongqian",
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "https://orcid.org/0000-0002-7141-1056",
+          "nameIdentifierScheme": "ORCID",
+          "schemeURI": "https://orcid.org"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "Indiana University Bloomington",
+          "affiliationIdentifier": "https://ror.org/02k40bc56",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    }
+  ],
+  "titles": [
+    {
+      "title": "Revisiting Connotations of Digital Humanists: Exploratory Interviews"
+    }
+  ],
+  "publisher": {
+    "name": "Zenodo",
+    "publisherIdentifier": "https://ror.org/04j0x0h93",
+    "publisherIdentifierScheme": "ROR",
+    "schemeURI": "https://ror.org"
+  },
+  "publicationYear": 2023,
+  "subjects": [
+    {
+      "subject": "Digital Humanities"
+    },
+    {
+      "subject": "Digital humanist"
+    },
+    {
+      "subject": "collective identity"
+    },
+    {
+      "subject": "semi-structured interview"
+    },
+    {
+      "subject": "survey"
+    },
+    {
+      "subject": "mixed-media analysis"
+    },
+    {
+      "subject": "rhetorical analysis"
+    },
+    {
+      "subject": "Library & information science"
+    },
+    {
+      "subject": "Research Identity"
+    },
+    {
+      "subject": "Self-Identification"
+    }
+  ],
+  "dates": [
+    {
+      "date": "2023-06-30",
+      "dateType": "Issued",
+      "dateInformation": "Published on Zenodo"
+    },
+    {
+      "date": "2023-06-30",
+      "dateType": "Available"
+    },
+    {
+      "date": "2023-07-12",
+      "dateType": "Other",
+      "dateInformation": "Poster presented at DH2023"
+    },
+    {
+      "date": "2023-07-10/2023-07-14",
+      "dateType": "Other",
+      "dateInformation": "DH2023 Conference dates"
+    },
+    {
+      "date": "2024-07-11",
+      "dateType": "Updated",
+      "dateInformation": "Last modified on Zenodo"
+    }
+  ],
+  "language": "en",
+  "types": {
+    "resourceType": "Conference Poster",
+    "resourceTypeGeneral": "Image"
+  },
+  "relatedIdentifiers": [
+    {
+      "relatedIdentifier": "10.5281/zenodo.8107549",
+      "relatedIdentifierType": "DOI",
+      "relationType": "IsSupplementTo",
+      "resourceTypeGeneral": "ConferencePaper"
+    },
+    {
+      "relatedIdentifier": "https://doi.org/10.5749/minnesota/9780816677948.003.0005",
+      "relatedIdentifierType": "DOI",
+      "relationType": "Cites",
+      "resourceTypeGeneral": "BookChapter"
+    },
+    {
+      "relatedIdentifier": "https://doi.org/10.4324/9781315576251",
+      "relatedIdentifierType": "DOI",
+      "relationType": "Cites",
+      "resourceTypeGeneral": "Book"
+    },
+    {
+      "relatedIdentifier": "https://dh2023.adho.org/",
+      "relatedIdentifierType": "URL",
+      "relationType": "IsPartOf",
+      "resourceTypeGeneral": "Event"
+    },
+    {
+      "relatedIdentifier": "https://doi.org/10.5281/zenodo.7961822",
+      "relatedIdentifierType": "DOI",
+      "relationType": "IsPublishedIn",
+      "resourceTypeGeneral": "Text"
+    }
+  ],
+  "sizes": [
+    "850.0 kB PDF"
+  ],
+  "formats": [
+    "application/pdf"
+  ],
+  "version": "v1",
+  "rightsList": [
+    {
+      "rights": "Creative Commons Attribution 4.0 International",
+      "rightsUri": "https://creativecommons.org/licenses/by/4.0/",
+      "rightsIdentifier": "CC-BY-4.0",
+      "rightsIdentifierScheme": "SPDX",
+      "schemeUri": "https://spdx.org/licenses/",
+      "language": "en"
+    }
+  ],
+  "descriptions": [
+    {
+      "description": "This ongoing study revisits the connotations of 'digital humanists' and explores the reasons why a researcher does or does not self-identify as a digital humanist. Building on semi-structured interview data collected from fourteen researchers and practitioners engaging in digital humanities (DH) projects, this poster illustrates researchers' various understandings of 'digital humanist' as a term and highlights the complexity of 'digital humanists' as a research community. The study provides insights into the collective imaginations of 'digital humanist' as a research community. The research employs qualitative semi-structured interviews to address two main questions: how researchers currently understand the connotations of 'digital humanists' as a research identity, and why researchers do or do not self-identify as a digital humanist. Findings indicate that researchers' self-confidence in technical literacy and the nature of research questions affect their self-identification as a digital humanist.",
+      "descriptionType": "Abstract",
+      "language": "en"
+    },
+    {
+      "description": "The study employed qualitative semi-structured interviews with fourteen participants from diverse domains including history, religious studies, English, art history, sociology, information science, mathematics, and anthropology. Participants included Master's students (n=2), PhD candidates (n=5), postdoc (n=1), assistant professors (n=4), associate professors (n=1), and curator (n=1). The inclusive screening criterion was any researcher or practitioner who has been actively engaging in DH projects. Two primary interview questions were asked: (1) Do you self-identify as a digital humanist, depending on your personal understanding of the term? (2) Why or why not? Responses were analyzed to identify patterns in self-identification rationales.",
+      "descriptionType": "Methods",
+      "language": "en"
+    },
+    {
+      "description": "Presented at the Digital Humanities 2023 Conference (DH2023): Collaboration as Opportunity, held July 10-14, 2023, in Graz, Austria.",
+      "descriptionType": "Other",
+      "language": "en"
+    }
+  ],
+  "fundingReferences": [
+    {
+      "funderName": "Indiana University Bloomington"
+    }
+  ],
+  "conference": {
+    "conferenceName": "Digital Humanities 2023: Collaboration as Opportunity",
+    "conferenceLocation": "Graz, Austria",
+    "conferenceUri": "https://dh2023.adho.org/",
+    "conferenceStartDate": "2023-07-10",
+    "conferenceEndDate": "2023-07-14",
+    "conferenceAcronym": "DH2023",
+    "conferenceSeries": "ADHO Digital Humanities Conference"
+  },
+  "posterContent": {
+    "posterTitle": "Revisiting Connotations of Digital Humanists: Exploratory Interviews",
+    "sections": [
+      {
+        "sectionTitle": "Abstract",
+        "sectionContent": "This ongoing study revisits the connotations of \"digital humanists\" and explores the reasons why a researcher does or does not self-identify as a digital humanist. Building on semi-structured interview data collected from fourteen researchers and practitioners engaging in digital humanities (DH) projects, this poster illustrates researchers' various understandings of \"digital humanist\" as a term and highlights the complexity of \"digital humanists\" as a research community. This study provides insights into the collective imaginations of \"digital humanist\" as a research community."
+      },
+      {
+        "sectionTitle": "Background: Who is in and who is out? Early deliberations of digital humanists",
+        "sectionContent": "Alvarado (2012): Someone who (1) aims to develop the deep domain knowledge of the traditional humanist, (2) learns a wide variety of technologies and programming languages, and (3) critically situates the technologies as cultural artifacts \"participating in the production of social and cognitive structures.\"\n\nRamsay (2011): A (humanities) scholar who can build something with digital methods.\n\nJänicke (2016): Inclusive conception of digital humanists, advocating for active participation from researchers of various knowledge domains, especially those from scientific fields."
+      },
+      {
+        "sectionTitle": "Research Questions",
+        "sectionContent": "RQ 1: How do researchers currently understand the connotations of \"digital humanists\" as a research identity?\n\nRQ 2: Why do (or do not) researchers self-identify as a digital humanist?"
+      },
+      {
+        "sectionTitle": "Qualitative Semi-structured Interviews",
+        "sectionContent": "Question 1: Do you self-identify as a digital humanist, depending on your personal understanding of the term?\n\nQuestion 2: Why or why not?"
+      },
+      {
+        "sectionTitle": "Participants (n=14)",
+        "sectionContent": "Inclusive screening criterion: Any researcher or practitioner who has been actively engaging in DH projects\n\n8 DOMAINS: History, religious studies, English, art history, sociology, information science, math, anthropology\n\n6 LEVELS OF TRAINING: Master's students (n=2), PhD candidates (n=5), postdoc (n=1), assistant professors (n=4), associate professors (n=1), and curator (n=1)."
+      },
+      {
+        "sectionTitle": "Results",
+        "sectionContent": "Researchers' self-confidence in technical literacy and the nature of research questions affect their self-identification as a digital humanist.\n\nTable 1. Why do researchers self-identify as digital humanists?\n\nCompetent in digital methods (programming and coding in particular) - P2, P6, P7, P9, P11: \"I have a background in anthropology and museum studies, and I know coding and know how to do data analysis. …\" (P9). \"I can code and I use computational and quantitative methods to study literature.\" (P11)\n\nActive working, teaching, or supervising students in DH - P4, P10, P14: \"I self-identify as a digital humanist in the same way as I self-identify as an information designer, a programmer, and a statistician. I do research in digital humanities, so I guess technically I can say I am a digital humanist.\" (P4)\n\nTable 2. Why do researchers NOT self-identify as digital humanists?\n\nNot a \"humanist\" - P12, P13: \"I wouldn't think I'm a humanist because my research question is not a humanities research question. I approach cultural heritage research from information science and design perspectives…. although I think what I'm doing is digital humanities work.\" (P13)\n\nConcerned with technical skills (programming in particular) - P8: \"I just started learning programming and digital methods. Being a digital humanist will be my final goal, but I am not there yet.\" (P8)\n\nDH does not raise new research questions - P3: \"…new constructs such as \"DH\" did not generate fundamentally new questions distinct from those in conventional or analog humanities.\" (P3)\n\nDigital methods are not necessary - P1, P5: \"My research questions are not ultimately bound with digital methods; they can be addressed with digital methods, but not necessarily have to be.\" (P5)"
+      },
+      {
+        "sectionTitle": "References",
+        "sectionContent": "Alvarado, R. C. (2012). The digital humanities situation. In M. Gold (Ed.), Debates in the Digital Humanities. University of Minnesota Press.\n\nJänicke, S. (2016). Valuable Research for Visualization and Digital Humanities: A Balancing Act. Workshop on Visualization for the Digital Humanities, IEEE VIS 2016, Baltimore, Maryland, USA.\n\nRamsay, S. (2011). Who's in and who's out. In M. Terras, J. Nyhan, & E. Vanhoutte (Eds.), Defining digital humanities: A reader. Ashgate."
+      }
+    ]
+  },
+  "tableCaption": [
+    {
+      "caption1": "Table 1. Why do researchers self-identify as digital humanists?",
+      "caption2": "Shows reasons from 8 participants including competence in digital methods (programming and coding) with examples from P2, P6, P7, P9, P11, and active working, teaching, or supervising students in DH with examples from P4, P10, P14."
+    },
+    {
+      "caption1": "Table 2. Why do researchers NOT self-identify as digital humanists?",
+      "caption2": "Shows reasons from 6 participants including not being a humanist (P12, P13), concerns with technical skills particularly programming (P8), belief that DH does not raise new research questions (P3), and view that digital methods are not necessary (P1, P5)."
+    }
+  ],
+  "domain": "Information Science"
+}

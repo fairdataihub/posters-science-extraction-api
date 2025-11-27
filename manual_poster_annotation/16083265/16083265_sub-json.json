@@ -1,0 +1,131 @@
+{
+  "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
+  "identifiers": [],
+  "creators": [
+    {
+      "name": "Gul, Merve",
+      "nameType": "Personal",
+      "affiliation": [
+        {
+          "name": "Department of Drug Sciences, University of Pavia"
+        },
+        {
+          "name": "Department of Chemical Engineering, Universitat Politècnica de Catalunya (UPC-EEBE)"
+        }
+      ]
+    },
+    {
+      "name": "Genta, Ida",
+      "nameType": "Personal",
+      "affiliation": [
+        {
+          "name": "Department of Drug Sciences, University of Pavia"
+        }
+      ]
+    },
+    {
+      "name": "Perez Madrigal, Maria M.",
+      "nameType": "Personal",
+      "affiliation": [
+        {
+          "name": "Department of Chemical Engineering, Universitat Politècnica de Catalunya (UPC-EEBE)"
+        }
+      ]
+    },
+    {
+      "name": "Aleman, Carlos",
+      "nameType": "Personal",
+      "affiliation": [
+        {
+          "name": "Department of Chemical Engineering, Universitat Politècnica de Catalunya (UPC-EEBE)"
+        },
+        {
+          "name": "Barcelona Research Center for Multiscale Science and Engineering, EEBE, Universitat Politècnica de Catalunya"
+        }
+      ]
+    },
+    {
+      "name": "Chiesa, Enrica",
+      "nameType": "Personal",
+      "affiliation": [
+        {
+          "name": "Department of Drug Sciences, University of Pavia"
+        }
+      ]
+    }
+  ],
+  "titles": [
+    {
+      "title": "INFLUENCE OF DRUG-POLYMER INTERACTIONS ON RELEASE KINETICS OF PLGA AND PLA/PEG NPS"
+    }
+  ],
+  "posterContent": {
+    "posterTitle": "INFLUENCE OF DRUG-POLYMER INTERACTIONS ON RELEASE KINETICS OF PLGA AND PLA/PEG NPS",
+    "sections": [
+      {
+        "sectionTitle": "Introduction",
+        "sectionContent": "Antimicrobial resistance (AMR) is a growing global health threat, requiring novel drug delivery strategies (1). Microfluidic-based synthesis of nano-sized carriers for drug delivery systems (NDDS) offers precise control over nanocarrier characteristics and improves encapsulation efficiency (2,3).\n\n(1) ANTIMICROBIAL RESISTANCE\n\nBacteria\n\n1. Efflux Pump\n2. Drug Inhibition\n3. Mutation of Binding Sides\n\n(2) NPs SYNTHESIS BY MICROFLUIDICS\n\nY-Shape Microfluidic Chip\n\nPLGA (L:G 50:50)\nMw: 66 kDa\n\nPLA/PEG (L:mPEG 75:25)\nMw: 31 kDa\n\nHydrophobic Drug (Curcumin – CURC)\n\n(3) DRUG DELIVERY SYSTEM\n\nCURC loaded NPs\nNPs coating to skin patches\nRelease of NPs\nRelease of CURC\nInfected area"
+      },
+      {
+        "sectionTitle": "Methods",
+        "sectionContent": "• An ad hoc custom-built device was used, comprising a pumping module with two syringe pumps and an infusion setup designed to place a Passive Herringbone Mixer (PHBM) chip."
+      },
+      {
+        "sectionTitle": "Results",
+        "sectionContent": "1. Physical Properties of NPs\n\n• NPs had uniform size distribution with PDI ≤ 0.2, consistent with TEM observations.\n\n2. Release Kinetics of NPs\n\nHigher Encapsulation Efficiency (EE%)\n\nSlower Release Rate\n\n3. Cytotoxicity & Antimicrobial Activity"
+      },
+      {
+        "sectionTitle": "Conclusion",
+        "sectionContent": "• CURC loaded PLGA NPs were better candidates for controlled drug delivery due to hydrophobic interactions between the drug and the polymer.\n\n• No or slight cytotoxic effect of CURC NPs was observed on NHDFs with progressive cellular internalization of NPs.\n\n• The choice of polymer composition plays a key role in drug-polymer interactions and release kinetics to achieve more controlled delivery and improved therapeutic efficacy in regenerative medicine."
+      },
+      {
+        "sectionTitle": "References",
+        "sectionContent": "(1) Vega-Vásquez, P. et al. Front. Bioeng. Biotechnol. 2020, 8, 2296-4185.\n(2) Fu, Y. S. et al. Biomed. Pharmacother. 2021, 141, 111888.\n(3) Chiesa et al., International Journal of Pharmaceutics, Volume 629, 2022, 122368, ISSN 0378-5173."
+      },
+      {
+        "sectionTitle": "Acknowledgements",
+        "sectionContent": "\"This project has received funding from the European Union's research and innovation programme under the Marie Skłodowska-Curie grant agreement No 101072645\"."
+      }
+    ]
+  },
+  "imageCaption": [
+    {
+      "caption1": "Figure 1: Representative scheme of a) outer and b) inner side of microfluidic chip (3).",
+      "caption2": ""
+    },
+    {
+      "caption1": "Figure 2: Physical features of PLGA NPs and PLA/PEG micelles.",
+      "caption2": ""
+    },
+    {
+      "caption1": "Figure 3: TEM images of a) PLGA NPs, b) CURC loaded PLGA NPs, c) PLA-PEG micelles, and d) CURC loaded PLA-PEG micelles.",
+      "caption2": ""
+    },
+    {
+      "caption1": "Figure 4: Release profiles of CURC from PLGA NPs and PLA/PEG micelles.",
+      "caption2": ""
+    },
+    {
+      "caption1": "Figure 5: Cell viability (%) after 24 h treatment on NHDFs at a cell density of 3 × 10⁸ cells/mL.",
+      "caption2": ""
+    },
+    {
+      "caption1": "Figure 6: Bacterial reduction of S.epidermidis after 72h of treatment with CURC loaded PLGA NPs with a MIC of 0.1 mg/mL.",
+      "caption2": ""
+    },
+    {
+      "caption1": "Figure 7: Fluorescence microscope images of placebo and CURC loaded PLGA NPs on NHDFs after 2, 4 and 24 h indicating cellular uptake.",
+      "caption2": ""
+    }
+  ],
+  "tableCaption": [
+    {
+      "caption1": "Table 1: Drug loading into NPs and micelles.",
+      "caption2": ""
+    },
+    {
+      "caption1": "Table 2: Drug loading into NPs and micelles.",
+      "caption2": ""
+    }
+  ]
+}

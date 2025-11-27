@@ -1,0 +1,316 @@
+{
+  "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
+  "identifiers": [
+    {
+      "identifier": "10.5281/zenodo.4737132",
+      "identifierType": "DOI"
+    },
+    {
+      "identifier": "PS-2021-SCHLUESSEL-001",
+      "identifierType": "Other"
+    },
+    {
+      "identifier": "Frederik_Arnold_Poster_CLS_Schluesselstellen.jpg",
+      "identifierType": "Other"
+    }
+  ],
+  "creators": [
+    {
+      "name": "Arnold, Frederik",
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "https://orcid.org/0000-0002-0417-4054",
+          "nameIdentifierScheme": "ORCID",
+          "schemeURI": "https://orcid.org"
+        },
+        {
+          "nameIdentifier": "frederik.arnold@hu-berlin.de",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "Institut für Bibliotheks- und Informationswissenschaft, Humboldt-Universität zu Berlin, Berlin, Germany",
+          "affiliationIdentifier": "https://ror.org/01hcx6992",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    }
+  ],
+  "titles": [
+    {
+      "title": "Verfahren zur Entdeckung und Charakterisierung von Schlüsselstellen in der Literatur"
+    }
+  ],
+  "publisher": {
+    "name": "Zenodo"
+  },
+  "publicationYear": 2021,
+  "subjects": [
+    {
+      "subject": "Digital Humanities"
+    },
+    {
+      "subject": "Computational Literary Studies"
+    },
+    {
+      "subject": "Schlüsselstellen"
+    },
+    {
+      "subject": "Text Reuse"
+    },
+    {
+      "subject": "Zitaterkennung"
+    },
+    {
+      "subject": "Die Judenbuche"
+    },
+    {
+      "subject": "Annette von Droste-Hülshoff"
+    },
+    {
+      "subject": "Michael Kohlhaas"
+    },
+    {
+      "subject": "Literaturinterpretation"
+    },
+    {
+      "subject": "Textsegmentierung"
+    },
+    {
+      "subject": "Algorithmusentwicklung"
+    }
+  ],
+  "dates": [
+    {
+      "date": "2021-05-04",
+      "dateType": "Created"
+    },
+    {
+      "date": "2021-05-04",
+      "dateType": "Available"
+    },
+    {
+      "date": "2021-05-04",
+      "dateType": "Issued"
+    },
+    {
+      "date": "2021-03-16/2021-03-18",
+      "dateType": "Presented",
+      "dateInformation": "Poster präsentiert beim SPP CLS General Meeting"
+    },
+    {
+      "date": "2024-07-19",
+      "dateType": "Updated"
+    }
+  ],
+  "language": "de",
+  "types": {
+    "resourceType": "Conference Poster",
+    "resourceTypeGeneral": "Image"
+  },
+  "relatedIdentifiers": [
+    {
+      "relatedIdentifier": "https://gepris.dfg.de/gepris/projekt/402743989",
+      "relatedIdentifierType": "URL",
+      "relationType": "IsPartOf",
+      "resourceTypeGeneral": "Project"
+    },
+    {
+      "relatedIdentifier": "https://gepris.dfg.de/gepris/projekt/424207720",
+      "relatedIdentifierType": "URL",
+      "relationType": "IsDocumentedBy",
+      "resourceTypeGeneral": "Project"
+    },
+    {
+      "relatedIdentifier": "https://dfg-spp-cls.github.io/",
+      "relatedIdentifierType": "URL",
+      "relationType": "IsPartOf",
+      "resourceTypeGeneral": "Text"
+    },
+    {
+      "relatedIdentifier": "https://dfg-spp-cls.github.io/projects_en/de/2020/01/24/TP-What_matters/",
+      "relatedIdentifierType": "URL",
+      "relationType": "IsDocumentedBy",
+      "resourceTypeGeneral": "Text"
+    },
+    {
+      "relatedIdentifier": "https://www.projekte.hu-berlin.de/de/schluesselstellen",
+      "relatedIdentifierType": "URL",
+      "relationType": "IsDocumentedBy",
+      "resourceTypeGeneral": "Text"
+    },
+    {
+      "relatedIdentifier": "https://www.uni-goettingen.de/de/587821.html",
+      "relatedIdentifierType": "URL",
+      "relationType": "IsSupplementedBy",
+      "resourceTypeGeneral": "Dataset"
+    },
+    {
+      "relatedIdentifier": "https://shakespeare.visualizingbroadway.com/index.html",
+      "relatedIdentifierType": "URL",
+      "relationType": "IsDerivedFrom",
+      "resourceTypeGeneral": "InteractiveResource"
+    },
+    {
+      "relatedIdentifier": "10.5281/zenodo.4737131",
+      "relatedIdentifierType": "DOI",
+      "relationType": "IsVersionOf",
+      "resourceTypeGeneral": "Image"
+    }
+  ],
+  "sizes": [
+    "3.1 MB"
+  ],
+  "formats": [
+    "image/jpeg"
+  ],
+  "version": "v1",
+  "rightsList": [
+    {
+      "rights": "Creative Commons Attribution 4.0 International",
+      "rightsUri": "https://creativecommons.org/licenses/by/4.0/",
+      "rightsIdentifier": "CC-BY-4.0",
+      "rightsIdentifierScheme": "SPDX",
+      "schemeUri": "https://spdx.org/licenses/"
+    }
+  ],
+  "descriptions": [
+    {
+      "description": "Das Poster präsentiert einen Algorithmus zur Entdeckung von wörtlichen Zitaten aus literarischen Werken in Interpretationstexten. Darüber hinaus zeigt das Poster den Schritt der Segmentierung des literarischen Werks als Grundlage für eine Webseite zur Visualisierung und Exploration. Das Korpus wurde im ArguLit-Projekt erstellt und umfasst 45 Interpretationstexte der Judenbuche von Annette von Droste-Hülshoff sowie 52 Interpretationstexte zu Michael Kohlhaas. Die Auswertung an 45 Interpretationstexten der Judenbuche ergibt eine Precision von 0.80, einen Recall von 0.91 und einen F-Score von 0.85.",
+      "descriptionType": "Abstract"
+    },
+    {
+      "description": "Der Algorithmus besteht aus drei Hauptschritten: 1. Positionen in Text 1 erfassen (Wortfolge und Startpositionen werden in einer Tabelle erfasst). 2. Forward references erstellen (Mapping zwischen Text 1 Startpositionen und Text 2 Startpositionen). 3. Gefundene Matches erweitern (Ellipsen überbrücken, Tokens zusammenfassen oder auslassen). Weitere Schritte umfassen: Tokenisierung, ä ö ü etc. vereinheitlichen, Satzzeichen markieren oder entfernen, Fuzzy matching, Matches zusammenfassen, Zu kurze Matches verwerfen, und Satzgrenzen berücksichtigen. Die Segmentierung erfolgt durch Aufteilung der Stellen aus Interpretationstexten, wobei die Literatur nach Wörtern segmentiert wird und die Zitierhäufigkeit pro Wort erfasst wird.",
+      "descriptionType": "Methods"
+    },
+    {
+      "description": "Teil des DFG Schwerpunktprogramms SPP 2207 'Computational Literary Studies' (https://gepris.dfg.de/gepris/projekt/402743989, https://dfg-spp-cls.github.io/). Teilprojekt: 'Was ist wichtig? Schlüsselstellen in der Literatur' (https://gepris.dfg.de/gepris/projekt/424207720, https://dfg-spp-cls.github.io/projects_en/de/2020/01/24/TP-What_matters/, https://www.projekte.hu-berlin.de/de/schluesselstellen). Präsentiert beim SPP CLS General Meeting, virtuell, 16.-18. März 2021.",
+      "descriptionType": "Other"
+    },
+    {
+      "description": "Der Algorithmus basiert auf 'sim_text' von Dick Grune. Similarity texter: A text-comparison web tool based on the 'sim_text' algorithm von Sofia Kalaidopoulou (2016). Programmiersprache: Python. Die Visualisierungswebseite wurde inspiriert von 'To Quote or Not to Quote' (https://shakespeare.visualizingbroadway.com/index.html, Stand: 12.03.2021). Die Webseite ermöglicht die interaktive Exploration durch Heatmap, ausgewählte Interpretationstexte, ausgewählte Textstellen und Literatur mit häufig zitierten Stellen.",
+      "descriptionType": "TechnicalInfo"
+    }
+  ],
+  "fundingReferences": [
+    {
+      "funderName": "Deutsche Forschungsgemeinschaft",
+      "funderIdentifier": "https://ror.org/018mejw64",
+      "funderIdentifierType": "ROR",
+      "schemeUri": "https://ror.org",
+      "awardNumber": "424207720",
+      "awardUri": "https://gepris.dfg.de/gepris/projekt/424207720",
+      "awardTitle": "Was ist wichtig? Schlüsselstellen in der Literatur"
+    },
+    {
+      "funderName": "Deutsche Forschungsgemeinschaft",
+      "funderIdentifier": "https://ror.org/018mejw64",
+      "funderIdentifierType": "ROR",
+      "schemeUri": "https://ror.org",
+      "awardNumber": "402743989",
+      "awardUri": "https://gepris.dfg.de/gepris/projekt/402743989",
+      "awardTitle": "SPP 2207: Computational Literary Studies"
+    }
+  ],
+  "conference": {
+    "conferenceName": "SPP CLS General Meeting",
+    "conferenceLocation": "virtuell",
+    "conferenceStartDate": "2021-03-16",
+    "conferenceEndDate": "2021-03-18"
+  },
+  "posterContent": {
+    "posterTitle": "Verfahren zur Entdeckung und Charakterisierung von Schlüsselstellen in der Literatur",
+    "sections": [
+      {
+        "sectionTitle": "im Projekt",
+        "sectionContent": "Was ist wichtig? – Schlüsselstellen in der Literatur"
+      },
+      {
+        "sectionTitle": "Erkennung wörtlicher Zitate",
+        "sectionContent": "Text 1\n- w1 w2 w3 w4 w5 w6 w7\n- w8 w9 w10 w11 w12 w13 w14\n- w15 w16 w17 w18 w19 w20 w21\n- w22 w23 w24 w25 w26 w27 w28\n- w29 w30 w31 w32 w33 w34 w35\n- w10 w11 w12 w13 w14 w15 w16\n\nText 2\n- ... ... ... ... ... ... ... ...\n- w17 w18 w19 w20 w21 w22 ...\n- w8 w9 w10 w11 w12 ... ...\n- ... ... ... ... ... ... ... ...\n- w8 w9 w10 w11 w12 ... ...\n- w27 w28 w29 [...] w33 w34 w35"
+      },
+      {
+        "sectionTitle": "Korpus",
+        "sectionContent": "• erstellt im ArguLit-Projekt¹\n• 45 Interpretationstexte der Judenbuche\n• 52 Interpretationstexte Michael Kohlhaas\n\n¹ https://www.uni-goettingen.de/de/587821.html (Stand: 12.03.2021)"
+      },
+      {
+        "sectionTitle": "Segmentierung",
+        "sectionContent": "Literatur-Stelle aus Interpretationstext\n\n| Literatur | w1 | w2 | w3 | w4 | w5 w6 w7 | w8 w9 | w10 |\n|-----------|----|----|----|----|----------|-------|-----|\n| Zitierhäufigkeit | 2 | 3 | 4 | 3 | 2 | 3 | 2 |\n\nVisual representation showing:\n- w1 w2 w3 w4 w5 w6 w7 w8 w9 w10\n- w3 w4 w5 w6 w7 w8 w9\n- w2 w3 w4\n- w2 w3\n- w8 w9 w10"
+      },
+      {
+        "sectionTitle": "Comic",
+        "sectionContent": "Comic strip showing a conversation about key passages in literature\n\nText in comic:\n- \"I bet...\"\n- \"I wonder. What are the right places.\"\n- \"Do you see the place on Page XX, line YY? What did you say?\"\n- \"Uh-oh. Can't think of the text now.\"\n- \"I'll never let Larry lend that copy again!\"\n- \"Call me - I was the one asking.\""
+      },
+      {
+        "sectionTitle": "Algorithmus",
+        "sectionContent": "1. Positionen in Text 1 erfassen\n\n| Wortfolge | Startpositionen |\n|-----------|---------------|\n| w1 w2 w3 | [0] |\n| w9 w9 w4 | [1] |\n| ... ... ... | ... |\n| w8 w9 w10 | [7] |\n| w9 w10 w11 | [8] |\n| w10 w11 w12 | [9, 35] |\n| w33 w34 w35 | [32] |\n\n2. Forward references erstellen\n\n| Text 1 Startpos. | Text 2 Startpos. |\n|------------------|------------------|\n| 0 | [] |\n| 1 | [] |\n| 7 | [75, 120] |\n| 8 | [121] |\n| 9 | [77, 122] |\n| 35 | [77, 122] |\n| 32 | [145] |\n\n3. Gefundene Matches erweitern\n\n• Ellipsen \"überspringen\"\n• Token zusammenfassen / auslassen"
+      },
+      {
+        "sectionTitle": "Weitere Schritte",
+        "sectionContent": "• Tokenisierung\n• ä, ö, ü etc. vereinheitlichen\n• Satzzeichen markieren oder entfernen\n• Fuzzy matching\n• Matches zusammenfassen\n• Zu kurze Matches filtern\n• Satzgrenzen berücksichtigen"
+      },
+      {
+        "sectionTitle": "Auswertung",
+        "sectionContent": "45 Interpretationstexte der Judenbuche\n\nPrecision: 0.80  Recall: 0.91  \nF-Score: 0.85"
+      },
+      {
+        "sectionTitle": "Quellen",
+        "sectionContent": "• \"sim_text\" von Dick Grune¹\n• Similarity texter: A text-comparison web tool based on the \"sim_text\" algorithm von Sofia Kalaidopoulou (2016)²\n• Programmiersprache: Python\n\n¹ https://dickgrune.com/Programs/similarity_tester/ (Stand: 12.03.2021)\n\n² https://www.sfs.uni-tuebingen.de/~skalaido/similarity_tester/index.html?v=v3&mode=normal&simtester/522789_Sofia-Kalaidopoulou_bachelor-thesis.pdf (Stand: 12.03.2021)"
+      },
+      {
+        "sectionTitle": "Visualisierungswebseite",
+        "sectionContent": "Features shown:\n- Heatmap\n- Ausgewählter Interpretationstext\n- Annette von Droste-Hülshoff: Die Judenbuche\n  - Ausgewählte Textstelle\n  - Literatur\n  - Häufig zitierte Stellen\n  - Interpretationstexte, die diese Textstelle zitieren\n\nVisualization example text (excerpt from Die Judenbuche):\n\n\"Wo ist die Hand so zart, daß ohne Irren...\"\n\nInspiriert von: To Quote or Not to Quote (https://shakespeare.mit.edu/macbeth/macbeth.html) (Stand: 12.03.2021)"
+      }
+    ]
+  },
+  "imageCaption": [
+    {
+      "caption1": "Erkennung wörtlicher Zitate",
+      "caption2": "Diagramm zeigt Text 1 (literarisches Werk) mit Wortpositionen und Zeilennummern (0, 7, 14, 21, 28, 35) und Text 2 (Interpretationstext) mit entsprechenden Zeilennummern (50, 60, 75, 90, 120, 134), illustriert die Positionsmapping zwischen beiden Texten zur Zitaterkennung"
+    },
+    {
+      "caption1": "Korpus",
+      "caption2": "Box zeigt das im ArguLit-Projekt erstellte Korpus: 45 Interpretationstexte der Judenbuche, 52 Interpretationstexte Michael Kohlhaas. Quelle: https://www.uni-goettingen.de/de/587821.html (Stand: 12.03.2021)"
+    },
+    {
+      "caption1": "Algorithmus Schritt 1: Positionen in Text 1 erfassen",
+      "caption2": "Tabelle zeigt Wortfolgen (w1 w2 w3, w3 w3 w4, w9 w9 w10, w9 w10 w11, w10 w11 w12, w33 w34 w35) und ihre Startpositionen ([0], [1], [7], [8], [9, 35], [32])"
+    },
+    {
+      "caption1": "Algorithmus Schritt 2: Forward references erstellen",
+      "caption2": "Tabelle zeigt Mapping von Text 1 Startpositionen (0, 1, 7, 8, 9, 35, 32) zu Text 2 Startpositionen ([1], [1], [75, 120], [121], [77, 122], [77, 122], [145])"
+    },
+    {
+      "caption1": "Algorithmus Schritt 3: Gefundene Matches erweitern",
+      "caption2": "Beschreibung: Ellipsen 'überspringen', Token zusammenfassen / auslassen"
+    },
+    {
+      "caption1": "Weitere Schritte",
+      "caption2": "Auflistung: Tokenisierung, ä ö ü etc. vereinheitlichen, Satzzeichen markieren oder entfernen, Fuzzy matching, Matches zusammenfassen, Zu kurze Matches verwerfen, Satzgrenzen berücksichtigen"
+    },
+    {
+      "caption1": "Segmentierung",
+      "caption2": "Diagramm zeigt Stellen aus Interpretationstexten mit Balkendiagramm der Zitierhäufigkeit. Literatur segmentiert als: w1 | w2 | w3 | w4 | w5 w6 w7 | w8 w9 | w10 mit Zitierhäufigkeit 2 | 3 | 4 | 3 | 2 | 3 | 2"
+    },
+    {
+      "caption1": "Visualisierungswebseite",
+      "caption2": "Screenshot zeigt Webinterface mit Heatmap für Annette von Droste-Hülshoff: Die Judenbuche, Bereiche für ausgewählten Interpretationstext, ausgewählte Textstelle und Literatur mit häufig zitierten Stellen. Roter Text sichtbar in den angezeigten Textpassagen."
+    },
+    {
+      "caption1": "Auswertung",
+      "caption2": "Box zeigt Evaluierungsergebnisse: 45 Interpretationstexte der Judenbuche, Precision: 0.80, Recall: 0.91, F-Score: 0.85"
+    },
+    {
+      "caption1": "Quellen",
+      "caption2": "'sim_text' von Dick Grune, Similarity texter: A text-comparison web tool based on the 'sim_text' algorithm von Sofia Kalaidopoulou (2016), GitHub-Links sichtbar, Programmiersprache: Python"
+    },
+    {
+      "caption1": "Comic",
+      "caption2": "XKCD-Stil Comic mit Strichfiguren, zeigt Diskussion über Schlüsselstellen. Untertitel: 'Häufig zitierte Stellen → Interpretationstexte, die diese Textstelle zitieren'"
+    }
+  ],
+  "domain": "Digital Humanities"
+}

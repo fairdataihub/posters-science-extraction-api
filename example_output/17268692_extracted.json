@@ -1,0 +1,94 @@
+{
+  "creators": [
+    {
+      "name": "Patel, Bhavesh, Ph.D.",
+      "affiliation": [
+        {
+          "name": "FAIR Data Innovations Hub, California Medical Innovations Institute, San Diego, CA, USA"
+        }
+      ]
+    },
+    {
+      "name": "Garijo, Daniel, Ph.D.",
+      "affiliation": [
+        {
+          "name": "Universidad Politécnica de Madrid, Spain"
+        }
+      ]
+    }
+  ],
+  "titles": [
+    {
+      "title": "Presenting the Actionable Guidelines for FAIR Research Software Task Force"
+    }
+  ],
+  "posterContent": {
+    "posterTitle": "Presenting the Actionable Guidelines for FAIR Research Software Task Force",
+    "sections": [
+      {
+        "sectionTitle": "Background",
+        "sectionContent": "Research software is a critical element of modern scientific research. Making it FAIR (Findable, Accessible, Interoperable, and Reusable) is crucial to support reproducibility, transparency, sustainability, and scientific progress. The FAIR4RS principles (2022) provide a framework to achieve this through unique identifiers, metadata, license, and more. They are now being adopted by researchers, organizations, and funders worldwide."
+      },
+      {
+        "sectionTitle": "Problem",
+        "sectionContent": "By design, the FAIR4RS principles do not provide concrete implementation steps, making them difficult for developers to apply. Field-specific guidelines, such as FAIR-BioRS (2023), exist but lack broad, cross-disciplinary input. The 2 year community survey of the FAIR4RS principles confirmed the need for generalized actionable guidelines."
+      },
+      {
+        "sectionTitle": "Solution",
+        "sectionContent": "To address that, we established the Actionable Guidelines for the FAIR Research Software (Actionable FAIR4RS) Task Force in December 2024 under the Research Software Alliance (ReSA). The Task Force is run by a diverse international team of researchers and research software developers from various fields (Fig. 1). Goal: Create actionable and domain-agnostic guidelines for implementing the FAIR4RS principles, through a comprehensive, community-driven methodology."
+      },
+      {
+        "sectionTitle": "Home of the Task Force",
+        "sectionContent": "17 FAIR4RS principles 6 main categories 17 FAIR4RS principles ~12 active members Location: Germany, Spain, UK, USA, etc. Research domains: Biomedical, Data Science, Knowledge Representation, etc."
+      },
+      {
+        "sectionTitle": "Many questions!",
+        "sectionContent": "We identified 6 categories where actionable guidelines are needed C1. Identifier C4. Qualified references C2. Metadata for software publication & discovery C5. Metadata for software reuse C3. Standards for inputs & outputs C6. License Figure 2. Illustration of the outcomes of task 1 of the Task Force, which consisted of understanding the requirements of each of the 17 FAIR4RS principles."
+      },
+      {
+        "sectionTitle": "2 FAIR4RS principles",
+        "sectionContent": "R1. Software is described with a plurality of accurate and relevant attributes R1.2. Software is associated with detailed provenance. www.researchsoft.org/tf-actionable-fair4rs"
+      },
+      {
+        "sectionTitle": "2 main questions",
+        "sectionContent": "What provenance and other metadata are necessary for software reuse? How to provide that metadata?"
+      },
+      {
+        "sectionTitle": "Methods",
+        "sectionContent": "Preliminary findings Literature review Personal assessment External feedback Provenance metadata: Authors info Funding details Other metadata Software description Required dependencies How to provide: codemeta.json Figure 3. Progress of the subgroup working on C5 - Metadata for software reuse."
+      },
+      {
+        "sectionTitle": "Join the Task Force!",
+        "sectionContent": "Email: bpatel@calmi2.org"
+      },
+      {
+        "sectionTitle": "Progress",
+        "sectionContent": "We began by conducting an in-depth analysis of the FAIR4RS principles and identified six key categories where actionable instructions are needed, each with a series of outstanding questions (Fig. 2). Six subgroups are now conducting literature reviews and community outreach to answer these questions. Fig. 3 illustrates the approach and preliminary findings from the subgroup working on category C5, including a preliminary list of metadata elements we believe are essential for software reuse and ways to include that metadata with software."
+      },
+      {
+        "sectionTitle": "Next Steps",
+        "sectionContent": "Dec 2025: Subgroups complete investigations to establish answers for outstanding questions. Mar 2026: Release draft guidelines for broad community feedback. Summer 2026: Publish the first official version of the Actionable FAIR4RS Guidelines. Fall 2026: Transition to a maintained, living resource that evolves with community input."
+      },
+      {
+        "sectionTitle": "Get Involved!",
+        "sectionContent": "Are you a developer, maintainer, funder, or user of research software? Email bpatel@calmi2.org to join us and help build the foundation for FAIR research software!"
+      },
+      {
+        "sectionTitle": "References",
+        "sectionContent": "Find this poster and all related references here bit.ly/a-FAIR4RS"
+      }
+    ]
+  },
+  "imageCaption": [
+    {
+      "caption1": "Figure 1. Overview of the Task Force."
+    },
+    {
+      "caption1": "Figure 2. Illustration of the outcomes of task 1 of the Task Force, which consisted of understanding the requirements of each of the 17 FAIR4RS principles."
+    },
+    {
+      "caption1": "Figure 3. Progress of the subgroup working on C5 - Metadata for software reuse."
+    }
+  ],
+  "tableCaption": []
+}

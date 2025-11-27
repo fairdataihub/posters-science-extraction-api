@@ -1,0 +1,348 @@
+{
+  "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
+  "identifiers": [
+    {
+      "identifier": "10.5281/zenodo.16083265",
+      "identifierType": "DOI"
+    },
+    {
+      "identifier": "PS-2025-NANOREMEDI-001",
+      "identifierType": "Other"
+    },
+    {
+      "identifier": "Influence of drug-polymer interactions on release kinetics of PLGA and PLAPEG Nanoparticles.pdf",
+      "identifierType": "Other"
+    }
+  ],
+  "creators": [
+    {
+      "name": "Gul, Merve",
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "mailto:merve.gul@example.com",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "Department of Drug Sciences, University of Pavia, Pavia, Italy",
+          "affiliationIdentifier": "https://ror.org/00s6t1f81",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        },
+        {
+          "name": "Department of Chemical Engineering, Universitat Politècnica de Catalunya (UPC-EEBE), Barcelona, Spain",
+          "affiliationIdentifier": "https://ror.org/03mb6wj31",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    },
+    {
+      "name": "Genta, Ida",
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "ida.genta@unipv.it",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "Department of Drug Sciences, University of Pavia, Pavia, Italy",
+          "affiliationIdentifier": "https://ror.org/00s6t1f81",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    },
+    {
+      "name": "Perez Madrigal, Maria M.",
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "https://orcid.org/0000-0002-2498-8485",
+          "nameIdentifierScheme": "ORCID",
+          "schemeURI": "https://orcid.org"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "Department of Chemical Engineering, Universitat Politècnica de Catalunya (UPC-EEBE), Barcelona, Spain",
+          "affiliationIdentifier": "https://ror.org/03mb6wj31",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    },
+    {
+      "name": "Aleman, Carlos",
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "https://orcid.org/0000-0003-4462-6075",
+          "nameIdentifierScheme": "ORCID",
+          "schemeURI": "https://orcid.org"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "Department of Chemical Engineering, Universitat Politècnica de Catalunya (UPC-EEBE), Barcelona, Spain",
+          "affiliationIdentifier": "https://ror.org/03mb6wj31",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        },
+        {
+          "name": "Barcelona Research Center for Multiscale Science and Engineering, EEBE, Universitat Politècnica de Catalunya, Barcelona, Spain",
+          "affiliationIdentifier": "https://ror.org/03mb6wj31",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    },
+    {
+      "name": "Chiesa, Enrica",
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "enrica.chiesa@unipv.it",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "Department of Drug Sciences, University of Pavia, Pavia, Italy",
+          "affiliationIdentifier": "https://ror.org/00s6t1f81",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    }
+  ],
+  "titles": [
+    {
+      "title": "Influence of drug-polymer interactions on release kinetics of PLGA and PLA/PEG Nanoparticles"
+    }
+  ],
+  "publisher": {
+    "name": "Zenodo"
+  },
+  "publicationYear": 2025,
+  "subjects": [
+    {
+      "subject": "Drug Delivery Systems"
+    },
+    {
+      "subject": "Nanoparticles"
+    },
+    {
+      "subject": "PLGA"
+    },
+    {
+      "subject": "PLA/PEG"
+    },
+    {
+      "subject": "Microfluidics"
+    },
+    {
+      "subject": "Curcumin"
+    },
+    {
+      "subject": "Release Kinetics"
+    },
+    {
+      "subject": "Drug-Polymer Interactions"
+    },
+    {
+      "subject": "Antimicrobial Resistance"
+    },
+    {
+      "subject": "Regenerative Medicine"
+    },
+    {
+      "subject": "Biodegradable Polymers"
+    },
+    {
+      "subject": "Encapsulation Efficiency"
+    }
+  ],
+  "dates": [
+    {
+      "date": "2025-07-18",
+      "dateType": "Created",
+      "dateInformation": "Date poster was created based on Zenodo technical metadata"
+    },
+    {
+      "date": "2025-05-17",
+      "dateType": "Available",
+      "dateInformation": "Published on Zenodo"
+    },
+    {
+      "date": "2025-05-17",
+      "dateType": "Issued"
+    },
+    {
+      "date": "2025-05-15/2025-05-17",
+      "dateType": "Presented",
+      "dateInformation": "CRS Italy Chapter Workshop, Bari, Italy"
+    }
+  ],
+  "language": "en",
+  "types": {
+    "resourceType": "Conference Poster",
+    "resourceTypeGeneral": "Image"
+  },
+  "relatedIdentifiers": [
+    {
+      "relatedIdentifier": "10.1016/j.biopha.2021.111888",
+      "relatedIdentifierType": "DOI",
+      "relationType": "Cites",
+      "resourceTypeGeneral": "JournalArticle"
+    },
+    {
+      "relatedIdentifier": "10.1016/j.ijpharm.2022.122368",
+      "relatedIdentifierType": "DOI",
+      "relationType": "Cites",
+      "resourceTypeGeneral": "JournalArticle"
+    },
+    {
+      "relatedIdentifier": "https://cordis.europa.eu/project/id/101072645",
+      "relatedIdentifierType": "URL",
+      "relationType": "IsSupplementedBy",
+      "resourceTypeGeneral": "Text"
+    },
+    {
+      "relatedIdentifier": "10.3030/101072645",
+      "relatedIdentifierType": "DOI",
+      "relationType": "IsSupplementedBy",
+      "resourceTypeGeneral": "Text"
+    },
+    {
+      "relatedIdentifier": "https://www.crsitalia.it/events/workshops/crs-italy-workshop-2025",
+      "relatedIdentifierType": "URL",
+      "relationType": "IsPartOf",
+      "resourceTypeGeneral": "Event"
+    }
+  ],
+  "sizes": [
+    "1.2 MB PDF"
+  ],
+  "formats": [
+    "application/pdf"
+  ],
+  "version": "v1",
+  "rightsList": [
+    {
+      "rights": "Creative Commons Attribution 4.0 International",
+      "rightsUri": "https://creativecommons.org/licenses/by/4.0/",
+      "rightsIdentifier": "CC-BY-4.0",
+      "rightsIdentifierScheme": "SPDX",
+      "schemeUri": "https://spdx.org/licenses/"
+    }
+  ],
+  "descriptions": [
+    {
+      "description": "This poster presents research on the influence of drug-polymer interactions on release kinetics of polymeric nanoparticles for drug delivery applications. Achieving nano-sized drug delivery systems has become crucial in addressing antimicrobial resistance and improving cancer treatments. The study focuses on poly(lactic-co-glycolic acid) (PLGA) and poly(lactic acid)/poly(ethylene glycol) (PLA/PEG) nanoparticles synthesized using microfluidics and loaded with curcumin, a hydrophobic drug with anticancer, antimicrobial, and anti-inflammatory properties. PLGA nanoparticles demonstrated superior encapsulation efficiency at approximately 66% compared to 14% for PLA/PEG nanoparticles, highlighting the difficulty of loading hydrophobic drugs into hydrophilic carriers. Release kinetics differed significantly between the two polymer systems, with PLGA nanoparticles showing controlled sustained release over 24 hours while PLA/PEG nanoparticles exhibited rapid burst release of 75% within the first hour. Cytotoxicity tests on A549 lung cancer cells yielded IC50 values of approximately 4.7-4.8 µg/mL for both formulations. These findings demonstrate the critical role of polymer composition in controlling drug-polymer interactions and release kinetics for biomedical applications in regenerative medicine.",
+      "descriptionType": "Abstract"
+    },
+    {
+      "description": "PLGA and PLA/PEG nanoparticles were synthesized using a custom-built microfluidic device comprising a pumping module with two syringe pumps and a Passive Herringbone Mixer (PHBM) chip. For PLGA nanoparticles, Terumo 5 mL syringes were used with a total flow rate of 8 mL/min and a flow rate ratio of 4:1 (aqueous to organic phase). For PLA/PEG nanoparticles, the total flow rate was 3 mL/min with a 3:1 flow rate ratio. The final volume for both formulations was 2 mL. Nanoparticles were characterized for hydrodynamic diameter, polydispersity index, and zeta potential. Drug loading was assessed through encapsulation efficiency and payload measurements. Release profiles were evaluated over 24 hours. Cytotoxicity was tested on normal human dermal fibroblasts (NHDFs) at a cell density of 3x10^8 cells/mL after 24 hours of treatment. Antimicrobial activity was evaluated against Staphylococcus epidermidis with a minimum inhibitory concentration of 0.1 mg/mL after 72 hours. Cellular uptake was visualized using fluorescence microscopy at 2, 4, and 24-hour time points.",
+      "descriptionType": "Methods"
+    },
+    {
+      "description": "Presented at the Controlled Release Society (CRS) Italy Chapter Workshop in Bari, Italy, May 15-17, 2025. The workshop theme focused on bioinspired therapeutics and their applications in drug delivery and controlled release.",
+      "descriptionType": "Other"
+    }
+  ],
+  "fundingReferences": [
+    {
+      "funderName": "European Commission",
+      "funderIdentifier": "https://doi.org/10.13039/501100000780",
+      "funderIdentifierType": "Crossref Funder ID",
+      "schemeUri": "https://www.crossref.org/services/funder-registry/",
+      "awardNumber": "101072645",
+      "awardUri": "https://cordis.europa.eu/project/id/101072645",
+      "awardTitle": "NANOREMEDI - Functional Nano-Scaffolds for Regenerative Medicine"
+    }
+  ],
+  "conference": {
+    "conferenceName": "Controlled Release Society (CRS) Italy Chapter Workshop",
+    "conferenceLocation": "Bari, Italy",
+    "conferenceUri": "https://www.crsitalia.it/events/workshops/crs-italy-workshop-2025",
+    "conferenceStartDate": "2025-05-15",
+    "conferenceEndDate": "2025-05-17",
+    "conferenceAcronym": "CRS Italy",
+    "conferenceSeries": "CRS Italy Annual Workshop"
+  },
+  "posterContent": {
+    "posterTitle": "INFLUENCE OF DRUG-POLYMER INTERACTIONS ON RELEASE KINETICS OF PLGA AND PLA/PEG NPS",
+    "sections": [
+      {
+        "sectionTitle": "INTRODUCTION",
+        "sectionContent": "Antimicrobial resistance (AMR) is a growing global health threat, requiring novel drug delivery strategies (1). Microfluidic-based synthesis of nano-sized carriers for drug delivery systems (NDDS) offers precise control over nanocarrier characteristics and improves encapsulation efficiency (2,3).\n\n(1) ANTIMICROBIAL RESISTANCE\n\nBacteria\n1. Efflux Pump\n2. Drug Inhibition\n3. Mutation of Binding Sides\n\n(2) NPs SYNTHESIS BY MICROFLUIDICS\n\nY-Shape Microfluidic Chip\n\nPLGA (L:G 50:50)\nMw: 66 kDa\n\nPLA/PEG (L:mPEG 75:25)\nMw: 31 kDa\n\nHydrophobic Drug (Curcumin – CURC)\n\n(3) DRUG DELIVERY SYSTEM\n\nCURC loaded NPs\nNPs coating to skin patches\nRelease of NPs\nRelease of CURC\nInfected area"
+      },
+      {
+        "sectionTitle": "METHODS",
+        "sectionContent": "• An ad hoc custom-built device was used, comprising a pumping module with two syringe pumps and an infusion setup designed to place a Passive Herringbone Mixer (PHBM) chip.\n\nFigure 1: Representative scheme of a) outer and b) inner side of microfluidic chip (3).\n\nTable 1: Drug loading into NPs and micelles.\n\nType of Syringes | Final Volume (mL) | Total Flow Rate (TFR) (mL/min) | Flow Rate Ratio (FRR) (aqueous/organic phase)\nPLGA NPs | Terumo 5 mL | 2 | 8 | 4:1\n         | Terumo 5 mL | 2 | 8 | 4:1\nPLA/PEG NPs | Terumo 5 mL | 2 | 3 | 3:1\n            | Terumo 5 mL | 2 | 3 | 3:1"
+      },
+      {
+        "sectionTitle": "RESULTS",
+        "sectionContent": "1. Physical Properties of NPs\n\n• NPs had uniform size distribution with PDI ≤ 0.2, consistent with TEM observations.\n\nFigure 2: Physical features of PLGA NPs and PLA/PEG micelles.\n\nDh (nm)\n180.0\n120.0\n60.0\n0.0\n-120.0\n\nζ (mV)\nPLGA\nPLGA\nPLA/PEG\nPLA/PEG\n\nPLACEBO\nCURC\n\nFigure 3: TEM images of a) PLGA NPs, b) CURC loaded PLGA NPs, c) PLA-PEG micelles, and d) CURC loaded PLA-PEG micelles.\n\n2. Release Kinetics of NPs\n\nTable 2: Drug loading into NPs and micelles.\n\nLoading | PLGA | PLA/PEG | EE %\nCurcumin | 61.91 ± 1.86 | 13.74 ± 0.97\n\nPayload (% µg/mg)\n2.81 ± 0.81 | 2.51 ± 0.57\n\nHigher Encapsulation Efficiency (EE%)\n\nFigure 4: Release profiles of CURC from PLGA NPs and PLA/PEG micelles.\n\nRelease (%)\n120.0\n80.0\n40.0\n0.0\nTime (h)\n0  5  10  15  20  25\n\nPLA/PEG CURC\nPLGA CURC\n\nSlower Release Rate\n\n3. Cytotoxicity & Antimicrobial Activity\n\nFigure 5: Cell viability (%) after 24 h treatment on NHDFs at a cell density of 3 × 10⁸ cells/mL.\n\nCell Viability (%)\n200.0\n160.0\n120.0\n80.0\n40.0\n0.0\n\nNPs Concentrations (µg/mL)\n0.0 0.12 0.19 0.37 1.25\n\nPLGA\nPLGA-CURC\n\nFigure 6: Bacterial reduction of S.epidermidis after 72h of treatment with CURC loaded PLGA NPs with a MIC of 0.1 mg/mL.\n\nReduction (R%)\n120.0\n80.0\n40.0\n0.0\n\nTime (h)\nPLGA    PLGA-CURC\n\nPLACEBO PLGA NPs | CURCUMIN PLGA NPs\n\n2h  | 2h\n4h  | 4h\n24h | 24h\n\nFigure 7: Fluorescence microscope images of placebo and CURC loaded PLGA NPs on NHDFs after 2, 4 and 24 h indicating cellular uptake.\n\n20x (images at 2h, 4h, 24h for both placebo and curcumin loaded NPs)"
+      },
+      {
+        "sectionTitle": "CONCLUSION",
+        "sectionContent": "• CURC loaded PLGA NPs were better candidates for controlled drug delivery due to hydrophobic interactions between the drug and the polymer.\n\n• No or slight cytotoxic effect of CURC NPs was observed on NHDFs with progressive cellular internalization of NPs.\n\n• The choice of polymer composition plays a key role in drug-polymer interactions and release kinetics to achieve more controlled delivery and improved therapeutic efficacy in regenerative medicine."
+      },
+      {
+        "sectionTitle": "REFERENCES",
+        "sectionContent": "(1) Vega-Vásquez, P. et al. Front. Bioeng. Biotechnol. 2020, 8, 2296-4185.\n(2) Fu, Y. S. et al. Biomed. Pharmacother. 2021, 141, 111888.\n(3) Chiesa et al., International Journal of Pharmaceutics, Volume 629, 2022, 122368, ISSN 0378-5173."
+      },
+      {
+        "sectionTitle": "ACKNOWLEDGEMENTS",
+        "sectionContent": "\"This project has received funding from the European Union's research and innovation programme under the Marie Skłodowska-Curie grant agreement No 101072645\"."
+      }
+    ]
+  },
+  "imageCaption": [
+    {
+      "caption1": "Figure 1: Antimicrobial Resistance mechanisms",
+      "caption2": "Illustrates three mechanisms by which bacteria develop resistance: efflux pump, drug inhibition, and mutation of binding sites"
+    },
+    {
+      "caption1": "Figure 2: Physical features of PLGA NPs and PLA/PEG micelles",
+      "caption2": "Bar graph showing hydrodynamic diameter (Dh in nm) and zeta potential (ζ in mV) for placebo and curcumin-loaded formulations of both PLGA and PLA/PEG systems"
+    },
+    {
+      "caption1": "Figure 3: TEM images",
+      "caption2": "Transmission electron microscopy images of (a) PLGA NPs, (b) CURC loaded PLGA NPs, (c) PLA-PEG micelles, and (d) CURC loaded PLA-PEG micelles. Scale bars: 200 nm"
+    },
+    {
+      "caption1": "Figure 4: Release profiles of CURC from PLGA NPs and PLA/PEG micelles",
+      "caption2": "Graph showing release percentage over time (hours), demonstrating higher encapsulation efficiency and slower release rate for PLGA compared to PLA/PEG systems"
+    },
+    {
+      "caption1": "Figure 5: Cell viability after 24 h treatment on NHDFs",
+      "caption2": "Bar graph showing cell viability percentage for placebo and curcumin-loaded PLGA nanoparticles at various NPs concentrations (0.03, 0.12, 0.19, 0.37, 1.25 µg/mL), demonstrating no significant cytotoxic effects at cell density of 3 × 10^8 cells/mL"
+    },
+    {
+      "caption1": "Figure 6: Bacterial reduction of S.epidermidis after 72h of treatment",
+      "caption2": "Bar graph showing reduction percentage over time for PLGA and PLGA-CURC treatments with MIC of 0.1 mg/mL, demonstrating approximately 94% bacterial reduction"
+    },
+    {
+      "caption1": "Figure 7: Fluorescence microscope images of cellular uptake",
+      "caption2": "Images showing placebo PLGA NPs and curcumin PLGA NPs on NHDFs after 2, 4 and 24 hours at 20x magnification, indicating progressive cellular internalization"
+    }
+  ],
+  "tableCaption": [
+    {
+      "caption1": "Table 1: Drug loading into NPs and micelles - synthesis parameters",
+      "caption2": "Type of Syringes (Terumo 5 mL), Final Volume (2 mL), Total Flow Rate (TFR in mL/min), Flow Rate Ratio (FRR aqueous/organic phase) for PLGA NPs (TFR: 8, 8; FRR: 4:1, 4:1) and PLA/PEG NPs (TFR: 3, 3; FRR: 3:1, 3:1)"
+    },
+    {
+      "caption1": "Table 2: Drug loading into NPs and micelles - loading efficiency",
+      "caption2": "Loading data for Curcumin in PLGA (EE%: 61.91 ± 1.86; Payload %µg/mg: 2.81 ± 0.81) and PLA/PEG (EE%: 13.74 ± 0.97; Payload %µg/mg: 2.51 ± 0.57), demonstrating higher encapsulation efficiency for PLGA"
+    }
+  ],
+  "domain": "Pharmaceutical Sciences"
+}

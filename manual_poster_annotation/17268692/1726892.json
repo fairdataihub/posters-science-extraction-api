@@ -1,0 +1,284 @@
+{
+  "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
+  "identifiers": [
+    {
+      "identifier": "10.5281/zenodo.17268692",
+      "identifierType": "DOI"
+    },
+    {
+      "identifier": "PS-2025-FAIR4RS-001",
+      "identifierType": "Other"
+    },
+    {
+      "identifier": "USRSE25-Poster-Actionable-FAIR4RS-TF.pdf",
+      "identifierType": "Other"
+    }
+  ],
+  "creators": [
+    {
+      "name": "Patel, Bhavesh",
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "https://orcid.org/0000-0002-0307-262X",
+          "nameIdentifierScheme": "ORCID",
+          "schemeURI": "https://orcid.org"
+        },
+        {
+          "nameIdentifier": "bpatel@calmi2.org",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "FAIR Data Innovations Hub, California Medical Innovations Institute, San Diego, CA, USA",
+          "affiliationIdentifier": "https://ror.org/0156zyn36",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    },
+    {
+      "name": "Garijo, Daniel",
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "https://orcid.org/0000-0003-0454-7145",
+          "nameIdentifierScheme": "ORCID",
+          "schemeURI": "https://orcid.org"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "Universidad Politécnica de Madrid, Spain",
+          "affiliationIdentifier": "https://ror.org/03ths8210",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    }
+  ],
+  "titles": [
+    {
+      "title": "Presenting the Actionable Guidelines for FAIR Research Software Task Force"
+    }
+  ],
+  "publisher": {
+    "name": "California Medical Innovations Institute",
+    "publisherIdentifier": "https://ror.org/0156zyn36",
+    "publisherIdentifierScheme": "ROR",
+    "schemeURI": "https://ror.org"
+  },
+  "publicationYear": 2025,
+  "subjects": [
+    {
+      "subject": "FAIR Principles"
+    },
+    {
+      "subject": "Research Software"
+    },
+    {
+      "subject": "Software Engineering"
+    },
+    {
+      "subject": "Reproducibility"
+    },
+    {
+      "subject": "Open Science"
+    },
+    {
+      "subject": "Metadata Standards"
+    },
+    {
+      "subject": "FAIR4RS"
+    },
+    {
+      "subject": "Research Software Alliance"
+    },
+    {
+      "subject": "ReSA"
+    }
+  ],
+  "dates": [
+    {
+      "date": "2025-10-04",
+      "dateType": "Created"
+    },
+    {
+      "date": "2025-10-05",
+      "dateType": "Available",
+      "dateInformation": "Published on Zenodo"
+    },
+    {
+      "date": "2025-10-05",
+      "dateType": "Issued"
+    },
+    {
+      "date": "2025-10-06T17:30:00-04:00",
+      "dateType": "Presented",
+      "dateInformation": "Poster presented at USRSE'25, Monday, October 6, 2025, at 5:30 pm EST, Hamilton location"
+    },
+    {
+      "date": "2025-10-06/2025-10-08",
+      "dateType": "Coverage",
+      "dateInformation": "US-RSE Conference 2025 dates"
+    }
+  ],
+  "language": "en",
+  "types": {
+    "resourceType": "Conference Poster",
+    "resourceTypeGeneral": "Image"
+  },
+  "relatedIdentifiers": [
+    {
+      "relatedIdentifier": "https://www.researchsoft.org/tf-actionable-fair4rs",
+      "relatedIdentifierType": "URL",
+      "relationType": "IsDocumentedBy",
+      "resourceTypeGeneral": "Text"
+    },
+    {
+      "relatedIdentifier": "https://github.com/researchsoft/Actionable-FAIR4RS",
+      "relatedIdentifierType": "URL",
+      "relationType": "IsSupplementedBy",
+      "resourceTypeGeneral": "Software"
+    },
+    {
+      "relatedIdentifier": "https://github.com/fairdataihub/actionableFAIR4RS-USRSE-2025",
+      "relatedIdentifierType": "URL",
+      "relationType": "IsSupplementedBy",
+      "resourceTypeGeneral": "Software"
+    },
+    {
+      "relatedIdentifier": "https://bit.ly/a-FAIR4RS",
+      "relatedIdentifierType": "URL",
+      "relationType": "IsSupplementedBy",
+      "resourceTypeGeneral": "Text"
+    },
+    {
+      "relatedIdentifier": "10.15497/RDA00068",
+      "relatedIdentifierType": "DOI",
+      "relationType": "Cites",
+      "resourceTypeGeneral": "Text"
+    },
+    {
+      "relatedIdentifier": "10.1038/s41597-023-02463-x",
+      "relatedIdentifierType": "DOI",
+      "relationType": "Cites",
+      "resourceTypeGeneral": "JournalArticle"
+    },
+    {
+      "relatedIdentifier": "10.1038/sdata.2016.18",
+      "relatedIdentifierType": "DOI",
+      "relationType": "Cites",
+      "resourceTypeGeneral": "JournalArticle"
+    },
+    {
+      "relatedIdentifier": "https://us-rse.org/usrse25/",
+      "relatedIdentifierType": "URL",
+      "relationType": "IsPartOf",
+      "resourceTypeGeneral": "Event"
+    },
+    {
+      "relatedIdentifier": "10.5281/zenodo.17268673",
+      "relatedIdentifierType": "DOI",
+      "relationType": "IsSupplementedBy",
+      "resourceTypeGeneral": "Text"
+    }
+  ],
+  "sizes": [
+    "A0 portrait",
+    "733.9 kB PDF"
+  ],
+  "formats": [
+    "application/pdf"
+  ],
+  "version": "1.0.0",
+  "rightsList": [
+    {
+      "rights": "Creative Commons Attribution 4.0 International",
+      "rightsUri": "https://creativecommons.org/licenses/by/4.0/",
+      "rightsIdentifier": "CC-BY-4.0",
+      "rightsIdentifierScheme": "SPDX",
+      "schemeUri": "https://spdx.org/licenses/"
+    }
+  ],
+  "descriptions": [
+    {
+      "description": "This poster presents the Actionable Guidelines for FAIR Research Software Task Force, established in December 2024 under the Research Software Alliance (ReSA). The Task Force addresses the challenge that FAIR4RS principles, while providing a framework for making research software Findable, Accessible, Interoperable, and Reusable, lack concrete implementation steps. Through a comprehensive, community-driven methodology involving six subgroups conducting literature reviews and community outreach, the Task Force aims to create actionable and domain-agnostic guidelines for implementing the FAIR4RS principles. The poster outlines the background, problem statement, proposed solution, current progress including preliminary findings on metadata for software reuse, and next steps toward releasing draft guidelines in March 2026 and the first official version in Summer 2026. The Task Force brings together approximately 12 active members from diverse international locations (Germany, Spain, UK, USA, etc.) and research domains (Biomedical, Data Science, Knowledge Representation, etc.).",
+      "descriptionType": "Abstract"
+    },
+    {
+      "description": "The Task Force is conducting literature reviews and community outreach through six subgroups, each addressing key categories: C1 (Identifier), C2 (Metadata for software publication & discovery), C3 (Standards for inputs & outputs), C4 (Qualified references), C5 (Metadata for software reuse), and C6 (License). The methodology includes personal assessment, literature review, and external feedback to establish answers for outstanding questions related to the 17 FAIR4RS principles. The subgroup working on category C5 has identified preliminary findings suggesting that provenance metadata (authors info, funding details) and other metadata (software description, required dependencies) are essential for software reuse, with codemeta.json identified as a method to provide this metadata.",
+      "descriptionType": "Methods"
+    },
+    {
+      "description": "Presented at the 3rd Annual Conference of the US Research Software Engineer Associate (USRSE'25) in Philadelphia, PA, USA, October 6-8, 2025. Conference theme: Code, Practices, and People.",
+      "descriptionType": "Other"
+    }
+  ],
+  "fundingReferences": [
+    {
+      "funderName": "Research Software Alliance (ReSA)"
+    },
+    {
+      "funderName": "California Medical Innovations Institute"
+    }
+  ],
+  "conference": {
+    "conferenceName": "US Research Software Engineering Conference 2025",
+    "conferenceLocation": "Philadelphia, Pennsylvania, USA",
+    "conferenceUri": "https://us-rse.org/usrse25/",
+    "conferenceStartDate": "2025-10-06",
+    "conferenceEndDate": "2025-10-08",
+    "conferenceAcronym": "USRSE'25",
+    "conferenceSeries": "US-RSE Annual Conference"
+  },
+  "posterContent": {
+    "posterTitle": "Presenting the Actionable Guidelines for FAIR Research Software Task Force",
+    "sections": [
+      {
+        "sectionTitle": "Background",
+        "sectionContent": "• Research software is a critical element of modern scientific research.\n\n• Making it FAIR (Findable, Accessible, Interoperable, and Reusable) is crucial to support reproducibility, transparency, sustainability, and scientific progress.\n\n• The FAIR4RS principles (2022) provide a framework to achieve this through unique identifiers, metadata, license, and more. They are now being adopted by researchers, organizations, and funders worldwide."
+      },
+      {
+        "sectionTitle": "Problem",
+        "sectionContent": "• By design, the FAIR4RS principles do not provide concrete implementation steps, making them difficult for developers to apply.\n\n• Field-specific guidelines, such as FAIR-BioRS (2023), exist but lack broad, cross-disciplinary input.\n\n• The 2 year community survey of the FAIR4RS principles confirmed the need for generalized actionable guidelines."
+      },
+      {
+        "sectionTitle": "Solution",
+        "sectionContent": "• To address that, we established the Actionable Guidelines for the FAIR Research Software (Actionable FAIR4RS) Task Force in December 2024 under the Research Software Alliance (ReSA).\n\n• The Task Force is run by a diverse international team of researchers and research software developers from various fields (Fig. 1).\n\n• Goal: Create actionable and domain-agnostic guidelines for implementing the FAIR4RS principles, through a comprehensive, community-driven methodology.\n\nFigure 1. Overview of the Task Force.\n\nHome of the Task Force\n\n~12 active members\n\nLocation: Germany, Spain, UK, USA, etc.\n\nResearch domains: Biomedical, Data Science, Knowledge Representation, etc."
+      },
+      {
+        "sectionTitle": "Progress",
+        "sectionContent": "• We began by conducting an in-depth analysis of the FAIR4RS principles and identified six key categories where actionable instructions are needed, each with a series of outstanding questions (Fig. 2).\n\n• Six subgroups are now conducting literature reviews and community outreach to answer these questions.\n\n• Fig. 3 illustrates the approach and preliminary findings from the subgroup working on category C5, including a preliminary list of metadata elements we believe are essential for software reuse and ways to include that metadata with software.\n\nFigure 2. Illustration of the outcomes of task 1 of the Task Force, which consisted of understanding the requirements of each of the 17 FAIR4RS principles.\n\n17 FAIR4RS principles → 6 main categories → Many questions!\n\nWe identified 6 categories where actionable guidelines are needed:\n- C1. Identifier\n- C2. Metadata for software publication & discovery\n- C3. Standards for inputs & outputs\n- C4. Qualified references\n- C5. Metadata for software reuse\n- C6. License\n\nFigure 3. Progress of the subgroup working on C5 - Metadata for software reuse.\n\n2 FAIR4RS principles → 2 main questions\n\n• R1. Software is described with a plurality of accurate and relevant attributes\n\n• R1.2. Software is associated with detailed provenance.\n\nQuestions:\n- What provenance and other metadata are necessary for software reuse?\n- How to provide that metadata?\n\nMethods:\n- Literature review\n- Personal assessment\n- External feedback\n\nPreliminary findings:\n\nProvenance metadata:\n- Authors info\n- Funding details\n\nOther metadata:\n- Software description\n- Required dependencies\n\nHow to provide:\ncodemeta.json"
+      },
+      {
+        "sectionTitle": "Next Steps",
+        "sectionContent": "• Dec 2025: Subgroups complete investigations to establish answers for outstanding questions.\n\n• Mar 2026: Release draft guidelines for broad community feedback.\n\n• Summer 2026: Publish the first official version of the Actionable FAIR4RS Guidelines.\n\n• Fall 2026: Transition to a maintained, living resource that evolves with community input."
+      },
+      {
+        "sectionTitle": "Get Involved!",
+        "sectionContent": "Are you a developer, maintainer, funder, or user of research software?\n\nEmail bpatel@calmi2.org to join us and help build the foundation for FAIR research software!"
+      },
+      {
+        "sectionTitle": "Join the Task Force!",
+        "sectionContent": "Email: bpatel@calmi2.org\n\nFind this poster and all related references here: bit.ly/a-FAIR4RS\n\nwww.researchsoft.org/tf-actionable-fair4rs"
+      }
+    ]
+  },
+  "imageCaption": [
+    {
+      "caption1": "Figure 1. Overview of the Task Force",
+      "caption2": "Shows approximately 12 active members from various locations (Germany, Spain, UK, USA, etc.) and research domains (Biomedical, Data Science, Knowledge Representation, etc.). Home of the Task Force under the Research Software Alliance (ReSA)."
+    },
+    {
+      "caption1": "Figure 2. Illustration of the outcomes of task 1 of the Task Force",
+      "caption2": "Understanding the requirements of each of the 17 FAIR4RS principles. We identified 6 categories where actionable guidelines are needed: C1 (Identifier), C2 (Metadata for software publication & discovery), C3 (Standards for inputs & outputs), C4 (Qualified references), C5 (Metadata for software reuse), C6 (License)."
+    },
+    {
+      "caption1": "Figure 3. Progress of the subgroup working on C5 - Metadata for software reuse",
+      "caption2": "Shows the flow from 2 FAIR4RS principles (R1: Software is described with a plurality of accurate and relevant attributes; R1.2: Software is associated with detailed provenance) to 2 main questions about provenance and metadata, through methods (literature review, personal assessment, external feedback) to preliminary findings including provenance metadata (authors info, funding details), other metadata (software description, required dependencies), and how to provide it via codemeta.json."
+    }
+  ],
+  "domain": "Computer Science"
+}

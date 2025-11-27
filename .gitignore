@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Model cache
+.cache/
+*.bin
+*.safetensors
+
+# Output directories (keep example_output)
+output/
+llama_v*_output/
+
+# OS
+.DS_Store
+Thumbs.db
+

@@ -1,0 +1,322 @@
+{
+  "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
+  "identifiers": [
+    {
+      "identifier": "10.5281/zenodo.15963941",
+      "identifierType": "DOI"
+    },
+    {
+      "identifier": "PS-2025-UNICA-SIV-001",
+      "identifierType": "Other"
+    },
+    {
+      "identifier": "Poster DETTORI LAURA SIV ISV.pdf",
+      "identifierType": "Other"
+    }
+  ],
+  "creators": [
+    {
+      "name": "Dettori, Laura",
+      "nameType": "Personal",
+      "affiliation": [
+        {
+          "name": "National PhD Programme in One Health approaches to infectious diseases and life science research, Department of Public Health, Experimental and Forensic Medicine, University of Pavia, Pavia, 27100, Italy",
+          "affiliationIdentifier": "https://ror.org/00pz8jp65",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        },
+        {
+          "name": "Department of Life and Environmental Sciences, University of Cagliari, 09042, Monserrato, Italy",
+          "affiliationIdentifier": "https://ror.org/03pe5gz90",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    },
+    {
+      "name": "Malune, Paolo",
+      "nameType": "Personal",
+      "affiliation": [
+        {
+          "name": "Department of Life and Environmental Sciences, University of Cagliari, 09042, Monserrato, Italy",
+          "affiliationIdentifier": "https://ror.org/03pe5gz90",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    },
+    {
+      "name": "Cara, Marta Maria",
+      "nameType": "Personal",
+      "affiliation": [
+        {
+          "name": "National PhD Programme in One Health approaches to infectious diseases and life science research, Department of Public Health, Experimental and Forensic Medicine, University of Pavia, Pavia, 27100, Italy",
+          "affiliationIdentifier": "https://ror.org/00pz8jp65",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        },
+        {
+          "name": "Department of Life and Environmental Sciences, University of Cagliari, 09042, Monserrato, Italy",
+          "affiliationIdentifier": "https://ror.org/03pe5gz90",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    },
+    {
+      "name": "Nieddu, Salvatore",
+      "nameType": "Personal",
+      "affiliation": [
+        {
+          "name": "Department of Life and Environmental Sciences, University of Cagliari, 09042, Monserrato, Italy",
+          "affiliationIdentifier": "https://ror.org/03pe5gz90",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    },
+    {
+      "name": "Tramontano, Enzo",
+      "nameType": "Personal",
+      "affiliation": [
+        {
+          "name": "Department of Life and Environmental Sciences, University of Cagliari, 09042, Monserrato, Italy",
+          "affiliationIdentifier": "https://ror.org/03pe5gz90",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    },
+    {
+      "name": "Esposito, Francesca",
+      "nameType": "Personal",
+      "affiliation": [
+        {
+          "name": "Department of Life and Environmental Sciences, University of Cagliari, 09042, Monserrato, Italy",
+          "affiliationIdentifier": "https://ror.org/03pe5gz90",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    }
+  ],
+  "titles": [
+    {
+      "title": "Optimization and Validation of a Biochemical Fret Assay For the Exonuclease Activity of SARS CoV-2 nsp14-nsp10 Complex"
+    }
+  ],
+  "publisher": {
+    "name": "Zenodo",
+    "publisherIdentifier": "https://ror.org/04wxnsj81",
+    "publisherIdentifierScheme": "ROR",
+    "schemeURI": "https://ror.org"
+  },
+  "publicationYear": 2025,
+  "subjects": [
+    {
+      "subject": "nsp14-nsp10 complex"
+    },
+    {
+      "subject": "FRET assay"
+    },
+    {
+      "subject": "antiviral drug discovery"
+    },
+    {
+      "subject": "SARS-CoV-2",
+      "subjectScheme": "MeSH"
+    },
+    {
+      "subject": "Antiviral Agents",
+      "subjectScheme": "MeSH"
+    },
+    {
+      "subject": "COVID-19"
+    },
+    {
+      "subject": "Exonuclease"
+    },
+    {
+      "subject": "Proofreading mechanism"
+    },
+    {
+      "subject": "Biochemical assay"
+    },
+    {
+      "subject": "Antiviral inhibitors"
+    }
+  ],
+  "dates": [
+    {
+      "date": "2025-06-22",
+      "dateType": "Created",
+      "dateInformation": "Date mentioned in Zenodo metadata"
+    },
+    {
+      "date": "2025-07-16",
+      "dateType": "Available",
+      "dateInformation": "Published on Zenodo"
+    },
+    {
+      "date": "2025-07-16",
+      "dateType": "Issued"
+    },
+    {
+      "date": "2025-06-22/2025-06-24",
+      "dateType": "Presented",
+      "dateInformation": "Presented at SIV-ISV 2025 conference"
+    },
+    {
+      "date": "2025-06-22/2025-06-24",
+      "dateType": "Coverage",
+      "dateInformation": "9th National Congress of the Italian Society for Virology dates"
+    }
+  ],
+  "language": "en",
+  "types": {
+    "resourceType": "Conference Poster",
+    "resourceTypeGeneral": "Image"
+  },
+  "relatedIdentifiers": [
+    {
+      "relatedIdentifier": "https://congressosivisv.com/",
+      "relatedIdentifierType": "URL",
+      "relationType": "IsPartOf",
+      "resourceTypeGeneral": "Event"
+    },
+    {
+      "relatedIdentifier": "10.5281/zenodo.15963940",
+      "relatedIdentifierType": "DOI",
+      "relationType": "IsVersionOf",
+      "resourceTypeGeneral": "Image"
+    },
+    {
+      "relatedIdentifier": "10.1038/s41418-021-00900-1",
+      "relatedIdentifierType": "DOI",
+      "relationType": "Cites",
+      "resourceTypeGeneral": "JournalArticle"
+    },
+    {
+      "relatedIdentifier": "10.3390/v15071539",
+      "relatedIdentifierType": "DOI",
+      "relationType": "Cites",
+      "resourceTypeGeneral": "JournalArticle"
+    },
+    {
+      "relatedIdentifier": "https://siv-isv.org",
+      "relatedIdentifierType": "URL",
+      "relationType": "IsDocumentedBy",
+      "resourceTypeGeneral": "Text"
+    }
+  ],
+  "sizes": [
+    "750.7 kB PDF"
+  ],
+  "formats": [
+    "application/pdf"
+  ],
+  "version": "v1",
+  "rightsList": [
+    {
+      "rights": "Creative Commons Attribution 4.0 International",
+      "rightsUri": "https://creativecommons.org/licenses/by/4.0/",
+      "rightsIdentifier": "CC-BY-4.0",
+      "rightsIdentifierScheme": "SPDX",
+      "schemeUri": "https://spdx.org/licenses/"
+    }
+  ],
+  "descriptions": [
+    {
+      "description": "SARS-CoV-2, the virus responsible for COVID-19, has one of the longest RNA genomes among RNA viruses. To correct replication errors, it uses a unique proofreading mechanism involving the nsp14 protein, which has 3'-5' exonuclease activity, assisted by the cofactor nsp10. Currently, there are no drugs targeting this function. To support antiviral research, nsp14 and nsp10 were expressed and purified in E. Coli cells, and a FRET-based biochemical assay was developed to study their exonuclease activity, as previously mentioned in the literature. This system lays the groundwork for identifying future inhibitors of the nsp14-nsp10 complex. Optimization of the biochemical assay of the enzyme nsp14-10 allowed the development of a sensitive, reproducible, and effective method to study the activity of this enzyme complex. A compound known in the literature as an inhibitor of the nsp14-10 complex (Dynasore NO-Cat, IC50 = 3.3 μM ± 0.4) was used to validate the assay. This result represents an important step in furthering the biochemical characterization of nsp14-10 and facilitating future screening activities for potential inhibitors, with possible implications in the development of new antiviral strategies.",
+      "descriptionType": "Abstract"
+    },
+    {
+      "description": "The workflow involved: 1) Size-exclusion chromatography (SEC) purification of nsp10 and nsp14 proteins expressed in E. Coli, 2) pH optimization showing optimal activity at pH 7.5, 3) MgCl2 concentration optimization showing optimal activity at 4 mM MgCl2, 4) Enzymatic activity curve testing with nsp14 250 nM + nsp10 750 nM at different enzyme concentrations (2000, 1000, 500, 250, 125, 62.5, 31.2, 15.6 nM), 5) Substrate concentration curve testing at 1 μM substrate concentration with varying substrate amounts (2000, 1000, 500, 250, 125, 62.5, 31.2, 15.6 nM), 6) Inhibition assay using Dynasore NO-Cat showing IC50 = 3.3 μM ± 0.4.",
+      "descriptionType": "Methods"
+    },
+    {
+      "description": "Presented at the 9th National Congress of the Italian Society for Virology (SIV-ISV), June 22-24, 2025, Turin, Italy, at Lingotto Convention Center.",
+      "descriptionType": "Other"
+    }
+  ],
+  "fundingReferences": [
+    {
+      "funderName": "European Commission",
+      "funderIdentifier": "https://doi.org/10.13039/501100000780",
+      "funderIdentifierType": "Crossref Funder ID",
+      "schemeUri": "https://www.crossref.org/services/funder-registry/",
+      "awardNumber": "101137192",
+      "awardUri": "https://cordis.europa.eu/project/id/101137192",
+      "awardTitle": "AVITHRAPID - Antiviral Therapeutics for Rapid Response Against Pandemic Infectious Diseases"
+    },
+    {
+      "funderName": "Italian Ministry of University and Research (MUR)",
+      "awardNumber": "PE00000007",
+      "awardTitle": "NextGenerationEU-MUR PNRR Extended Partnership initiative on Emerging Infectious Diseases (INF-ACT), spoke 5"
+    }
+  ],
+  "conference": {
+    "conferenceName": "9th National Congress of the Italian Society for Virology",
+    "conferenceLocation": "Turin, Italy (Lingotto Convention Center, Via Nizza, 280)",
+    "conferenceUri": "https://congressosivisv.com/",
+    "conferenceStartDate": "2025-06-22",
+    "conferenceEndDate": "2025-06-24",
+    "conferenceAcronym": "SIV-ISV 2025"
+  },
+  "posterContent": {
+    "posterTitle": "OPTIMIZATION AND VALIDATION OF A BIOCHEMICAL FRET ASSAY FOR THE EXONUCLEASE ACTIVITY OF SARS COV-2 NSP14-NSP10 COMPLEX",
+    "sections": [
+      {
+        "sectionTitle": "INTRODUCTION",
+        "sectionContent": "SARS-CoV-2, the virus responsible for COVID-19, has one of the longest RNA genomes among RNA viruses. To correct replication errors, it uses a unique proofreading mechanism involving the nsp14 protein, which has 3'-5' exonuclease activity, assisted by the cofactor nsp10. Currently, there are no drugs targeting this function. To support antiviral research, nsp14 and nsp10 were expressed and purified in E. Coli cells, and a FRET-based biochemical assay was developed to study their exonuclease activity, as previously mentioned in the literature [1]. This system lays the groundwork for identifying future inhibitors of the nsp14-nsp10 complex."
+      },
+      {
+        "sectionTitle": "WORKFLOW",
+        "sectionContent": "1. Expression and purification\n2. Size-exclusion chromatography\n3. FRET-based biochemical assay optimization\n4. Enzyme activity characterization\n5. Inhibitor screening"
+      },
+      {
+        "sectionTitle": "RESULTS",
+        "sectionContent": "1. Size-exclusion chromatography (SEC)\n\nnsp14\n- Chromatography profile showing purified nsp14 protein\n- SDS-PAGE gel confirming protein purity\n\nnsp10\n- Chromatography profile showing purified nsp10 protein\n- SDS-PAGE gel confirming protein purity\n\n2. pH dose-dependent\n\nOptimal pH determination for enzymatic activity\n\nRFU vs pH\n- pH range tested: 6-10\n- Optimal pH: 7.5\n\n3. MgCl₂ dose-dependent\n\nOptimal magnesium concentration for enzymatic activity\n\nRFU vs [MgCl2]\n- MgCl₂ concentration range tested: 0-10 mM\n- Optimal MgCl₂: 4 mM\n\n4. Enzymatic activity curve\n\nConditions:\n- nsp14 250 nM + nsp10 750 nM\n- Substrate concentration 1 μM\n- pH 7.5\n- MgCl₂ 4 mM\n\n[Nsp14] concentrations tested:\n- 2000 nM\n- 1000 nM\n- 500 nM\n- 250 nM\n- 125 nM\n- 62.5 nM\n- 31.2 nM\n- 15.6 nM\n\nResults:\n- Time course: 0-80 minutes\n- RFU measured over time showing dose-dependent activity\n\n5. Substrate concentration curve\n\nConditions:\n- nsp14 250 nM + nsp10 750 nM\n- Substrate concentration 1 μM\n- pH 7.5\n- MgCl₂ 4 mM\n\n[S] concentrations tested:\n- 2000 nM\n- 1000 nM\n- 500 nM\n- 250 nM\n- 125 nM\n- 62.5 nM\n- 31.2 nM\n- 15.6 nM\n\nResults:\n- Time course: 0-90 minutes\n- RFU measured showing substrate concentration-dependent activity\n\n6. Inhibition Dynasore NO-Cat curve\n\nDynasore NO-Cat\n\nDose-response inhibition curve\n\nResults:\n- IC₅₀ = 3.3 μM ± 0.4\n- % of residual enzymatic activity vs inhibitor concentration (0.01-100 μM)\n- Complete inhibition observed at higher concentrations"
+      },
+      {
+        "sectionTitle": "CONCLUSIONS",
+        "sectionContent": "Optimization of the biochemical assay of the enzyme nsp14-10 allowed the development of a sensitive, reproducible, and effective method to study the activity of this enzyme complex. A compound known in the literature as an inhibitor of the nsp14-10 complex was used [2]. This result represents an important step in furthering the biochemical characterization of nsp14-10 and facilitating future screening activities for potential inhibitors, with possible implications in the development of new antiviral strategies."
+      },
+      {
+        "sectionTitle": "REFERENCES",
+        "sectionContent": "[1] Rona G, Zeke A et al. The NSP14/NSP10 RNA repair complex as a Pan-coronavirus therapeutic target. Cell Death Differ. 2022 Feb;29(2):285-292.\n\n[2] Asthana, A.; Corona, A.; et al. Analogs of the Catechol Derivative Dynasore Inhibit HIV-1 Ribonuclease H, SARS-CoV-2 nsp14 Exoribonuclease, and Virus Replication. Viruses 2023, 15, 1539."
+      },
+      {
+        "sectionTitle": "ACKNOWLEDGMENTS",
+        "sectionContent": "This research was supported by EU funding within the NextGenerationEU-MUR PNRR Extended Partnership initiative on Emerging Infectious Diseases (Project no. PE00000007, INF-ACT), spoke 5. AVITHRAPID: Antiviral Therapeutics for Rapid Response Against Pandemic Infectious Diseases\" project n. 101137192 - HORIZON-HLTH-2023-DISEASE-03, finanziato nell'ambito del programma HORIZON EUROPE - CUP F23C23000820006."
+      }
+    ]
+  },
+  "imageCaption": [
+    {
+      "caption1": "Figure 1. Size-exclusion chromatography (SEC) results",
+      "caption2": "Shows purification of nsp14 and nsp10 proteins with corresponding SDS-PAGE gels confirming protein purity and size."
+    },
+    {
+      "caption1": "Figure 2. pH dose-dependent optimization",
+      "caption2": "Graph showing relative fluorescence units (RFU) across pH range 6-10, with optimal activity at pH 7.5."
+    },
+    {
+      "caption1": "Figure 3. MgCl2 dose-dependent optimization",
+      "caption2": "Graph showing RFU across MgCl2 concentrations 0-10 mM, with optimal activity at 4 mM MgCl2."
+    },
+    {
+      "caption1": "Figure 4. Enzymatic activity curve",
+      "caption2": "Time course showing RFU over 80 minutes at various nsp14 concentrations (2000, 1000, 500, 250, 125, 62.5, 31.2, 15.6 nM) with nsp14 250 nM + nsp10 750 nM."
+    },
+    {
+      "caption1": "Figure 5. Substrate concentration curve",
+      "caption2": "Graph showing activity with substrate concentrations from 2000 nM to 15.6 nM, with optimal response at 1 μM substrate concentration."
+    },
+    {
+      "caption1": "Figure 6. Inhibition Dynasore NO-Cat curve",
+      "caption2": "Dose-response inhibition curve showing percentage of residual enzymatic activity versus inhibitor concentration (0.01 to 100 μM), yielding IC50 = 3.3 μM ± 0.4."
+    }
+  ],
+  "domain": "Virology"
+}

@@ -1,0 +1,124 @@
+{
+  "creators": [
+    {
+      "name": "Toker, Michael",
+      "affiliation": [
+        {
+          "name": "Technion − Israel Institute of Technology"
+        }
+      ]
+    },
+    {
+      "name": "Mishali, Oren",
+      "affiliation": [
+        {
+          "name": "Technion − Israel Institute of Technology"
+        }
+      ]
+    },
+    {
+      "name": "Cohen, Adir",
+      "affiliation": [
+        {
+          "name": "Technion − Israel Institute of Technology"
+        }
+      ]
+    },
+    {
+      "name": "Munz-Manor, Ophir",
+      "affiliation": [
+        {
+          "name": "The Open University of Israel"
+        }
+      ]
+    },
+    {
+      "name": "Kimelfeld, Benny",
+      "affiliation": [
+        {
+          "name": "Technion − Israel Institute of Technology"
+        }
+      ]
+    },
+    {
+      "name": "Belinkov, Yonatan",
+      "affiliation": [
+        {
+          "name": "Technion − Israel Institute of Technology"
+        }
+      ]
+    }
+  ],
+  "titles": [
+    {
+      "title": "A Dataset for Metaphor Detection in Early Medieval Hebrew Poetry"
+    }
+  ],
+  "posterContent": {
+    "posterTitle": "A Dataset for Metaphor Detection in Early Medieval Hebrew Poetry",
+    "sections": [
+      {
+        "sectionTitle": "Abstract",
+        "sectionContent": "The corpus of late antique and medieval Hebrew is vast and represents a crucial linguistic and cultural bridge between Biblical and modern Hebrew. Poetry is prominent in texts from these time periods and one of its characteristics is the use of metaphor. Distinguishing ﬁgurative and literal words or phrases is a major task for scholars in the Humanities, especially in the ﬁelds of literature, linguistics, and hermeneutics. We present a new, challenging dataset of early medieval Hebrew poetry with expert annotations of metaphors with baseline results."
+      },
+      {
+        "sectionTitle": "The Dataset",
+        "sectionContent": "• Early medieval Hebrew poems. • 180 labeled texts, 7,000 sentences, 45,000 words. • 15% of the words are metaphors."
+      },
+      {
+        "sectionTitle": "Hebrew English Meaning",
+        "sectionContent": "‫ים‬ ‫כשטופי‬ ‫בגזרות,‬ ‫טבענו‬ We drowned in decrees, like sea washed There are too many decrees\n‫נר‬ ‫ויבער‬ ‫נשמה‬ ‫הצית‬ Ignite a soul, ﬁre a candle Create a soul\n‫פרי‬ ‫עשו‬ ‫לא‬ ‫עשירי‬ ‫דור‬ ‫עד‬ Until the tenth generation they did not bear fruit\nInter Annotator Agreement\nFor ten generations, they did no good deeds"
+      },
+      {
+        "sectionTitle": "Inter Annotator Agreement",
+        "sectionContent": "Inter-annotator agreement evaluates how consistently diﬀerent annotators label data for NLP research (measured in Cohen’s kappa). The score for our dataset is 0.618 (considered substantial)."
+      },
+      {
+        "sectionTitle": "Methods",
+        "sectionContent": "LM adaptation Fine-tuning for metaphor detection\nMetaphor\nMetaphor\nMetaphor\nNot a Metaphor\nNot a Metaphor\nPre-trained/Adapted Language Model\n‫עיצ_‬ ‫_בון‬ ‫במשלח‬ ‫ידי_‬ ‫_נו‬\n‫במשלח‬ ‫עיצ_‬\nPre-trained Language Model\n<mask> ‫_בון‬ <mask> ‫ידי_‬ ‫_נו‬\n‫עיצ_‬ ‫_בון‬ ‫במשלח‬ ‫ידי_‬ ‫_נו‬"
+      },
+      {
+        "sectionTitle": "Language models (pre-trained & adapted)",
+        "sectionContent": "BEREL 220 Milion Medieval\nAlephBERT 2 Bilion Modern\nAlephBERT Adapted\nData Size (words) Data Type\n2 Bilion + 10 Milion\nModern + Medieval\nTrained on additional prose and poetic medieval texts (Project Ben-Yehuda*) + Piyyut dataset"
+      },
+      {
+        "sectionTitle": "Tokenizer",
+        "sectionContent": "Tokenizer\n‫ידינו‬ ‫במשלח‬ ‫עיצבון‬"
+      },
+      {
+        "sectionTitle": "Error Analysis Results",
+        "sectionContent": "• AlephBERT is outperformed by AlephBERT Adapted. • BEREL, pre-trained on medieval texts, shows the best results.\n49\n36.75\n24.5\n12.25\n0\n46.56 48.3 44.404\nAlephBERT BEREL AlephBERT - adapted\nf1 Score on test set\n‫ידינו‬ ‫במשלח‬ ‫עיצבון‬"
+      },
+      {
+        "sectionTitle": "Expert explanation",
+        "sectionContent": "Berel\n‫חשקתיו‬ ‫לניחוח‬ ‫ילד‬\nBerel\n‫חשקתיו‬ ‫לניחוח‬ ‫ילד‬\n(A child for a scent - I have desired)\nExpert explanation: The child is a non-metaphorical epithet for Isaac. “Scent” is a metonymic term for “sacriﬁce”."
+      },
+      {
+        "sectionTitle": "Key Findings",
+        "sectionContent": "• AlephBERT is outperformed by AlephBERT Adapted.\n• BEREL, pre-trained on medieval texts, shows the best results."
+      },
+      {
+        "sectionTitle": "References",
+        "sectionContent": "1. Project Ben-Yehuda is a volunteer-based online library of free Hebrew literature."
+      },
+      {
+        "sectionTitle": "Contact",
+        "sectionContent": "Michael Toker (tok@cs.technion.ac.il), Oren Mishali (omishali@cs.technion.ac.il), Adir Cohen (adircohen@campus.technion.ac.il), Ophir Munz-Manor (ophirmm@openu.ac.il), Benny Kimelfeld (bennyk@cs.technion.ac.il), Yonatan Belinkov (belinkov@technion.ac.il)"
+      },
+      {
+        "sectionTitle": "Funding",
+        "sectionContent": "No funding information provided"
+      }
+    ]
+  },
+  "imageCaption": [
+    {
+      "caption1": "A medieval Hebrew poem from the Worms Prayerbook, Germany, 13th Century, The National Library of Israel, \"Ktiv\" Project"
+    }
+  ],
+  "tableCaption": [
+    {
+      "caption1": "Error Analysis Results"
+    }
+  ]
+}

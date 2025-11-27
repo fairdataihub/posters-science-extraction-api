@@ -1,0 +1,351 @@
+{
+  "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
+  "identifiers": [
+    {
+      "identifier": "10.5281/zenodo.8228476",
+      "identifierType": "DOI"
+    },
+    {
+      "identifier": "PS-2023-DH-METAPHOR-001",
+      "identifierType": "Other"
+    },
+    {
+      "identifier": "M_nz_Manor_Metaphor-Detection-in-Early-Medieval-Hebrew-Poetry.pdf",
+      "identifierType": "Other"
+    }
+  ],
+  "creators": [
+    {
+      "name": "Münz-Manor, Ophir",
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "https://orcid.org/0000-0001-6333-345X",
+          "nameIdentifierScheme": "ORCID",
+          "schemeURI": "https://orcid.org"
+        },
+        {
+          "nameIdentifier": "ophirmm@openu.ac.il",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "The Open University of Israel, Ra'anana, Israel",
+          "affiliationIdentifier": "https://ror.org/027z64205",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    },
+    {
+      "name": "Toker, Michael",
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "tok@cs.technion.ac.il",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "Technion – Israel Institute of Technology, Haifa, Israel",
+          "affiliationIdentifier": "https://ror.org/03qryx823",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    },
+    {
+      "name": "Mishali, Oren",
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "omishali@cs.technion.ac.il",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "Technion – Israel Institute of Technology, Haifa, Israel",
+          "affiliationIdentifier": "https://ror.org/03qryx823",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    },
+    {
+      "name": "Kimmelfeld, Benny",
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "bennyk@cs.technion.ac.il",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "Technion – Israel Institute of Technology, Haifa, Israel",
+          "affiliationIdentifier": "https://ror.org/03qryx823",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    },
+    {
+      "name": "Belinkov, Yonatan",
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "https://orcid.org/0000-0001-9463-2575",
+          "nameIdentifierScheme": "ORCID",
+          "schemeURI": "https://orcid.org"
+        },
+        {
+          "nameIdentifier": "belinkov@technion.ac.il",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "Technion – Israel Institute of Technology, Haifa, Israel",
+          "affiliationIdentifier": "https://ror.org/03qryx823",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    },
+    {
+      "name": "Cohen, Adir",
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "adircohen@campus.technion.ac.il",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "Technion – Israel Institute of Technology, Haifa, Israel",
+          "affiliationIdentifier": "https://ror.org/03qryx823",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    }
+  ],
+  "titles": [
+    {
+      "title": "A Dataset for Metaphor Detection in Early Medieval Hebrew Poetry"
+    },
+    {
+      "title": "FigureOut - Automatic Detection of Metaphors in Hebrew Across the Eras",
+      "titleType": "AlternativeTitle"
+    }
+  ],
+  "publisher": {
+    "name": "Zenodo",
+    "publisherIdentifier": "https://ror.org/04wxnsj81",
+    "publisherIdentifierScheme": "ROR",
+    "schemeURI": "https://ror.org"
+  },
+  "publicationYear": 2023,
+  "subjects": [
+    {
+      "subject": "NLP"
+    },
+    {
+      "subject": "Computational Literary Studies"
+    },
+    {
+      "subject": "Metaphor"
+    },
+    {
+      "subject": "Deep Machine Learning"
+    },
+    {
+      "subject": "Annotation"
+    },
+    {
+      "subject": "Artificial Intelligence and Machine Learning"
+    },
+    {
+      "subject": "Natural Language Processing"
+    },
+    {
+      "subject": "Rhetorical Analysis"
+    },
+    {
+      "subject": "Semantic Analysis"
+    },
+    {
+      "subject": "Computer Science"
+    },
+    {
+      "subject": "Literary Studies"
+    },
+    {
+      "subject": "Theology and Religious Studies"
+    },
+    {
+      "subject": "Hebrew Poetry"
+    },
+    {
+      "subject": "Medieval Hebrew"
+    },
+    {
+      "subject": "Piyyut"
+    },
+    {
+      "subject": "Language Models"
+    },
+    {
+      "subject": "BERT"
+    },
+    {
+      "subject": "Digital Humanities"
+    }
+  ],
+  "dates": [
+    {
+      "date": "2023-06-30",
+      "dateType": "Created"
+    },
+    {
+      "date": "2023-06-30",
+      "dateType": "Available"
+    },
+    {
+      "date": "2023-06-30",
+      "dateType": "Issued"
+    },
+    {
+      "date": "2023-07-10/2023-07-14",
+      "dateType": "Presented",
+      "dateInformation": "Poster presented at DH2023"
+    },
+    {
+      "date": "2024-07-11",
+      "dateType": "Updated"
+    }
+  ],
+  "language": "en",
+  "types": {
+    "resourceType": "Conference Poster",
+    "resourceTypeGeneral": "Image"
+  },
+  "relatedIdentifiers": [
+    {
+      "relatedIdentifier": "10.5281/zenodo.8107795",
+      "relatedIdentifierType": "DOI",
+      "relationType": "IsSupplementTo",
+      "resourceTypeGeneral": "ConferencePaper"
+    },
+    {
+      "relatedIdentifier": "10.5281/zenodo.8228475",
+      "relatedIdentifierType": "DOI",
+      "relationType": "IsVersionOf",
+      "resourceTypeGeneral": "Image"
+    }
+  ],
+  "sizes": [
+    "2.7 MB PDF"
+  ],
+  "formats": [
+    "application/pdf"
+  ],
+  "version": "v1",
+  "rightsList": [
+    {
+      "rights": "Creative Commons Attribution 4.0 International",
+      "rightsUri": "https://creativecommons.org/licenses/by/4.0/",
+      "rightsIdentifier": "CC-BY-4.0",
+      "rightsIdentifierScheme": "SPDX",
+      "schemeUri": "https://spdx.org/licenses/"
+    }
+  ],
+  "descriptions": [
+    {
+      "description": "The corpus of late antique and medieval Hebrew is vast and represents a crucial linguistic and cultural bridge between Biblical and modern Hebrew. Poetry is prominent in texts from these time periods and one of its characteristics is the use of metaphor. Distinguishing figurative and literal words or phrases is a major task for scholars in the Humanities, especially in the fields of literature, linguistics, and hermeneutics. We present a new, challenging dataset of early medieval Hebrew poetry with expert annotations of metaphors with baseline results. The dataset contains 180 labeled texts, 7,000 sentences, and 45,000 words, with 15% of the words being metaphors. Inter-annotator agreement measured by Cohen's kappa is 0.618 (considered substantial).",
+      "descriptionType": "Abstract"
+    },
+    {
+      "description": "Three language models were used: BEREL (pre-trained on 220 million words of medieval texts), AlephBERT (pre-trained on 2 billion words of modern Hebrew), and AlephBERT Adapted (trained on 2 billion words of modern Hebrew plus 10 million words of medieval texts from Project Ben-Yehuda and the Piyyut dataset). Fine-tuning for metaphor detection was performed using tokenizers with metaphor/not-a-metaphor classification. Language model adaptation involved training on additional prose and poetic medieval texts.",
+      "descriptionType": "Methods"
+    },
+    {
+      "description": "Poster presented at Digital Humanities 2023: Collaboration as Opportunity (DH2023), Graz, Austria, July 10-14, 2023. The poster introduces a new, challenging dataset in Hebrew and seeks to extend automatic metaphor detection capabilities in pre-modern Hebrew.",
+      "descriptionType": "Other"
+    },
+    {
+      "description": "Project Ben-Yehuda is a volunteer-based online library of free Hebrew literature used as a source for medieval texts in the adapted language model training.",
+      "descriptionType": "TechnicalInfo"
+    }
+  ],
+  "fundingReferences": [],
+  "conference": {
+    "conferenceName": "Digital Humanities 2023: Collaboration as Opportunity",
+    "conferenceLocation": "Graz, Austria",
+    "conferenceStartDate": "2023-07-10",
+    "conferenceEndDate": "2023-07-14",
+    "conferenceAcronym": "DH2023"
+  },
+  "posterContent": {
+    "posterTitle": "A Dataset for Metaphor Detection in Early Medieval Hebrew Poetry",
+    "sections": [
+      {
+        "sectionTitle": "Introduction",
+        "sectionContent": "The corpus of late antique and medieval Hebrew is vast and represents a crucial linguistic and cultural bridge between Biblical and modern Hebrew. Poetry is prominent in texts from these time periods and one of its characteristics is the use of metaphor. Distinguishing figurative and literal words or phrases is a major task for scholars in the Humanities, especially in the fields of literature, linguistics, and hermeneutics. We present a new, challenging dataset of early medieval Hebrew poetry with expert annotations of metaphors with baseline results.\n\nImage: A medieval Hebrew poem from the Worms Prayerbook, Germany, 13th Century, The National Library of Israel, \"Ktiv\" Project"
+      },
+      {
+        "sectionTitle": "The Dataset",
+        "sectionContent": "• Early medieval Hebrew poems.\n• 180 labeled texts, 7,000 sentences, 45,000 words.\n• 15% of the words are metaphors.\n\nExamples of Metaphors\n\n| Hebrew | English | Meaning |\n|--------|---------|----------|\n| טבענו בגזרות, כשטופי ים | We drowned in decrees, like sea washed | There are too many decrees |\n| הצית נשמה ויבער נר | Ignite a soul, fire a candle | Create a soul |\n| עד דור עשירי לא עשו פרי | Until the tenth generation they did not bear fruit | For ten generations, they did no good deeds |\n\nInter Annotator Agreement\n\nInter-annotator agreement evaluates how consistently different annotators label data for NLP research (measured in Cohen's kappa). The score for our dataset is 0.618 (considered substantial)."
+      },
+      {
+        "sectionTitle": "Methods",
+        "sectionContent": "Fine-tuning for metaphor detection\n\nProcess flow:\n1. Pre-trained/Adapted Language Model\n2. Tokenizer\n3. Classification: Metaphor / Not a Metaphor\n\nExample:\n- Input: עיצבון במשלח ידינו\n- Tokenized: עיצ_ _בון במשלח ידי_ _נו\n- Output: Metaphor / Not a Metaphor labels\n\nLM adaptation\n\nProcess flow:\n1. Pre-trained Language Model\n2. Masked language modeling\n   - Input: עיצבון במשלח ידינו\n   - Masked: עיצ_ <mask> בון <mask> ידי_ _נו\n3. Tokenizer\n4. Output: עיצבון במשלח ידינו\n\nLanguage models (pre-trained & adapted)\n\nTrained on additional prose and poetic medieval texts (Project Ben-Yehuda*) + Piyyut dataset\n\n| Model | Data Size (words) | Data Type |\n|-------|-------------------|------------|\n| BEREL | 220 Million | Medieval |\n| AlephBERT | 2 Billion | Modern |\n| AlephBERT Adapted | 2 Billion + 10 Million | Modern + Medieval |\n\n*Project Ben-Yehuda is a volunteer-based online library of free Hebrew literature."
+      },
+      {
+        "sectionTitle": "Results",
+        "sectionContent": "• AlephBERT is outperformed by AlephBERT Adapted.\n• BEREL, pre-trained on medieval texts, shows the best results.\n\nf1 Score on test set\n\n| Model | f1 Score |\n|-------|----------|\n| AlephBERT | 44.404 |\n| BEREL | 48.3 |\n| AlephBERT - adapted | 46.56 |\n\nChart shows BEREL achieving the highest f1 score of 48.3"
+      },
+      {
+        "sectionTitle": "Error Analysis",
+        "sectionContent": "Example case:\n\nHebrew text: ילד לניחוח חשקתיו\n\nEnglish: (A child for a scent - I have desired)\n\nExpert explanation: The child is a non-metaphorical epithet for Isaac. \"Scent\" is a metonymic term for \"sacrifice\".\n\nModel prediction: Berel (shown in blue box)\n\nThis example illustrates the complexity of metaphor detection in medieval Hebrew poetry, where cultural and religious context is crucial for accurate interpretation."
+      }
+    ]
+  },
+  "tableCaption": [
+    {
+      "caption1": "Table 1: Dataset examples with metaphors",
+      "caption2": "Three-column table showing Hebrew text, English translation, and Meaning. Row 1: Hebrew 'טבענו בגזרות, כשטופי ים', English 'We drowned in decrees, like sea washed', Meaning 'There are too many decrees'. Row 2: Hebrew 'הצית נשמה ויבער נר', English 'Ignite a soul, fire a candle', Meaning 'Create a soul'. Row 3: Hebrew 'עד דור עשירי לא עשו פרי', English 'Until the tenth generation they did not bear fruit', Meaning 'For ten generations, they did no good deeds'."
+    },
+    {
+      "caption1": "Table 2: Language models (pre-trained & adapted)",
+      "caption2": "Three-column table showing language model names, data size in words, and data type. BEREL: 220 Million words, Medieval. AlephBERT: 2 Billion words, Modern. AlephBERT Adapted: 2 Billion + 10 Million words, Modern + Medieval. Note indicates trained on additional prose and poetic medieval texts from Project Ben-Yehuda and Piyyut dataset."
+    }
+  ],
+  "imageCaption": [
+    {
+      "caption1": "Figure 1: A medieval Hebrew poem from the Worms Prayerbook",
+      "caption2": "Image shows an illuminated manuscript page from the Worms Prayerbook, Germany, 13th Century, from The National Library of Israel 'Ktiv' Project. The page features ornate decorative borders with medieval artwork and Hebrew text in the center."
+    },
+    {
+      "caption1": "Figure 2: Methods - Fine-tuning for metaphor detection",
+      "caption2": "Flowchart showing Pre-trained/Adapted Language Model processing Hebrew text through Tokenizer to classify as Metaphor or Not a Metaphor. Hebrew text examples shown with tokenization process."
+    },
+    {
+      "caption1": "Figure 3: Methods - LM adaptation",
+      "caption2": "Diagram showing Pre-trained Language Model receiving Hebrew text input, processing through Tokenizer, with connection to training on additional prose and poetic medieval texts from Project Ben-Yehuda and Piyyut dataset. Blue oval indicates training corpus."
+    },
+    {
+      "caption1": "Figure 4: Results - F1 Score on test set",
+      "caption2": "Bar chart showing F1 scores for three models: AlephBERT (44.404), BEREL (48.3), and AlephBERT - adapted (46.56). BEREL shows the highest performance."
+    },
+    {
+      "caption1": "Figure 5: Error Analysis example",
+      "caption2": "Shows Hebrew text 'ילד לניחוח חשקתיו' (A child for a scent - I have desired) with Berel classification. Expert explanation provided: The child is a non-metaphorical epithet for Isaac. 'Scent' is a metonymic term for 'sacrifice'."
+    }
+  ],
+  "domain": "Digital Humanities"
+}

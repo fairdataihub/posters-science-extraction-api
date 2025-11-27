@@ -1,0 +1,88 @@
+{
+  "creators": [
+    {
+      "name": "Arnold, Frederik",
+      "affiliation": [
+        {
+          "name": "Institut für Bibliotheks- und Informationswissenschaft"
+        }
+      ]
+    }
+  ],
+  "titles": [
+    {
+      "title": "Verfahren zur Entdeckung und Charakterisierung von im Projekt Schlüsselstellen in der Literatur"
+    }
+  ],
+  "posterContent": {
+    "posterTitle": "Verfahren zur Entdeckung und Charakterisierung von im Projekt Schlüsselstellen in der Literatur",
+    "sections": [
+      {
+        "sectionTitle": "Was ist wichtig? – Schlüsselstellen in der Literatur",
+        "sectionContent": "Erkennung wörtlicher Zitate"
+      },
+      {
+        "sectionTitle": "Text 1",
+        "sectionContent": "0 w1 w2 w3 w4 w5 w6 w7\n7 w8 w9 w10 w11 w12 w13 w14\n14 w15 w16 w17 w18 w19 w20 w21\n21 w22 w23 w24 w25 w26 w27 w28\n28 w29 w30 w31 w32 w33 w34 w35\n35 w10 w11 w12 w13 w14 w15 w16"
+      },
+      {
+        "sectionTitle": "Text 2",
+        "sectionContent": "50 … … … … … … … …\n60 w17 w18 w19 w20 w21 w22 …\n75 w8 w9 w10 w11 w12 …\n90 … … … … … … … …\n120 w8 w9 w10 w11 w12 …\n130 w27 w28 w29 … w33 w34 w35"
+      },
+      {
+        "sectionTitle": "Korpus",
+        "sectionContent": "erstellt im ArguLit- Projekt\n- 45 Interpretationstexte der Judenbuche\n- 52 Interpretationstexte des Michael Kohlhaas"
+      },
+      {
+        "sectionTitle": "Segmentierung",
+        "sectionContent": "Zitierte Stellen aus Interpretationstexten\nw1 w2 w3 w4 w5 w6 w7 w8 w9 w10\nw3 w4 w5 w6 w7 w8 w9\nw2 w3 w4\nw1 w2 w3\nw8 w9 w10"
+      },
+      {
+        "sectionTitle": "Literatur",
+        "sectionContent": "w1 | w2 | w3 | w4 | w5 w6 w7 | w8 w9 | w10\n2 | 3 | 4 | 3 | 2 | 3 | 2"
+      },
+      {
+        "sectionTitle": "Comic",
+        "sectionContent": "https://kiid.com/1262 (Stand: 12.03.2021)"
+      },
+      {
+        "sectionTitle": "Algorithmus",
+        "sectionContent": "1. Positionen in Text 1 erfassen\nWortfolge Startpositionen\nw1 w2 w3 [0]\nw2 w3 w4 [1]\n… … …\n…\n2. Forward references erstellen\nText 1 Startpos. Text 2 Startpos.\n0 [] 1 []\n1 [] 7 [75, 120]\n8 [] 8 [121]\n9 [] 9 [77, 122]\n35 [] 35 [77, 122]\n32 [] 32 [145]\n3. Gefundene Matches erweitern\n• Ellipsen \"überspringen\"\n• Token zusammenfassen / auslassen\nWeitere Schritte\n• Tokenisierung\n• ä, ö, ü etc. vereinheitlichen\n• Satzzeichen markieren oder entfernen\n• Fuzzy matching\n• Matches zusammenfassen\n• Zu kurze Matches entfernen\n• Satzgrenzen berücksichtigen"
+      },
+      {
+        "sectionTitle": "Auswertung",
+        "sectionContent": "45 Interpretationstexte der Judenbuche\nPrecision: 0.80 Recall: 0.91 F-score: 0.85"
+      },
+      {
+        "sectionTitle": "Quellen",
+        "sectionContent": "• \"sim_text\" von Dick Grune1\n• Similarity texter: A text-comparison web tool based on the \"sim_text\" algorithm von Sofia Kalaidopoulou (2016)2\n• Programmiersprache: Python\n1 https://dickgrune.com/Programs/similarity_tester/\n2 https://people.f4.haw-berlin.de/webervu/ simtext/522789_Sofia-Kalaidopoulou_ bachelor-thesis.pdf (Stand: 12.03.2021)"
+      },
+      {
+        "sectionTitle": "Visualisierungswebseite",
+        "sectionContent": "Heatmap\nAnnette von Droste-Hülshoff: Die Judenbuche"
+      },
+      {
+        "sectionTitle": "Literatur",
+        "sectionContent": "Ausgewählte Textstelle"
+      },
+      {
+        "sectionTitle": "Häufig zitierte Stellen",
+        "sectionContent": "Interpretationstexte, die die ausgewählte Textstelle zitieren"
+      },
+      {
+        "sectionTitle": "Inspiriert von:",
+        "sectionContent": "To Quote or Not to Quote (https://shakespeare.visualizingbroadway.com/index.html (Stand: 12.03.2021))"
+      }
+    ]
+  },
+  "imageCaption": [
+    {
+      "caption1": "Heatmap"
+    }
+  ],
+  "tableCaption": [
+    {
+      "caption1": "Literatur"
+    }
+  ]
+}
