@@ -9,10 +9,7 @@ services:
     volumes:
       # Mount source code for live editing
       - ./poster_extraction.py:/app/poster_extraction.py
-      # Mount input directory
-      - ./manual_poster_annotation:/app/input:ro
-      # Mount output directory
-      - ./output:/app/output
+      - ./api.py:/app/api.py
       # Mount model cache
       - ~/.cache/huggingface:/root/.cache/huggingface
     # Override command to allow interactive use

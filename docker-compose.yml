@@ -11,17 +11,14 @@ services:
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - PORT=8000
+      - HOST=0.0.0.0
+    ports:
+      - "${API_PORT:-8000}:8000"
     volumes:
-      # Mount input directory (posters to process)
-      - ./manual_poster_annotation:/app/input:ro
-      # Mount output directory (results)
-      - ./output:/app/output
       # Model cache (persists between runs)
       - ~/.cache/huggingface:/root/.cache/huggingface
-    command: >
-      python poster_extraction.py
-      --annotation-dir /app/input
-      --output-dir /app/output
+    command: python api.py
     deploy:
       resources:
         limits:
@@ -45,4 +42,4 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s
+      start_period: 120s

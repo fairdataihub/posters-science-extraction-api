@@ -223,17 +223,21 @@ def extract_text_with_pymupdf(pdf_path: str) -> str:
     return text.strip()
 
 
-def get_raw_text(poster_path: str, poster_id: str, output_dir: str) -> tuple:
+def get_raw_text(
+    poster_path: str, poster_id: str = None, output_dir: str = None
+) -> tuple:
     """Get raw text from poster."""
     ext = Path(poster_path).suffix.lower()
 
     if ext in [".jpg", ".jpeg", ".png"]:
-        cache_file = Path(output_dir) / f"{poster_id}_raw.txt"
-        if cache_file.exists():
-            with open(cache_file) as f:
-                text = f.read()
-            if len(text) > 500:
-                return text, "qwen_vision_cached"
+        # Check cache if output_dir is provided
+        if output_dir and poster_id:
+            cache_file = Path(output_dir) / f"{poster_id}_raw.txt"
+            if cache_file.exists():
+                with open(cache_file) as f:
+                    text = f.read()
+                if len(text) > 500:
+                    return text, "qwen_vision_cached"
 
         text = extract_text_with_qwen_vision(poster_path)
         return text, "qwen_vision"
@@ -776,6 +780,52 @@ def find_pairs(annotation_dir: str):
         if json_files and poster_files:
             pairs.append((str(poster_files[0]), str(json_files[0]), subdir.name))
     return sorted(pairs, key=lambda x: x[2])
+
+
+def process_poster_file(poster_path: str) -> dict:
+    """
+    Process a single poster file and return the extracted JSON.
+
+    Args:
+        poster_path: Path to the poster file (PDF, JPG, PNG)
+
+    Returns:
+        Dictionary containing the extracted JSON structure
+    """
+    log(f"Processing poster: {poster_path}")
+
+    # Extract raw text
+    raw_text, source = get_raw_text(poster_path)
+
+    if not raw_text or source == "unknown":
+        return {
+            "error": f"Failed to extract text from file. Unsupported format or extraction failed."
+        }
+
+    log(f"Extracted {len(raw_text)} characters using {source}")
+
+    # Load JSON model if not already loaded
+    model, tokenizer = load_json_model()
+
+    # Convert to JSON
+    try:
+        generated = extract_json_with_retry(raw_text, model, tokenizer)
+
+        # Unload vision model if it was used (to free GPU memory)
+        ext = Path(poster_path).suffix.lower()
+        if ext in [".jpg", ".jpeg", ".png"]:
+            unload_vision_model()
+
+        # Clean up GPU memory
+        torch.cuda.empty_cache()
+
+        return generated
+    except Exception as e:
+        log(f"ERROR processing poster: {e}")
+        import traceback
+
+        traceback.print_exc()
+        return {"error": str(e)}
 
 
 def run(annotation_dir: str, output_dir: str):

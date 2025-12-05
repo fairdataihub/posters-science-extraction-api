@@ -50,10 +50,14 @@ RUN pip3 install --no-cache-dir --upgrade pip && \
 
 # Copy application code
 COPY poster_extraction.py .
+COPY api.py .
 
 # Create directories for input/output
 RUN mkdir -p /app/input /app/output
 
-# Set default command
-CMD ["python", "poster_extraction.py", "--annotation-dir", "/app/input", "--output-dir", "/app/output"]
+# Expose API port
+EXPOSE 8000
+
+# Set default command to run API server
+CMD ["python", "api.py"]
 
