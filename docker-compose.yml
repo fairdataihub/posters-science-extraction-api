@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  poster-extraction:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: poster-extraction:latest
+    container_name: poster-extraction
+    environment:
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    volumes:
+      # Mount input directory (posters to process)
+      - ./manual_poster_annotation:/app/input:ro
+      # Mount output directory (results)
+      - ./output:/app/output
+      # Model cache (persists between runs)
+      - ~/.cache/huggingface:/root/.cache/huggingface
+    command: >
+      python poster_extraction.py
+      --annotation-dir /app/input
+      --output-dir /app/output
+    deploy:
+      resources:
+        limits:
+          memory: 32G
+        reservations:
+          memory: 16G
+          devices:
+            - driver: nvidia
+              count: ${GPU_COUNT:-1}
+              capabilities: [gpu]
+    restart: ${RESTART_POLICY:-unless-stopped}
+    # Health check to monitor container status
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import torch; assert torch.cuda.is_available()",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s

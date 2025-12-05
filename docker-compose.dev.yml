@@ -1,0 +1,22 @@
+version: "3.8"
+
+# Development override for docker-compose.yml
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  poster-extraction:
+    # Override volumes for development
+    volumes:
+      # Mount source code for live editing
+      - ./poster_extraction.py:/app/poster_extraction.py
+      # Mount input directory
+      - ./manual_poster_annotation:/app/input:ro
+      # Mount output directory
+      - ./output:/app/output
+      # Mount model cache
+      - ~/.cache/huggingface:/root/.cache/huggingface
+    # Override command to allow interactive use
+    stdin_open: true
+    tty: true
+    # Remove restart policy for dev
+    restart: "no"

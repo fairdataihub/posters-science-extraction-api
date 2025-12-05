@@ -12,6 +12,7 @@ Based on v24 (60% baseline) with improved JSON repair:
 """
 
 import os
+import shutil
 import torch
 import fitz  # PyMuPDF
 import json
@@ -38,9 +39,21 @@ from rouge_score import rouge_scorer
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-home_dir = Path.home()
-downloads_dir = home_dir / "Downloads"
-PDFALTO_PATH = downloads_dir / "pdfalto"
+# Find pdfalto: check environment variable, then PATH, then Downloads directory
+PDFALTO_PATH = os.environ.get("PDFALTO_PATH")
+if not PDFALTO_PATH:
+    # Check if pdfalto is in PATH
+    pdfalto_in_path = shutil.which("pdfalto")
+    if pdfalto_in_path:
+        PDFALTO_PATH = pdfalto_in_path
+    else:
+        # Fall back to Downloads directory (for local development)
+        home_dir = Path.home()
+        downloads_dir = home_dir / "Downloads"
+        PDFALTO_PATH = downloads_dir / "pdfalto"
+        if not Path(PDFALTO_PATH).exists():
+            PDFALTO_PATH = None
+
 MAX_JSON_TOKENS = 18000
 MAX_RETRY_TOKENS = 24000
 
@@ -155,6 +168,8 @@ Rules:
 
 
 def extract_text_with_pdfalto(pdf_path: str) -> str:
+    if PDFALTO_PATH is None:
+        return None
     try:
         with tempfile.TemporaryDirectory() as tmpdir:
             xml_path = os.path.join(tmpdir, "output.xml")
