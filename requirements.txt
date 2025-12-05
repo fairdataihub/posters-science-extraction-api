@@ -4,5 +4,15 @@ rouge-score
 qwen-vl-utils
 accelerate
 Pillow
+pymupdf
 numpy
 
+# Formatters
+black
+isort
+
+# Linters
+flake8
+mypy
+pylint
+pydocstyle
