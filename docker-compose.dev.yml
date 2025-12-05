@@ -22,8 +22,6 @@ services:
       # Mount source code for live editing
       - ./poster_extraction.py:/app/poster_extraction.py
       - ./api.py:/app/api.py
-      # Mount model cache
-      - ~/.cache/huggingface:/root/.cache/huggingface
     # Override command to allow interactive use
     stdin_open: true
     tty: true
