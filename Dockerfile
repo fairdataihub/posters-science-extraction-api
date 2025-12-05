@@ -16,6 +16,10 @@ RUN apt-get update && apt-get install -y \
     git \
     build-essential \
     cmake \
+    autotools-dev \
+    autoconf \
+    automake \
+    libtool \
     libpoppler-dev \
     libxerces-c-dev \
     libpng-dev \
@@ -33,9 +37,7 @@ WORKDIR /app
 RUN git clone https://github.com/kermitt2/pdfalto.git /tmp/pdfalto && \
     cd /tmp/pdfalto && \
     git submodule update --init --recursive && \
-    mkdir build && \
-    cd build && \
-    cmake .. && \
+    cmake . && \
     make && \
     cp pdfalto /usr/local/bin/pdfalto && \
     chmod +x /usr/local/bin/pdfalto && \
