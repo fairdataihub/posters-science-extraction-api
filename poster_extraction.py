@@ -1,25 +1,28 @@
 #!/usr/bin/env python3
 """
-LLAMA POSTER EXTRACTION MVP v36 - ROBUST JSON REPAIR
+Poster Science - Scientific Poster Metadata Extraction Pipeline
 
-Based on v24 (60% baseline) with improved JSON repair:
-- Fix unescaped quote issues (e.g., 319 pc/" -> 319 pc/\\")
-- Better truncation repair with proper string closing
-- More aggressive brace/bracket balancing
-- Keep v24's section-aware prompt (proven effective)
-- Keep Qwen2-VL for image OCR
-- Keep pdfalto for PDF
+Extracts structured metadata from scientific poster PDFs and images
+into JSON format conforming to the posters-science schema.
+
+Models:
+- Meta Llama 3.1 8B Instruct: JSON structuring
+- Qwen2-VL-7B-Instruct: Vision OCR for images
+
+Environment Variables:
+- PDFALTO_PATH: Path to pdfalto binary (optional, falls back to PyMuPDF)
+- CUDA_VISIBLE_DEVICES: GPU device(s) to use (default: 0)
+- HF_TOKEN: HuggingFace token for gated models (required for Llama)
 """
 
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-
 import json
 import re
 import time
 import argparse
 import subprocess
 import tempfile
+import shutil
 import gc
 from pathlib import Path
 from datetime import datetime
@@ -33,9 +36,48 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, Qwen2VLForConditio
 from rouge_score import rouge_scorer
 import unicodedata
 
-PDFALTO_PATH = "/home/joneill/vaults/jmind/calmi2/poster_science/pdfalto/pdfalto"
+# ============================
+# CONFIGURATION
+# ============================
+
+def get_pdfalto_path():
+    """Get pdfalto path from environment or search common locations."""
+    # Check environment variable first
+    env_path = os.environ.get('PDFALTO_PATH')
+    if env_path and os.path.isfile(env_path) and os.access(env_path, os.X_OK):
+        return env_path
+    
+    # Search common locations
+    search_paths = [
+        shutil.which('pdfalto'),  # System PATH
+        '/usr/local/bin/pdfalto',
+        '/usr/bin/pdfalto',
+        os.path.expanduser('~/pdfalto/pdfalto'),
+        os.path.expanduser('~/.local/bin/pdfalto'),
+        './pdfalto/pdfalto',
+        '../pdfalto/pdfalto',
+    ]
+    
+    for path in search_paths:
+        if path and os.path.isfile(path) and os.access(path, os.X_OK):
+            return path
+    
+    return None
+
+PDFALTO_PATH = get_pdfalto_path()
 MAX_JSON_TOKENS = 18000
 MAX_RETRY_TOKENS = 24000
+
+def get_device():
+    """Get the appropriate CUDA device."""
+    if not torch.cuda.is_available():
+        return "cpu"
+    
+    # Use CUDA_VISIBLE_DEVICES if set, otherwise use first available GPU
+    cuda_devices = os.environ.get('CUDA_VISIBLE_DEVICES', '0')
+    return f"cuda:{cuda_devices.split(',')[0]}" if cuda_devices else "cuda:0"
+
+DEVICE = get_device()
 
 def log(msg: str):
     ts = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -43,8 +85,9 @@ def log(msg: str):
 
 def free_gpu():
     gc.collect()
-    torch.cuda.empty_cache()
-    torch.cuda.synchronize()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        torch.cuda.synchronize()
 
 # ============================
 # QWEN2-VL OCR FOR IMAGES
@@ -60,7 +103,7 @@ def load_vision_model():
         _vision_model = Qwen2VLForConditionalGeneration.from_pretrained(
             "Qwen/Qwen2-VL-7B-Instruct",
             torch_dtype=torch.bfloat16,
-            device_map="cuda:0",
+            device_map=DEVICE,
         )
         _vision_processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-7B-Instruct")
         log(f"   ✓ Qwen2-VL loaded on {next(_vision_model.parameters()).device}")
@@ -133,6 +176,11 @@ Rules:
 # ============================
 
 def extract_text_with_pdfalto(pdf_path: str) -> str:
+    """Extract text using pdfalto with XML layout analysis."""
+    if PDFALTO_PATH is None:
+        log("   ⚠️ pdfalto not found, using PyMuPDF fallback")
+        return None
+    
     try:
         with tempfile.TemporaryDirectory() as tmpdir:
             xml_path = os.path.join(tmpdir, "output.xml")
@@ -141,9 +189,17 @@ def extract_text_with_pdfalto(pdf_path: str) -> str:
                 capture_output=True, text=True, timeout=60
             )
             if result.returncode != 0 or not os.path.exists(xml_path):
+                log(f"   ⚠️ pdfalto returned code {result.returncode}, using PyMuPDF fallback")
                 return None
             return parse_alto_xml(xml_path)
-    except Exception:
+    except FileNotFoundError:
+        log("   ⚠️ pdfalto binary not found, using PyMuPDF fallback")
+        return None
+    except subprocess.TimeoutExpired:
+        log("   ⚠️ pdfalto timeout, using PyMuPDF fallback")
+        return None
+    except Exception as e:
+        log(f"   ⚠️ pdfalto error: {e}, using PyMuPDF fallback")
         return None
 
 def parse_alto_xml(xml_path: str) -> str:
@@ -167,17 +223,23 @@ def parse_alto_xml(xml_path: str) -> str:
                 lines.append(' '.join(words))
         
         return '\n'.join(lines)
-    except:
+    except Exception as e:
+        log(f"   ⚠️ XML parsing error: {e}")
         return None
 
 def extract_text_with_pymupdf(pdf_path: str) -> str:
-    doc = fitz.open(pdf_path)
-    text = "\n".join(page.get_text("text") for page in doc)
-    doc.close()
-    return text.strip()
+    """Extract text using PyMuPDF (fallback method)."""
+    try:
+        doc = fitz.open(pdf_path)
+        text = "\n".join(page.get_text("text") for page in doc)
+        doc.close()
+        return text.strip()
+    except Exception as e:
+        log(f"   ⚠️ PyMuPDF error: {e}")
+        return ""
 
 def get_raw_text(poster_path: str, poster_id: str, output_dir: str) -> tuple:
-    """Get raw text from poster."""
+    """Get raw text from poster using appropriate extraction method."""
     ext = Path(poster_path).suffix.lower()
     
     if ext in ['.jpg', '.jpeg', '.png']:
@@ -192,11 +254,16 @@ def get_raw_text(poster_path: str, poster_id: str, output_dir: str) -> tuple:
         return text, "qwen_vision"
     
     if ext == '.pdf':
+        # Try pdfalto first (better layout analysis)
         text = extract_text_with_pdfalto(poster_path)
         if text and len(text) > 500:
             return text, "pdfalto"
-        return extract_text_with_pymupdf(poster_path), "pymupdf"
+        
+        # Fallback to PyMuPDF
+        text = extract_text_with_pymupdf(poster_path)
+        return text, "pymupdf"
     
+    log(f"   ⚠️ Unsupported file type: {ext}")
     return "", "unknown"
 
 # ============================
@@ -214,7 +281,7 @@ def load_json_model():
         _json_model = AutoModelForCausalLM.from_pretrained(
             "meta-llama/Llama-3.1-8B-Instruct",
             torch_dtype=torch.bfloat16,
-            device_map="cuda:0",
+            device_map=DEVICE,
         )
         log(f"   ✓ Llama 3.1 8B loaded on {next(_json_model.parameters()).device}")
     return _json_model, _json_tokenizer
@@ -668,21 +735,49 @@ def find_pairs(annotation_dir: str):
             pairs.append((str(poster_files[0]), str(json_files[0]), subdir.name))
     return sorted(pairs, key=lambda x: x[2])
 
+def check_dependencies():
+    """Check and report on system dependencies."""
+    issues = []
+    
+    # Check CUDA
+    if not torch.cuda.is_available():
+        issues.append("⚠️ CUDA not available - will use CPU (slow)")
+    else:
+        log(f"GPU: {torch.cuda.get_device_name(0)}")
+    
+    # Check pdfalto
+    if PDFALTO_PATH:
+        log(f"pdfalto: {PDFALTO_PATH}")
+    else:
+        log("pdfalto: Not found (will use PyMuPDF fallback for PDFs)")
+        log("   To install pdfalto: https://github.com/kermitt2/pdfalto")
+    
+    # Check HuggingFace token for gated models
+    hf_token = os.environ.get('HF_TOKEN') or os.environ.get('HUGGING_FACE_HUB_TOKEN')
+    if not hf_token:
+        issues.append("⚠️ HF_TOKEN not set - may fail to download Llama model (gated)")
+        log("   Set HF_TOKEN environment variable for Meta Llama access")
+    
+    return issues
+
 def run(annotation_dir: str, output_dir: str):
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     pairs = find_pairs(annotation_dir)
     
     log("=" * 60)
-    log("LLAMA MVP v41 - DUAL PROMPT WITH FALLBACK")
+    log("POSTER EXTRACTION PIPELINE")
     log("=" * 60)
     log(f"Posters: {len(pairs)}")
-    log(f"GPU: {torch.cuda.get_device_name(0)}")
+    
+    issues = check_dependencies()
+    for issue in issues:
+        log(issue)
     
     image_posters = [p for p in pairs if Path(p[0]).suffix.lower() in ['.jpg', '.jpeg', '.png']]
     pdf_posters = [p for p in pairs if Path(p[0]).suffix.lower() == '.pdf']
     
     log(f"Image posters (Qwen Vision): {[p[2] for p in image_posters]}")
-    log(f"PDF posters (pdfalto): {len(pdf_posters)}")
+    log(f"PDF posters (pdfalto/PyMuPDF): {len(pdf_posters)}")
     
     # Phase 1: Extract raw text
     log("\n" + "=" * 40)
@@ -758,7 +853,8 @@ def run(annotation_dir: str, output_dir: str):
             traceback.print_exc()
             results.append({'poster_id': poster_id, 'error': str(e), 'passes': False})
         
-        torch.cuda.empty_cache()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
     
     # Summary
     log("\n" + "=" * 60)
@@ -784,9 +880,29 @@ def run(annotation_dir: str, output_dir: str):
         json.dump(results, f, indent=2)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--annotation-dir', required=True)
-    parser.add_argument('--output-dir', default='./llama_v24_output')
+    parser = argparse.ArgumentParser(
+        description="Extract structured metadata from scientific posters",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Environment Variables:
+  PDFALTO_PATH    Path to pdfalto binary (optional)
+  HF_TOKEN        HuggingFace token for Llama model access
+  CUDA_VISIBLE_DEVICES  GPU device(s) to use (default: 0)
+
+Examples:
+  # Basic usage
+  python poster_extraction.py --annotation-dir ./posters --output-dir ./output
+  
+  # With custom pdfalto path
+  PDFALTO_PATH=/opt/pdfalto/pdfalto python poster_extraction.py --annotation-dir ./posters
+  
+  # Use specific GPU
+  CUDA_VISIBLE_DEVICES=1 python poster_extraction.py --annotation-dir ./posters
+"""
+    )
+    parser.add_argument('--annotation-dir', required=True, 
+                       help='Directory containing poster subdirectories with PDF/image and _sub-json.json files')
+    parser.add_argument('--output-dir', default='./extraction_output',
+                       help='Output directory for extracted JSON and raw text files (default: ./extraction_output)')
     args = parser.parse_args()
     run(args.annotation_dir, args.output_dir)
-

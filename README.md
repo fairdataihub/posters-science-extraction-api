@@ -128,36 +128,143 @@ The pipeline is validated against manually annotated reference JSONs using four 
 
 **Aggregate Performance**: w=0.969, r=0.887, n=0.936, f=1.083
 
-## Usage
+## Installation
+
+### 1. Clone the Repository
 
 ```bash
-# Activate environment
-source ~/myenv/bin/activate
+git clone https://github.com/fairdataihub/posters-science-posterextraction-beta.git
+cd posters-science-posterextraction-beta
+```
 
-# Run extraction
+### 2. Create Python Environment
+
+```bash
+python -m venv venv
+source venv/bin/activate  # Linux/macOS
+# or: venv\Scripts\activate  # Windows
+
+pip install -r requirements.txt
+```
+
+### 3. Configure HuggingFace Access (Required)
+
+Meta's Llama 3.1 8B is a gated model requiring HuggingFace authentication:
+
+1. Create a HuggingFace account at https://huggingface.co
+2. Accept the Llama 3.1 license at https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct
+3. Generate an access token at https://huggingface.co/settings/tokens
+4. Set the environment variable:
+
+```bash
+export HF_TOKEN="your_huggingface_token"
+```
+
+Or add to `~/.bashrc` / `~/.zshrc` for persistence.
+
+### 4. Install pdfalto (Optional but Recommended)
+
+`pdfalto` provides superior PDF text extraction with layout preservation. Without it, the pipeline falls back to PyMuPDF.
+
+**Option A: Build from source**
+```bash
+git clone https://github.com/kermitt2/pdfalto.git
+cd pdfalto
+mkdir build && cd build
+cmake ..
+make
+# Binary will be at: pdfalto/build/pdfalto
+```
+
+**Option B: Download pre-built binary**
+- Check releases at https://github.com/kermitt2/pdfalto/releases
+
+**Configure the path:**
+```bash
+export PDFALTO_PATH="/path/to/pdfalto/build/pdfalto"
+```
+
+If not configured, the pipeline automatically searches:
+- System PATH (`which pdfalto`)
+- `/usr/local/bin/pdfalto`
+- `/usr/bin/pdfalto`
+- `~/pdfalto/pdfalto`
+- `~/.local/bin/pdfalto`
+- `./pdfalto/pdfalto` (relative to script)
+
+## Usage
+
+### Basic Usage
+
+```bash
+python poster_extraction.py \
+    --annotation-dir "./posters" \
+    --output-dir "./output"
+```
+
+### With Environment Variables
+
+```bash
+# Specify GPU device
+CUDA_VISIBLE_DEVICES=0 python poster_extraction.py --annotation-dir ./posters
+
+# Custom pdfalto location
+PDFALTO_PATH=/opt/pdfalto/pdfalto python poster_extraction.py --annotation-dir ./posters
+
+# Full example
+HF_TOKEN="hf_xxx" \
+PDFALTO_PATH="/usr/local/bin/pdfalto" \
+CUDA_VISIBLE_DEVICES=0 \
 python poster_extraction.py \
     --annotation-dir "./manual_poster_annotation" \
-    --output-dir "./output"
+    --output-dir "./extraction_output"
 ```
 
 ### Command Line Arguments
 
 | Argument | Description | Default |
 |----------|-------------|---------|
-| `--annotation-dir` | Directory containing poster PDFs/images | Required |
-| `--output-dir` | Directory for extracted JSON outputs | Required |
+| `--annotation-dir` | Directory containing poster subdirectories | Required |
+| `--output-dir` | Directory for extracted JSON outputs | `./extraction_output` |
+
+### Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `HF_TOKEN` | HuggingFace access token for Llama model | Yes |
+| `PDFALTO_PATH` | Path to pdfalto binary | No (falls back to PyMuPDF) |
+| `CUDA_VISIBLE_DEVICES` | GPU device index(es) to use | No (default: 0) |
+
+### Input Directory Structure
+
+The annotation directory should contain subdirectories for each poster:
+
+```
+annotation-dir/
+├── poster_001/
+│   ├── poster_001.pdf          # or .jpg/.png
+│   └── poster_001_sub-json.json  # Reference annotation (for validation)
+├── poster_002/
+│   ├── poster_002.jpg
+│   └── poster_002_sub-json.json
+└── ...
+```
+
+**Note**: Reference JSON files (`*_sub-json.json`) are only required for validation. For extraction-only mode, simply provide poster files.
 
 ## System Requirements
 
 ### Hardware
-- CUDA-capable GPU with ≥16GB VRAM (tested on NVIDIA RTX 4090)
-- Sufficient system RAM for model loading (~32GB recommended)
+- **GPU**: CUDA-capable GPU with ≥16GB VRAM (tested on NVIDIA RTX 4090)
+- **RAM**: ≥32GB system memory recommended for model loading
+- **Storage**: ~20GB for model weights (downloaded on first run)
 
 ### Software
 - Python 3.10+
 - CUDA 11.8+ with compatible drivers
+- Linux, macOS, or Windows with WSL2
 
-### Dependencies
+### Python Dependencies
 
 ```
 transformers>=4.40.0
@@ -167,11 +274,20 @@ qwen-vl-utils
 accelerate
 Pillow
 numpy
+PyMuPDF
+```
+
+Install all dependencies:
+```bash
+pip install -r requirements.txt
 ```
 
 ### External Tools
-- `pdfalto` - PDF layout analysis tool (compiled binary required)
-  - Installation: https://github.com/kermitt2/pdfalto
+
+| Tool | Purpose | Required |
+|------|---------|----------|
+| `pdfalto` | PDF layout analysis | No (PyMuPDF fallback available) |
+| CUDA toolkit | GPU acceleration | Yes (CPU mode available but slow) |
 
 ## Output Structure
 
