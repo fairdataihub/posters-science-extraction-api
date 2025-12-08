@@ -9,8 +9,12 @@ Models:
 - Meta Llama 3.1 8B Instruct: JSON structuring
 - Qwen2-VL-7B-Instruct: Vision OCR for images
 
+Requirements:
+- pdfalto: PDF layout analysis tool (https://github.com/kermitt2/pdfalto)
+- CUDA-capable GPU with ≥16GB VRAM
+
 Environment Variables:
-- PDFALTO_PATH: Path to pdfalto binary (optional, falls back to PyMuPDF)
+- PDFALTO_PATH: Path to pdfalto binary (required for PDF processing)
 - CUDA_VISIBLE_DEVICES: GPU device(s) to use (default: 0)
 - HF_TOKEN: HuggingFace token for gated models (required for Llama)
 """
@@ -24,12 +28,12 @@ import subprocess
 import tempfile
 import shutil
 import gc
+import sys
 from pathlib import Path
 from datetime import datetime
 import numpy as np
 
 import torch
-import fitz  # PyMuPDF
 from PIL import Image
 
 from transformers import AutoModelForCausalLM, AutoTokenizer, Qwen2VLForConditionalGeneration, AutoProcessor
@@ -67,6 +71,25 @@ def get_pdfalto_path():
 PDFALTO_PATH = get_pdfalto_path()
 MAX_JSON_TOKENS = 18000
 MAX_RETRY_TOKENS = 24000
+
+def verify_pdfalto():
+    """Verify pdfalto is available. Exit if not found."""
+    if PDFALTO_PATH is None:
+        print("ERROR: pdfalto not found.", file=sys.stderr)
+        print("", file=sys.stderr)
+        print("pdfalto is required for PDF text extraction.", file=sys.stderr)
+        print("", file=sys.stderr)
+        print("Installation options:", file=sys.stderr)
+        print("  1. Build from source:", file=sys.stderr)
+        print("     git clone https://github.com/kermitt2/pdfalto.git", file=sys.stderr)
+        print("     cd pdfalto && mkdir build && cd build", file=sys.stderr)
+        print("     cmake .. && make", file=sys.stderr)
+        print("", file=sys.stderr)
+        print("  2. Set environment variable:", file=sys.stderr)
+        print("     export PDFALTO_PATH=/path/to/pdfalto", file=sys.stderr)
+        print("", file=sys.stderr)
+        print("  3. Add to system PATH", file=sys.stderr)
+        sys.exit(1)
 
 def get_device():
     """Get the appropriate CUDA device."""
@@ -177,10 +200,6 @@ Rules:
 
 def extract_text_with_pdfalto(pdf_path: str) -> str:
     """Extract text using pdfalto with XML layout analysis."""
-    if PDFALTO_PATH is None:
-        log("   ⚠️ pdfalto not found, using PyMuPDF fallback")
-        return None
-    
     try:
         with tempfile.TemporaryDirectory() as tmpdir:
             xml_path = os.path.join(tmpdir, "output.xml")
@@ -188,55 +207,36 @@ def extract_text_with_pdfalto(pdf_path: str) -> str:
                 [PDFALTO_PATH, "-noImage", "-readingOrder", pdf_path, xml_path],
                 capture_output=True, text=True, timeout=60
             )
-            if result.returncode != 0 or not os.path.exists(xml_path):
-                log(f"   ⚠️ pdfalto returned code {result.returncode}, using PyMuPDF fallback")
-                return None
+            if result.returncode != 0:
+                raise RuntimeError(f"pdfalto returned code {result.returncode}: {result.stderr}")
+            if not os.path.exists(xml_path):
+                raise RuntimeError("pdfalto did not produce output XML")
             return parse_alto_xml(xml_path)
-    except FileNotFoundError:
-        log("   ⚠️ pdfalto binary not found, using PyMuPDF fallback")
-        return None
     except subprocess.TimeoutExpired:
-        log("   ⚠️ pdfalto timeout, using PyMuPDF fallback")
-        return None
+        raise RuntimeError(f"pdfalto timeout processing {pdf_path}")
     except Exception as e:
-        log(f"   ⚠️ pdfalto error: {e}, using PyMuPDF fallback")
-        return None
+        raise RuntimeError(f"pdfalto error: {e}")
 
 def parse_alto_xml(xml_path: str) -> str:
     from xml.etree import ElementTree as ET
-    try:
-        tree = ET.parse(xml_path)
-        root = tree.getroot()
+    tree = ET.parse(xml_path)
+    root = tree.getroot()
+    
+    text_blocks = root.findall('.//{http://www.loc.gov/standards/alto/ns-v3#}TextBlock')
+    if not text_blocks:
+        text_blocks = root.findall('.//TextBlock')
+    
+    lines = []
+    for block in text_blocks:
+        strings = block.findall('.//{http://www.loc.gov/standards/alto/ns-v3#}String')
+        if not strings:
+            strings = block.findall('.//String')
         
-        text_blocks = root.findall('.//{http://www.loc.gov/standards/alto/ns-v3#}TextBlock')
-        if not text_blocks:
-            text_blocks = root.findall('.//TextBlock')
-        
-        lines = []
-        for block in text_blocks:
-            strings = block.findall('.//{http://www.loc.gov/standards/alto/ns-v3#}String')
-            if not strings:
-                strings = block.findall('.//String')
-            
-            words = [s.get('CONTENT', '') for s in strings if s.get('CONTENT')]
-            if words:
-                lines.append(' '.join(words))
-        
-        return '\n'.join(lines)
-    except Exception as e:
-        log(f"   ⚠️ XML parsing error: {e}")
-        return None
-
-def extract_text_with_pymupdf(pdf_path: str) -> str:
-    """Extract text using PyMuPDF (fallback method)."""
-    try:
-        doc = fitz.open(pdf_path)
-        text = "\n".join(page.get_text("text") for page in doc)
-        doc.close()
-        return text.strip()
-    except Exception as e:
-        log(f"   ⚠️ PyMuPDF error: {e}")
-        return ""
+        words = [s.get('CONTENT', '') for s in strings if s.get('CONTENT')]
+        if words:
+            lines.append(' '.join(words))
+    
+    return '\n'.join(lines)
 
 def get_raw_text(poster_path: str, poster_id: str, output_dir: str) -> tuple:
     """Get raw text from poster using appropriate extraction method."""
@@ -254,17 +254,10 @@ def get_raw_text(poster_path: str, poster_id: str, output_dir: str) -> tuple:
         return text, "qwen_vision"
     
     if ext == '.pdf':
-        # Try pdfalto first (better layout analysis)
         text = extract_text_with_pdfalto(poster_path)
-        if text and len(text) > 500:
-            return text, "pdfalto"
-        
-        # Fallback to PyMuPDF
-        text = extract_text_with_pymupdf(poster_path)
-        return text, "pymupdf"
+        return text, "pdfalto"
     
-    log(f"   ⚠️ Unsupported file type: {ext}")
-    return "", "unknown"
+    raise ValueError(f"Unsupported file type: {ext}")
 
 # ============================
 # JSON MODEL
@@ -739,18 +732,17 @@ def check_dependencies():
     """Check and report on system dependencies."""
     issues = []
     
+    # Verify pdfalto is available (required)
+    verify_pdfalto()
+    log(f"pdfalto: {PDFALTO_PATH}")
+    
     # Check CUDA
     if not torch.cuda.is_available():
-        issues.append("⚠️ CUDA not available - will use CPU (slow)")
+        print("ERROR: CUDA not available.", file=sys.stderr)
+        print("A CUDA-capable GPU with ≥16GB VRAM is required.", file=sys.stderr)
+        sys.exit(1)
     else:
         log(f"GPU: {torch.cuda.get_device_name(0)}")
-    
-    # Check pdfalto
-    if PDFALTO_PATH:
-        log(f"pdfalto: {PDFALTO_PATH}")
-    else:
-        log("pdfalto: Not found (will use PyMuPDF fallback for PDFs)")
-        log("   To install pdfalto: https://github.com/kermitt2/pdfalto")
     
     # Check HuggingFace token for gated models
     hf_token = os.environ.get('HF_TOKEN') or os.environ.get('HUGGING_FACE_HUB_TOKEN')
@@ -777,7 +769,7 @@ def run(annotation_dir: str, output_dir: str):
     pdf_posters = [p for p in pairs if Path(p[0]).suffix.lower() == '.pdf']
     
     log(f"Image posters (Qwen Vision): {[p[2] for p in image_posters]}")
-    log(f"PDF posters (pdfalto/PyMuPDF): {len(pdf_posters)}")
+    log(f"PDF posters (pdfalto): {len(pdf_posters)}")
     
     # Phase 1: Extract raw text
     log("\n" + "=" * 40)

@@ -5,4 +5,3 @@ qwen-vl-utils
 accelerate
 Pillow
 numpy
-PyMuPDF>=1.23.0

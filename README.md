@@ -111,7 +111,7 @@ The pipeline is validated against manually annotated reference JSONs using four 
 
 ## Validation Results
 
-**Pipeline v41 - Production Release**: 10/10 (100%) passing
+**Production Release**: 10/10 (100%) passing
 
 | Poster ID | Word | ROUGE-L | Numbers | Fields | OCR Method |
 |-----------|------|---------|---------|--------|------------|
@@ -162,9 +162,9 @@ export HF_TOKEN="your_huggingface_token"
 
 Or add to `~/.bashrc` / `~/.zshrc` for persistence.
 
-### 4. Install pdfalto (Optional but Recommended)
+### 4. Install pdfalto (Required)
 
-`pdfalto` provides superior PDF text extraction with layout preservation. Without it, the pipeline falls back to PyMuPDF.
+`pdfalto` is required for PDF text extraction with layout preservation.
 
 **Option A: Build from source**
 ```bash
@@ -179,12 +179,21 @@ make
 **Option B: Download pre-built binary**
 - Check releases at https://github.com/kermitt2/pdfalto/releases
 
-**Configure the path:**
+**Configure the path (one of the following):**
+
 ```bash
+# Option 1: Set environment variable
 export PDFALTO_PATH="/path/to/pdfalto/build/pdfalto"
+
+# Option 2: Add to system PATH
+sudo cp /path/to/pdfalto/build/pdfalto /usr/local/bin/
+
+# Option 3: Place in auto-discovered location
+cp /path/to/pdfalto/build/pdfalto ~/pdfalto/pdfalto
 ```
 
-If not configured, the pipeline automatically searches:
+The pipeline automatically searches these locations:
+- `PDFALTO_PATH` environment variable
 - System PATH (`which pdfalto`)
 - `/usr/local/bin/pdfalto`
 - `/usr/bin/pdfalto`
@@ -232,7 +241,7 @@ python poster_extraction.py \
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `HF_TOKEN` | HuggingFace access token for Llama model | Yes |
-| `PDFALTO_PATH` | Path to pdfalto binary | No (falls back to PyMuPDF) |
+| `PDFALTO_PATH` | Path to pdfalto binary | Yes (if not in PATH or standard location) |
 | `CUDA_VISIBLE_DEVICES` | GPU device index(es) to use | No (default: 0) |
 
 ### Input Directory Structure
@@ -274,7 +283,6 @@ qwen-vl-utils
 accelerate
 Pillow
 numpy
-PyMuPDF
 ```
 
 Install all dependencies:
@@ -286,8 +294,8 @@ pip install -r requirements.txt
 
 | Tool | Purpose | Required |
 |------|---------|----------|
-| `pdfalto` | PDF layout analysis | No (PyMuPDF fallback available) |
-| CUDA toolkit | GPU acceleration | Yes (CPU mode available but slow) |
+| `pdfalto` | PDF layout analysis | Yes |
+| CUDA toolkit | GPU acceleration | Yes |
 
 ## Output Structure
 
