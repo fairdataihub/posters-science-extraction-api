@@ -1,14 +1,22 @@
 #!/usr/bin/env python3
 """
-LLAMA POSTER EXTRACTION MVP v36 - ROBUST JSON REPAIR
+Poster Science - Scientific Poster Metadata Extraction Pipeline
 
-Based on v24 (60% baseline) with improved JSON repair:
-- Fix unescaped quote issues (e.g., 319 pc/" -> 319 pc/\\")
-- Better truncation repair with proper string closing
-- More aggressive brace/bracket balancing
-- Keep v24's section-aware prompt (proven effective)
-- Keep Qwen2-VL for image OCR
-- Keep pdfalto for PDF
+Extracts structured metadata from scientific poster PDFs and images
+into JSON format conforming to the posters-science schema.
+
+Models:
+- Meta Llama 3.1 8B Instruct: JSON structuring
+- Qwen2-VL-7B-Instruct: Vision OCR for images
+
+Requirements:
+- pdfalto: PDF layout analysis tool (https://github.com/kermitt2/pdfalto)
+- CUDA-capable GPU with ≥16GB VRAM
+
+Environment Variables:
+- PDFALTO_PATH: Path to pdfalto binary (required for PDF processing)
+- CUDA_VISIBLE_DEVICES: GPU device(s) to use (default: 0)
+- HF_TOKEN: HuggingFace token for gated models (required for Llama)
 """
 
 import os
@@ -21,6 +29,7 @@ import time
 import argparse
 import subprocess
 import tempfile
+import shutil
 import gc
 import unicodedata
 import numpy as np
@@ -65,8 +74,9 @@ def log(msg: str):
 
 def free_gpu():
     gc.collect()
-    torch.cuda.empty_cache()
-    torch.cuda.synchronize()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        torch.cuda.synchronize()
 
 
 # ============================
@@ -84,7 +94,7 @@ def load_vision_model():
         _vision_model = Qwen2VLForConditionalGeneration.from_pretrained(
             "Qwen/Qwen2-VL-7B-Instruct",
             torch_dtype=torch.bfloat16,
-            device_map="cuda:0",
+            device_map=DEVICE,
         )
         _vision_processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-7B-Instruct")
         log(f"   ✓ Qwen2-VL loaded on {next(_vision_model.parameters()).device}")
@@ -179,11 +189,15 @@ def extract_text_with_pdfalto(pdf_path: str) -> str:
                 text=True,
                 timeout=60,
             )
-            if result.returncode != 0 or not os.path.exists(xml_path):
-                return None
+            if result.returncode != 0:
+                raise RuntimeError(f"pdfalto returned code {result.returncode}: {result.stderr}")
+            if not os.path.exists(xml_path):
+                raise RuntimeError("pdfalto did not produce output XML")
             return parse_alto_xml(xml_path)
-    except Exception:
-        return None
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(f"pdfalto timeout processing {pdf_path}")
+    except Exception as e:
+        raise RuntimeError(f"pdfalto error: {e}")
 
 
 def parse_alto_xml(xml_path: str) -> str:
@@ -269,7 +283,7 @@ def load_json_model():
         _json_model = AutoModelForCausalLM.from_pretrained(
             "akjindal53244/Llama-3.1-Storm-8B",
             torch_dtype=torch.bfloat16,
-            device_map="cuda:0",
+            device_map=DEVICE,
         )
         log(f"   ✓ Llama 3.1 8B loaded on {next(_json_model.parameters()).device}")
     return _json_model, _json_tokenizer
@@ -833,7 +847,7 @@ def run(annotation_dir: str, output_dir: str):
     pairs = find_pairs(annotation_dir)
 
     log("=" * 60)
-    log("LLAMA MVP v41 - DUAL PROMPT WITH FALLBACK")
+    log("POSTER EXTRACTION PIPELINE")
     log("=" * 60)
     log(f"Posters: {len(pairs)}")
     log(f"GPU: {torch.cuda.get_device_name(0)}")

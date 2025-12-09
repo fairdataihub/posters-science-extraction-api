@@ -121,7 +121,7 @@ The pipeline is validated against manually annotated reference JSONs using four 
 
 ## Validation Results
 
-**Pipeline v41 - Production Release**: 10/10 (100%) passing
+**Production Release**: 10/10 (100%) passing
 
 | Poster ID | Word | ROUGE-L | Numbers | Fields | OCR Method  |
 | --------- | ---- | ------- | ------- | ------ | ----------- |
@@ -138,16 +138,105 @@ The pipeline is validated against manually annotated reference JSONs using four 
 
 **Aggregate Performance**: w=0.969, r=0.887, n=0.936, f=1.083
 
-## Usage
+## Installation
+
+### 1. Clone the Repository
 
 ```bash
-# Activate environment
-source ~/myenv/bin/activate
+git clone https://github.com/fairdataihub/posters-science-posterextraction-beta.git
+cd posters-science-posterextraction-beta
+```
 
-# Run extraction
+### 2. Create Python Environment
+
+```bash
+python -m venv venv
+source venv/bin/activate  # Linux/macOS
+# or: venv\Scripts\activate  # Windows
+
+pip install -r requirements.txt
+```
+
+### 3. Configure HuggingFace Access (Required)
+
+Meta's Llama 3.1 8B is a gated model requiring HuggingFace authentication:
+
+1. Create a HuggingFace account at https://huggingface.co
+2. Accept the Llama 3.1 license at https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct
+3. Generate an access token at https://huggingface.co/settings/tokens
+4. Set the environment variable:
+
+```bash
+export HF_TOKEN="your_huggingface_token"
+```
+
+Or add to `~/.bashrc` / `~/.zshrc` for persistence.
+
+### 4. Install pdfalto (Required)
+
+`pdfalto` is required for PDF text extraction with layout preservation.
+
+**Option A: Build from source**
+```bash
+git clone https://github.com/kermitt2/pdfalto.git
+cd pdfalto
+mkdir build && cd build
+cmake ..
+make
+# Binary will be at: pdfalto/build/pdfalto
+```
+
+**Option B: Download pre-built binary**
+- Check releases at https://github.com/kermitt2/pdfalto/releases
+
+**Configure the path (one of the following):**
+
+```bash
+# Option 1: Set environment variable
+export PDFALTO_PATH="/path/to/pdfalto/build/pdfalto"
+
+# Option 2: Add to system PATH
+sudo cp /path/to/pdfalto/build/pdfalto /usr/local/bin/
+
+# Option 3: Place in auto-discovered location
+cp /path/to/pdfalto/build/pdfalto ~/pdfalto/pdfalto
+```
+
+The pipeline automatically searches these locations:
+- `PDFALTO_PATH` environment variable
+- System PATH (`which pdfalto`)
+- `/usr/local/bin/pdfalto`
+- `/usr/bin/pdfalto`
+- `~/pdfalto/pdfalto`
+- `~/.local/bin/pdfalto`
+- `./pdfalto/pdfalto` (relative to script)
+
+## Usage
+
+### Basic Usage
+
+```bash
+python poster_extraction.py \
+    --annotation-dir "./posters" \
+    --output-dir "./output"
+```
+
+### With Environment Variables
+
+```bash
+# Specify GPU device
+CUDA_VISIBLE_DEVICES=0 python poster_extraction.py --annotation-dir ./posters
+
+# Custom pdfalto location
+PDFALTO_PATH=/opt/pdfalto/pdfalto python poster_extraction.py --annotation-dir ./posters
+
+# Full example
+HF_TOKEN="hf_xxx" \
+PDFALTO_PATH="/usr/local/bin/pdfalto" \
+CUDA_VISIBLE_DEVICES=0 \
 python poster_extraction.py \
     --annotation-dir "./manual_poster_annotation" \
-    --output-dir "./output"
+    --output-dir "./extraction_output"
 ```
 
 ### Command Line Arguments
@@ -168,8 +257,9 @@ python poster_extraction.py \
 
 - Python 3.10+
 - CUDA 11.8+ with compatible drivers
+- Linux, macOS, or Windows with WSL2
 
-### Dependencies
+### Python Dependencies
 
 ```bash
 transformers>=4.40.0
@@ -179,6 +269,11 @@ qwen-vl-utils
 accelerate
 Pillow
 numpy
+```
+
+Install all dependencies:
+```bash
+pip install -r requirements.txt
 ```
 
 ### External Tools
