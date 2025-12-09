@@ -21,3 +21,7 @@ flake8
 mypy
 pylint
 pydocstyle
+
+# jupyter
+jupyter
+ipython

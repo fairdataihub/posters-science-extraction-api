@@ -264,10 +264,10 @@ def load_json_model():
     if _json_model is None:
         log("Loading Llama 3.1 8B for JSON structuring...")
         _json_tokenizer = AutoTokenizer.from_pretrained(
-            "meta-llama/Llama-3.1-8B-Instruct"
+            "akjindal53244/Llama-3.1-Storm-8B"
         )
         _json_model = AutoModelForCausalLM.from_pretrained(
-            "meta-llama/Llama-3.1-8B-Instruct",
+            "akjindal53244/Llama-3.1-Storm-8B",
             torch_dtype=torch.bfloat16,
             device_map="cuda:0",
         )
