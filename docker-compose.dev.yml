@@ -1,0 +1,39 @@
+# Development configuration for docker-compose
+# Can be used standalone: docker compose -f docker-compose.dev.yml up
+# Or as override: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  poster-extraction:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: poster-extraction:latest
+    container_name: poster-extraction
+    environment:
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - PORT=8000
+      - HOST=0.0.0.0
+    ports:
+      - "${API_PORT:-8000}:8000"
+    # Override volumes for development
+    volumes:
+      # Mount source code for live editing
+      - ./poster_extraction.py:/app/poster_extraction.py
+      - ./api.py:/app/api.py
+    # Override command to allow interactive use
+    stdin_open: true
+    tty: true
+    # Remove restart policy for dev
+    restart: "no"
+    deploy:
+      resources:
+        limits:
+          memory: 32G
+        reservations:
+          memory: 16G
+          devices:
+            - driver: nvidia
+              count: ${GPU_COUNT:-1}
+              capabilities: [gpu]

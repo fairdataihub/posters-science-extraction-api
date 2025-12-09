@@ -4,4 +4,24 @@ rouge-score
 qwen-vl-utils
 accelerate
 Pillow
+pymupdf
 numpy
+
+# API
+flask>=2.3.0
+flask-cors>=4.0.0
+requests>=2.31.0
+
+# Formatters
+black
+isort
+
+# Linters
+flake8
+mypy
+pylint
+pydocstyle
+
+# jupyter
+jupyter
+ipython
