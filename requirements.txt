@@ -6,6 +6,7 @@ accelerate
 Pillow
 pymupdf
 numpy
+ollama>=0.2.0
 
 # API
 flask>=2.3.0

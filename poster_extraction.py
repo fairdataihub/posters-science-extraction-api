@@ -6,17 +6,18 @@ Extracts structured metadata from scientific poster PDFs and images
 into JSON format conforming to the posters-science schema.
 
 Models:
-- Meta Llama 3.1 8B Instruct: JSON structuring
+- Ollama Llama 3.1 8B Instruct: JSON structuring
 - Qwen2-VL-7B-Instruct: Vision OCR for images
 
 Requirements:
 - pdfalto: PDF layout analysis tool (https://github.com/kermitt2/pdfalto)
+- Ollama: Local LLM server (https://ollama.ai) with llama3.1:8b-instruct-q8_0
 - CUDA-capable GPU with ≥16GB VRAM
 
 Environment Variables:
 - PDFALTO_PATH: Path to pdfalto binary (required for PDF processing)
 - CUDA_VISIBLE_DEVICES: GPU device(s) to use (default: 0)
-- HF_TOKEN: HuggingFace token for gated models (required for Llama)
+- HF_TOKEN: HuggingFace token for gated models (required for Qwen Vision)
 """
 
 import os
@@ -38,15 +39,19 @@ from datetime import datetime
 
 from PIL import Image
 
+# Ollama for Llama 3.1 8B JSON structuring
+import ollama
+
 from transformers import (
-    AutoModelForCausalLM,
-    AutoTokenizer,
     Qwen2VLForConditionalGeneration,
     AutoProcessor,
 )
 from rouge_score import rouge_scorer
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
+# Ollama model configuration
+OLLAMA_MODEL = "llama3.1:8b-instruct-q8_0"
 
 # Find pdfalto: check environment variable, then PATH, then Downloads directory
 PDFALTO_PATH = os.environ.get("PDFALTO_PATH")
@@ -94,7 +99,7 @@ def load_vision_model():
         _vision_model = Qwen2VLForConditionalGeneration.from_pretrained(
             "Qwen/Qwen2-VL-7B-Instruct",
             torch_dtype=torch.bfloat16,
-            device_map=DEVICE,
+            device_map="cuda:0",
         )
         _vision_processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-7B-Instruct")
         log(f"   ✓ Qwen2-VL loaded on {next(_vision_model.parameters()).device}")
@@ -266,47 +271,50 @@ def get_raw_text(
 
 
 # ============================
-# JSON MODEL
+# JSON MODEL (OLLAMA)
 # ============================
-
-_json_model = None
-_json_tokenizer = None
 
 
 def load_json_model():
-    global _json_model, _json_tokenizer
-    if _json_model is None:
-        log("Loading Llama 3.1 8B for JSON structuring...")
-        _json_tokenizer = AutoTokenizer.from_pretrained(
-            "akjindal53244/Llama-3.1-Storm-8B"
-        )
-        _json_model = AutoModelForCausalLM.from_pretrained(
-            "akjindal53244/Llama-3.1-Storm-8B",
-            torch_dtype=torch.bfloat16,
-            device_map=DEVICE,
-        )
-        log(f"   ✓ Llama 3.1 8B loaded on {next(_json_model.parameters()).device}")
-    return _json_model, _json_tokenizer
+    """Verify Ollama model is available and pull if needed."""
+    log(f"Checking Ollama model: {OLLAMA_MODEL}")
+    try:
+        ollama.show(OLLAMA_MODEL)
+        log(f"   ✓ Ollama model ready: {OLLAMA_MODEL}")
+    except ollama.ResponseError:
+        log(f"   Model not found, pulling {OLLAMA_MODEL}...")
+        ollama.pull(OLLAMA_MODEL)
+        log(f"   ✓ Model pulled: {OLLAMA_MODEL}")
+    except Exception as e:
+        log(f"   ⚠️ Ollama error: {e}")
+        log(f"   Attempting to use model anyway...")
+    
+    # Return None, None to maintain API compatibility
+    return None, None
 
 
 def generate(model, tokenizer, prompt: str, max_tokens: int) -> str:
-    messages = [{"role": "user", "content": prompt}]
-    input_text = tokenizer.apply_chat_template(
-        messages, tokenize=False, add_generation_prompt=True
-    )
-    inputs = tokenizer(input_text, return_tensors="pt").to(model.device)
+    """Generate response using Ollama with Llama 3.1 chat template."""
+    # Apply Llama 3.1 chat template manually (matches transformers behavior)
+    formatted_prompt = f"""<|begin_of_text|><|start_header_id|>user<|end_header_id|>
 
-    with torch.no_grad():
-        outputs = model.generate(
-            **inputs,
-            max_new_tokens=max_tokens,
-            do_sample=False,
-            pad_token_id=tokenizer.eos_token_id,
-        )
+{prompt}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
-    return tokenizer.decode(
-        outputs[0][inputs["input_ids"].shape[1] :], skip_special_tokens=True
+"""
+    
+    response = ollama.generate(
+        model=OLLAMA_MODEL,
+        prompt=formatted_prompt,
+        options={
+            "num_ctx": 32768,       # Large context for poster content + output
+            "num_predict": max_tokens,
+            "temperature": 0,
+            "top_p": 1.0,
+            "repeat_penalty": 1.0,
+        },
+        raw=True,  # Don't apply any additional template
     )
+    return response["response"]
 
 
 # PRIMARY PROMPT (best quality - 90% pass rate)
@@ -390,7 +398,25 @@ def is_truncated(json_str: str) -> bool:
     return False
 
 
+def preprocess_raw_text(text: str) -> str:
+    """Remove/replace problematic quotes that cause Ollama JSON issues.
+    
+    Ollama's Llama 3.1 tends to include literal quotes from source text,
+    causing double-quote artifacts in JSON output. This preprocessing
+    sanitizes quotes to prevent JSON parsing failures.
+    """
+    # Replace curly/smart quotes with nothing (they cause double-quote artifacts)
+    text = text.replace('"', '').replace('"', '')
+    text = text.replace(''', "'").replace(''', "'")
+    # Replace straight double quotes with single quotes
+    text = text.replace('"', "'")
+    return text
+
+
 def extract_json_with_retry(raw_text: str, model, tokenizer) -> dict:
+    # Preprocess to remove quotes that cause Ollama JSON artifacts
+    raw_text = preprocess_raw_text(raw_text)
+    
     # Try primary prompt first
     prompt = EXTRACTION_PROMPT.format(raw_text=raw_text)
 
@@ -420,15 +446,30 @@ def extract_json_with_retry(raw_text: str, model, tokenizer) -> dict:
 # ============================
 
 
+def repair_double_quote_values(s: str) -> str:
+    """Fix Ollama's pattern where values start with double quotes: "": ""text -> ": "text"""
+    # Pattern: ": "" followed by actual text (not end of value)
+    # This catches "sectionContent": ""This project... -> "sectionContent": "This project...
+    s = re.sub(r'": ""([^",}\]\n])', r'": "\1', s)
+    return s
+
+
 def robust_json_parse(response: str) -> dict:
     response = response.strip()
 
-    if response.startswith("```json"):
-        response = response[7:]
-    elif response.startswith("```"):
-        response = response[3:]
-    if response.endswith("```"):
-        response = response[:-3]
+    # Handle markdown code blocks (Ollama often wraps in ```)
+    if "```json" in response:
+        start_marker = response.find("```json")
+        end_marker = response.find("```", start_marker + 7)
+        if end_marker > start_marker:
+            response = response[start_marker + 7:end_marker]
+    elif "```" in response:
+        # Find content between first ``` and next ```
+        start_marker = response.find("```")
+        end_marker = response.find("```", start_marker + 3)
+        if end_marker > start_marker:
+            response = response[start_marker + 3:end_marker]
+
     response = response.strip()
 
     start = response.find("{")
@@ -438,6 +479,7 @@ def robust_json_parse(response: str) -> dict:
     json_str = response[start:]
 
     # First, fix known problematic patterns (do this BEFORE extracting object)
+    json_str = repair_double_quote_values(json_str)  # Ollama-specific fix
     json_str = repair_unescaped_quotes(json_str)
 
     # Try to extract complete JSON object
@@ -453,6 +495,7 @@ def robust_json_parse(response: str) -> dict:
 
     # Apply repairs in order of likelihood to fix
     repair_funcs = [
+        repair_double_quote_values,  # Ollama-specific fix
         repair_unescaped_quotes,  # Fix quote escaping first
         repair_trailing_commas,
         repair_unicode,
@@ -581,6 +624,7 @@ def repair_truncation(s: str) -> str:
 
 
 def repair_all(s: str) -> str:
+    s = repair_double_quote_values(s)  # Ollama-specific fix
     s = repair_unescaped_quotes(s)  # Fix quote escaping first
     s = repair_unicode(s)
     s = repair_trailing_commas(s)
@@ -847,8 +891,9 @@ def run(annotation_dir: str, output_dir: str):
     pairs = find_pairs(annotation_dir)
 
     log("=" * 60)
-    log("POSTER EXTRACTION PIPELINE")
+    log("POSTER EXTRACTION PIPELINE (Ollama)")
     log("=" * 60)
+    log(f"Ollama Model: {OLLAMA_MODEL}")
     log(f"Posters: {len(pairs)}")
     log(f"GPU: {torch.cuda.get_device_name(0)}")
 
@@ -890,7 +935,7 @@ def run(annotation_dir: str, output_dir: str):
 
     # Phase 2: JSON structuring
     log("\n" + "=" * 40)
-    log("PHASE 2: JSON Structuring")
+    log("PHASE 2: JSON Structuring (Ollama)")
     log("=" * 40)
 
     model, tokenizer = load_json_model()
