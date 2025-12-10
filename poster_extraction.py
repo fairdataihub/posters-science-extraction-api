@@ -30,7 +30,6 @@ import time
 import argparse
 import subprocess
 import tempfile
-import shutil
 import gc
 import unicodedata
 import numpy as np
@@ -38,6 +37,9 @@ from pathlib import Path
 from datetime import datetime
 
 from PIL import Image
+
+os.environ["OLLAMA_HOST"] = "http://host.docker.internal:11434"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 # Ollama for Llama 3.1 8B JSON structuring
 import ollama
@@ -48,7 +50,6 @@ from transformers import (
 )
 from rouge_score import rouge_scorer
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 # Ollama model configuration
 OLLAMA_MODEL = "llama3.1:8b-instruct-q8_0"
@@ -195,7 +196,9 @@ def extract_text_with_pdfalto(pdf_path: str) -> str:
                 timeout=60,
             )
             if result.returncode != 0:
-                raise RuntimeError(f"pdfalto returned code {result.returncode}: {result.stderr}")
+                raise RuntimeError(
+                    f"pdfalto returned code {result.returncode}: {result.stderr}"
+                )
             if not os.path.exists(xml_path):
                 raise RuntimeError("pdfalto did not produce output XML")
             return parse_alto_xml(xml_path)
@@ -275,6 +278,54 @@ def get_raw_text(
 # ============================
 
 
+def ensure_ollama_available(max_retries=10, retry_delay=2):
+    """Ensure Ollama service is running and accessible.
+
+    Args:
+        max_retries: Maximum number of retry attempts (default: 10)
+        retry_delay: Delay between retries in seconds (default: 2)
+
+    Raises:
+        RuntimeError: If Ollama is not available after all retries
+    """
+    ollama_host = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
+
+    for attempt in range(1, max_retries + 1):
+        try:
+            # Try to list models as a health check
+            ollama.list()
+            log(f"   ✓ Ollama is available at {ollama_host}")
+            return
+        except Exception as e:
+            if attempt < max_retries:
+                log(f"   ⚠️ Ollama not available (attempt {attempt}/{max_retries}): {e}")
+                log(f"   Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+            else:
+                raise RuntimeError(
+                    f"Ollama health check failed after {max_retries} attempts: {e}. "
+                    f"Please ensure Ollama is running and accessible at {ollama_host}"
+                )
+
+
+def ensure_models_available():
+    """Ensure all required Ollama models are available and pull if needed."""
+    log(f"Ensuring required model is available: {OLLAMA_MODEL}")
+    try:
+        # Check if model exists
+        ollama.show(OLLAMA_MODEL)
+        log(f"   ✓ Model {OLLAMA_MODEL} is ready")
+    except ollama.ResponseError:
+        log(f"   Model {OLLAMA_MODEL} not found, pulling...")
+        try:
+            ollama.pull(OLLAMA_MODEL)
+            log(f"   ✓ Model {OLLAMA_MODEL} pulled successfully")
+        except Exception as e:
+            raise RuntimeError(f"Failed to pull model {OLLAMA_MODEL}: {e}")
+    except Exception as e:
+        raise RuntimeError(f"Error checking model {OLLAMA_MODEL}: {e}")
+
+
 def load_json_model():
     """Verify Ollama model is available and pull if needed."""
     log(f"Checking Ollama model: {OLLAMA_MODEL}")
@@ -288,7 +339,7 @@ def load_json_model():
     except Exception as e:
         log(f"   ⚠️ Ollama error: {e}")
         log(f"   Attempting to use model anyway...")
-    
+
     # Return None, None to maintain API compatibility
     return None, None
 
@@ -301,12 +352,12 @@ def generate(model, tokenizer, prompt: str, max_tokens: int) -> str:
 {prompt}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
 """
-    
+
     response = ollama.generate(
         model=OLLAMA_MODEL,
         prompt=formatted_prompt,
         options={
-            "num_ctx": 32768,       # Large context for poster content + output
+            "num_ctx": 32768,  # Large context for poster content + output
             "num_predict": max_tokens,
             "temperature": 0,
             "top_p": 1.0,
@@ -400,14 +451,14 @@ def is_truncated(json_str: str) -> bool:
 
 def preprocess_raw_text(text: str) -> str:
     """Remove/replace problematic quotes that cause Ollama JSON issues.
-    
+
     Ollama's Llama 3.1 tends to include literal quotes from source text,
     causing double-quote artifacts in JSON output. This preprocessing
     sanitizes quotes to prevent JSON parsing failures.
     """
     # Replace curly/smart quotes with nothing (they cause double-quote artifacts)
-    text = text.replace('"', '').replace('"', '')
-    text = text.replace(''', "'").replace(''', "'")
+    text = text.replace('"', "").replace('"', "")
+    text = text.replace(""", "'").replace(""", "'")
     # Replace straight double quotes with single quotes
     text = text.replace('"', "'")
     return text
@@ -416,7 +467,7 @@ def preprocess_raw_text(text: str) -> str:
 def extract_json_with_retry(raw_text: str, model, tokenizer) -> dict:
     # Preprocess to remove quotes that cause Ollama JSON artifacts
     raw_text = preprocess_raw_text(raw_text)
-    
+
     # Try primary prompt first
     prompt = EXTRACTION_PROMPT.format(raw_text=raw_text)
 
@@ -462,13 +513,13 @@ def robust_json_parse(response: str) -> dict:
         start_marker = response.find("```json")
         end_marker = response.find("```", start_marker + 7)
         if end_marker > start_marker:
-            response = response[start_marker + 7:end_marker]
+            response = response[start_marker + 7 : end_marker]
     elif "```" in response:
         # Find content between first ``` and next ```
         start_marker = response.find("```")
         end_marker = response.find("```", start_marker + 3)
         if end_marker > start_marker:
-            response = response[start_marker + 3:end_marker]
+            response = response[start_marker + 3 : end_marker]
 
     response = response.strip()
 
@@ -852,12 +903,19 @@ def process_poster_file(poster_path: str) -> dict:
     """
     log(f"Processing poster: {poster_path}")
 
+    # Ensure Ollama is available (lightweight check for standalone usage)
+    try:
+        ensure_ollama_available(max_retries=3, retry_delay=1)
+        ensure_models_available()
+    except RuntimeError as e:
+        return {"error": f"Ollama not available: {e}"}
+
     # Extract raw text
     raw_text, source = get_raw_text(poster_path)
 
     if not raw_text or source == "unknown":
         return {
-            "error": f"Failed to extract text from file. Unsupported format or extraction failed."
+            "error": "Failed to extract text from file. Unsupported format or extraction failed."
         }
 
     log(f"Extracted {len(raw_text)} characters using {source}")
@@ -896,6 +954,23 @@ def run(annotation_dir: str, output_dir: str):
     log(f"Ollama Model: {OLLAMA_MODEL}")
     log(f"Posters: {len(pairs)}")
     log(f"GPU: {torch.cuda.get_device_name(0)}")
+
+    # Ensure Ollama is available before starting processing
+    try:
+        log("Checking Ollama availability (will retry up to 10 times)...")
+        ensure_ollama_available(max_retries=10, retry_delay=2)
+        log("✅ Ollama health check passed - service is ready")
+
+        # Ensure all required models are available
+        log("Ensuring all required models are available...")
+        ensure_models_available()
+        log("✅ All required models are ready")
+    except RuntimeError as e:
+        log(f"❌ Ollama health check failed after all retries: {e}")
+        log(
+            "Please ensure Ollama is running and accessible on host.docker.internal:11434"
+        )
+        raise
 
     image_posters = [
         p for p in pairs if Path(p[0]).suffix.lower() in [".jpg", ".jpeg", ".png"]
