@@ -31,9 +31,20 @@ ENV/
 # Output directories
 output/
 example_output/
+example_posters/
+manual_poster_annotation/
 
 # Model cache (will be mounted as volume)
 .cache/
+.huggingface/
+
+# Test files
+test_*.py
+*.ipynb
+test.ipynb
+
+# Development files
+docker-compose.dev.yml
 
 # OS
 .DS_Store
