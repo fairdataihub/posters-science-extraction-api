@@ -11,7 +11,7 @@ from pathlib import Path
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-from poster_extraction import process_poster_file, log
+from poster_extraction import process_poster_file, log, ensure_ollama_available
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -38,8 +38,21 @@ def root():
 
 @app.route("/health", methods=["GET"])
 def health():
-    """Health check endpoint."""
-    return jsonify({"status": "healthy"})
+    """Health check endpoint including Ollama status."""
+    checks = {"api": "ok"}
+
+    try:
+        # Fast, single-attempt Ollama health check to avoid long blocking retries
+        ensure_ollama_available(max_retries=5, retry_delay=1)
+        checks["ollama"] = "ok"
+        status = "healthy"
+        http_status = 200
+    except Exception as e:
+        checks["ollama"] = f"error: {str(e)}"
+        status = "unhealthy"
+        http_status = 503
+
+    return jsonify({"status": status, "checks": checks}), http_status
 
 
 @app.route("/extract", methods=["POST"])
