@@ -1,63 +1,65 @@
-FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
+# ---- builder: compile pdfalto ----
+FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04 AS builder
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# System deps needed to build pdfalto
+RUN --mount=type=cache,target=/var/cache/apt \
+    apt-get update && apt-get install -y --no-install-recommends \
+    git build-essential cmake autotools-dev autoconf automake libtool \
+    libpoppler-dev libxerces-c-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Faster / more reliable git
+RUN git config --global http.postBuffer 524288000 \
+    && git config --global http.lowSpeedLimit 0 \
+    && git config --global http.lowSpeedTime 0 \
+    && git config --global http.version HTTP/1.1
+
+# Pin to a known version tag (change if you want another)
+ARG PDFALTO_TAG=0.4
+
+# Shallow clone + shallow submodules
+RUN --mount=type=cache,target=/root/.cache/git \
+    git clone --depth 1 --branch ${PDFALTO_TAG} \
+    --recurse-submodules --shallow-submodules \
+    https://github.com/kermitt2/pdfalto.git /tmp/pdfalto \
+    && cmake -S /tmp/pdfalto -B /tmp/pdfalto/build \
+    && cmake --build /tmp/pdfalto/build -j"$(nproc)" \
+    && cp /tmp/pdfalto/build/pdfalto /usr/local/bin/pdfalto
+
+
+# ---- runtime: your API image ----
+FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
     CUDA_VISIBLE_DEVICES=0
 
-# Install dependencies
-RUN apt-get update && apt-get install -y \
-    git \
-    build-essential \
-    cmake \
-    autotools-dev \
-    autoconf \
-    automake \
-    libtool \
-    libpoppler-dev \
-    libxerces-c-dev \
-    python3.10 \
-    python3-pip \
-    curl
+# Only runtime libs (no compiler toolchain)
+RUN --mount=type=cache,target=/var/cache/apt \
+    apt-get update && apt-get install -y --no-install-recommends \
+    python3.10 python3-pip \
+    libpoppler-dev libxerces-c-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Create symlink for python
-RUN ln -s /usr/bin/python3.10 /usr/bin/python
+RUN ln -sf /usr/bin/python3.10 /usr/bin/python
 
-# Build pdfalto
-# Configure git for better network resilience
-RUN git config --global http.postBuffer 524288000 && \
-    git config --global http.lowSpeedLimit 0 && \
-    git config --global http.lowSpeedTime 0 && \
-    git config --global http.version HTTP/1.1
+# Bring in pdfalto binary
+COPY --from=builder /usr/local/bin/pdfalto /usr/local/bin/pdfalto
 
-# Clone pdfalto with retry logic and shallow clone for faster, more reliable builds
-RUN for i in 1 2 3 4 5; do \
-    git clone --depth 1 --single-branch https://github.com/kermitt2/pdfalto.git /tmp/pdfalto && \
-    break || sleep 5; \
-    done && \
-    cd /tmp/pdfalto && \
-    git submodule update --init --recursive --depth 1 && \
-    cmake . && \
-    make && \
-    chmod +x pdfalto && \
-    cp pdfalto /usr/local/bin/pdfalto
-
-# Set working directory
 WORKDIR /app
 
-# Copy requirements and install Python dependencies
+# Install python deps with pip cache
 COPY requirements-prod.txt requirements.txt
-RUN pip3 install --upgrade pip && \
-    pip3 install -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip3 install --upgrade pip \
+    && pip3 install -r requirements.txt
 
-# Copy application code
 COPY poster_extraction.py api.py ./
 
-# Create directories for input/output
 RUN mkdir -p /app/input /app/output
 
-# Expose API port
 EXPOSE 8000
-
-# Set default command to run API server
 CMD ["python", "api.py"]
-
