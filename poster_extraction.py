@@ -5,23 +5,22 @@ Poster Science - Scientific Poster Metadata Extraction Pipeline
 Extracts structured metadata from scientific poster PDFs and images
 into JSON format conforming to the posters-science schema.
 
-Models:
-- Meta Llama 3.1 8B Instruct: JSON structuring
-- Qwen2-VL-7B-Instruct: Vision OCR for images
+Models (Ollama):
+- Llama 3.1 8B Instruct (Q8_0): JSON structuring
+- Qwen3-VL 4B Instruct (Q8_0): Vision OCR for images
 
 Requirements:
 - pdfalto: PDF layout analysis tool (https://github.com/kermitt2/pdfalto)
-- CUDA-capable GPU with ≥16GB VRAM
+- Ollama: Local LLM server (https://ollama.ai)
+- CUDA-capable GPU with ≥8GB VRAM
 
 Environment Variables:
 - PDFALTO_PATH: Path to pdfalto binary (required for PDF processing)
 - CUDA_VISIBLE_DEVICES: GPU device(s) to use (default: 0)
-- HF_TOKEN: HuggingFace token for gated models (required for Llama)
 """
 
 import os
 import shutil
-import torch
 import fitz  # PyMuPDF
 import json
 import re
@@ -29,7 +28,6 @@ import time
 import argparse
 import subprocess
 import tempfile
-import shutil
 import gc
 import unicodedata
 import numpy as np
@@ -38,29 +36,28 @@ from datetime import datetime
 
 from PIL import Image
 
-from transformers import (
-    AutoModelForCausalLM,
-    AutoTokenizer,
-    Qwen2VLForConditionalGeneration,
-    AutoProcessor,
-)
+import ollama
 from rouge_score import rouge_scorer
+
+# Ollama models
+OLLAMA_JSON_MODEL = "llama3.1:8b-instruct-q8_0"
+OLLAMA_VISION_MODEL = "qwen3-vl:4b-instruct-q8_0"
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-# Find pdfalto: check environment variable, then PATH, then Downloads directory
+# Find pdfalto: check environment variable, then project path, then PATH
 PDFALTO_PATH = os.environ.get("PDFALTO_PATH")
 if not PDFALTO_PATH:
-    # Check if pdfalto is in PATH
-    pdfalto_in_path = shutil.which("pdfalto")
-    if pdfalto_in_path:
-        PDFALTO_PATH = pdfalto_in_path
+    # Check project-specific path
+    project_pdfalto = Path(__file__).parent.parent.parent / "pdfalto" / "pdfalto"
+    if project_pdfalto.exists():
+        PDFALTO_PATH = str(project_pdfalto)
     else:
-        # Fall back to Downloads directory (for local development)
-        home_dir = Path.home()
-        downloads_dir = home_dir / "Downloads"
-        PDFALTO_PATH = downloads_dir / "pdfalto"
-        if not Path(PDFALTO_PATH).exists():
+        # Check if pdfalto is in PATH
+        pdfalto_in_path = shutil.which("pdfalto")
+        if pdfalto_in_path:
+            PDFALTO_PATH = pdfalto_in_path
+        else:
             PDFALTO_PATH = None
 
 MAX_JSON_TOKENS = 18000
@@ -72,60 +69,64 @@ def log(msg: str):
     print(f"[{ts}] {msg}", flush=True)
 
 
-def free_gpu():
-    gc.collect()
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache()
-        torch.cuda.synchronize()
-
-
 # ============================
-# QWEN2-VL OCR FOR IMAGES
+# VISION OCR FOR IMAGES
 # ============================
 
-_vision_model = None
-_vision_processor = None
+_vision_model_ready = False
 
 
 def load_vision_model():
-    global _vision_model, _vision_processor
-    if _vision_model is None:
-        log("Loading Qwen2-VL-7B for image OCR...")
-        _vision_model = Qwen2VLForConditionalGeneration.from_pretrained(
-            "Qwen/Qwen2-VL-7B-Instruct",
-            torch_dtype=torch.bfloat16,
-            device_map=DEVICE,
-        )
-        _vision_processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-7B-Instruct")
-        log(f"   ✓ Qwen2-VL loaded on {next(_vision_model.parameters()).device}")
-    return _vision_model, _vision_processor
+    """Ensure Ollama vision model is available."""
+    global _vision_model_ready
+    if not _vision_model_ready:
+        log(f"Checking Ollama vision model: {OLLAMA_VISION_MODEL}")
+        try:
+            ollama.show(OLLAMA_VISION_MODEL)
+            log(f"   ✓ Vision model ready: {OLLAMA_VISION_MODEL}")
+        except ollama.ResponseError:
+            log(f"   Pulling {OLLAMA_VISION_MODEL}...")
+            ollama.pull(OLLAMA_VISION_MODEL)
+            log(f"   ✓ Vision model pulled: {OLLAMA_VISION_MODEL}")
+        _vision_model_ready = True
 
 
 def unload_vision_model():
-    global _vision_model, _vision_processor
-    if _vision_model is not None:
-        del _vision_model
-        _vision_model = None
-    if _vision_processor is not None:
-        del _vision_processor
-        _vision_processor = None
-    free_gpu()
-    log("   ✓ Vision model unloaded")
+    """Unload Ollama vision model to free GPU memory."""
+    global _vision_model_ready
+    if _vision_model_ready:
+        try:
+            subprocess.run(
+                ["ollama", "stop", OLLAMA_VISION_MODEL],
+                capture_output=True,
+                timeout=30
+            )
+            time.sleep(3)
+            log(f"   ✓ Vision model unloaded: {OLLAMA_VISION_MODEL}")
+        except Exception as e:
+            log(f"   ⚠️ Could not unload vision model: {e}")
+        _vision_model_ready = False
 
 
-def extract_text_with_qwen_vision(image_path: str) -> str:
-    """Use Qwen2-VL-7B for high-quality image OCR."""
-    model, processor = load_vision_model()
+def _deduplicate_lines(text: str) -> str:
+    """Remove duplicate lines (case-insensitive, whitespace-normalized)."""
+    lines = text.split('\n')
+    seen = set()
+    result = []
+    for line in lines:
+        norm = re.sub(r'\s+', ' ', line).strip().lower()
+        if norm and norm not in seen:
+            result.append(line)
+            seen.add(norm)
+        elif not norm:
+            result.append(line)
+    return '\n'.join(result)
 
-    image = Image.open(image_path).convert("RGB")
-    max_size = 1280
-    if max(image.size) > max_size:
-        ratio = max_size / max(image.size)
-        image = image.resize(
-            (int(image.size[0] * ratio), int(image.size[1] * ratio)),
-            Image.Resampling.LANCZOS,
-        )
 
+def extract_text_with_vision(image_path: str) -> str:
+    """Use Ollama vision model for image OCR."""
+    load_vision_model()
+    
     prompt = """Transcribe ALL visible text from this scientific poster exactly as written.
 
 Include:
@@ -142,34 +143,27 @@ Rules:
 - Do NOT add explanations or interpretations
 - Do NOT translate any text
 - Preserve the original language
-- Include all bullet points and lists"""
+- Include all bullet points and lists
+- Do NOT repeat any content"""
 
-    messages = [
-        {
+    response = ollama.chat(
+        model=OLLAMA_VISION_MODEL,
+        messages=[{
             "role": "user",
-            "content": [
-                {"type": "image", "image": image},
-                {"type": "text", "text": prompt},
-            ],
-        }
-    ]
-
-    text = processor.apply_chat_template(
-        messages, tokenize=False, add_generation_prompt=True
+            "content": prompt,
+            "images": [image_path],
+        }],
+        think=False,
+        options={
+            "num_ctx": 32768,
+            "num_predict": 4000,
+            "temperature": 0,
+            "repeat_penalty": 1.3,
+        },
     )
-    inputs = processor(
-        text=[text], images=[image], return_tensors="pt", padding=True
-    ).to(model.device)
-
-    with torch.no_grad():
-        output = model.generate(**inputs, max_new_tokens=4000, do_sample=False)
-
-    response = processor.batch_decode(output, skip_special_tokens=True)[0]
-
-    if "assistant" in response:
-        response = response.split("assistant")[-1].strip()
-
-    return response
+    
+    text = response.message.content if hasattr(response.message, 'content') else response['message']['content']
+    return _deduplicate_lines(text)
 
 
 # ============================
@@ -178,6 +172,7 @@ Rules:
 
 
 def extract_text_with_pdfalto(pdf_path: str) -> str:
+    """Extract text from PDF using pdfalto."""
     if PDFALTO_PATH is None:
         return None
     try:
@@ -201,6 +196,7 @@ def extract_text_with_pdfalto(pdf_path: str) -> str:
 
 
 def parse_alto_xml(xml_path: str) -> str:
+    """Parse ALTO XML output from pdfalto."""
     from xml.etree import ElementTree as ET
 
     try:
@@ -231,6 +227,7 @@ def parse_alto_xml(xml_path: str) -> str:
 
 
 def extract_text_with_pymupdf(pdf_path: str) -> str:
+    """Fallback PDF extraction using PyMuPDF."""
     doc = fitz.open(pdf_path)
     text = "\n".join(page.get_text("text") for page in doc)
     doc.close()
@@ -251,10 +248,10 @@ def get_raw_text(
                 with open(cache_file) as f:
                     text = f.read()
                 if len(text) > 500:
-                    return text, "qwen_vision_cached"
+                    return text, "vision_cached"
 
-        text = extract_text_with_qwen_vision(poster_path)
-        return text, "qwen_vision"
+        text = extract_text_with_vision(poster_path)
+        return text, "vision"
 
     if ext == ".pdf":
         text = extract_text_with_pdfalto(poster_path)
@@ -266,50 +263,43 @@ def get_raw_text(
 
 
 # ============================
-# JSON MODEL
+# JSON MODEL (Ollama)
 # ============================
 
-_json_model = None
-_json_tokenizer = None
+_json_model_ready = False
 
 
 def load_json_model():
-    global _json_model, _json_tokenizer
-    if _json_model is None:
-        log("Loading Llama 3.1 8B for JSON structuring...")
-        _json_tokenizer = AutoTokenizer.from_pretrained(
-            "akjindal53244/Llama-3.1-Storm-8B"
-        )
-        _json_model = AutoModelForCausalLM.from_pretrained(
-            "akjindal53244/Llama-3.1-Storm-8B",
-            torch_dtype=torch.bfloat16,
-            device_map=DEVICE,
-        )
-        log(f"   ✓ Llama 3.1 8B loaded on {next(_json_model.parameters()).device}")
-    return _json_model, _json_tokenizer
+    """Ensure Ollama JSON model is available."""
+    global _json_model_ready
+    if not _json_model_ready:
+        log(f"Checking Ollama JSON model: {OLLAMA_JSON_MODEL}")
+        try:
+            ollama.show(OLLAMA_JSON_MODEL)
+            log(f"   ✓ Ollama model ready: {OLLAMA_JSON_MODEL}")
+        except ollama.ResponseError:
+            log(f"   Pulling {OLLAMA_JSON_MODEL}...")
+            ollama.pull(OLLAMA_JSON_MODEL)
+            log(f"   ✓ Model pulled: {OLLAMA_JSON_MODEL}")
+        _json_model_ready = True
+    return None, None  # Return tuple for API compatibility
 
 
 def generate(model, tokenizer, prompt: str, max_tokens: int) -> str:
-    messages = [{"role": "user", "content": prompt}]
-    input_text = tokenizer.apply_chat_template(
-        messages, tokenize=False, add_generation_prompt=True
+    """Generate JSON using Ollama."""
+    response = ollama.chat(
+        model=OLLAMA_JSON_MODEL,
+        messages=[{"role": "user", "content": prompt}],
+        options={
+            "num_ctx": 32768,
+            "num_predict": max_tokens,
+            "temperature": 0,
+        },
     )
-    inputs = tokenizer(input_text, return_tensors="pt").to(model.device)
-
-    with torch.no_grad():
-        outputs = model.generate(
-            **inputs,
-            max_new_tokens=max_tokens,
-            do_sample=False,
-            pad_token_id=tokenizer.eos_token_id,
-        )
-
-    return tokenizer.decode(
-        outputs[0][inputs["input_ids"].shape[1] :], skip_special_tokens=True
-    )
+    return response.message.content if hasattr(response.message, 'content') else response['message']['content']
 
 
-# PRIMARY PROMPT (best quality - 90% pass rate)
+# PRIMARY PROMPT
 EXTRACTION_PROMPT = """Convert this scientific poster text to JSON format.
 
 CRITICAL RULES FOR SECTIONS:
@@ -335,7 +325,6 @@ JSON SCHEMA:
   ],
   "titles": [{{"title": "Main Poster Title"}}],
   "posterContent": {{
-    "posterTitle": "Main Poster Title",
     "sections": [
       {{"sectionTitle": "First Section Header", "sectionContent": "Complete verbatim text of first section"}},
       {{"sectionTitle": "Second Section Header", "sectionContent": "Complete verbatim text of second section"}},
@@ -364,7 +353,6 @@ FALLBACK_PROMPT = """Convert poster text to JSON. RULES:
   "creators": [{{"name": "LastName, FirstName", "affiliation": [{{"name": "Institution"}}]}}],
   "titles": [{{"title": "Poster Title"}}],
   "posterContent": {{
-    "posterTitle": "Poster Title",
     "sections": [{{"sectionTitle": "Header", "sectionContent": "verbatim text"}}]
   }},
   "imageCaption": [{{"caption1": "Figure caption"}}],
@@ -378,6 +366,7 @@ JSON:"""
 
 
 def is_truncated(json_str: str) -> bool:
+    """Check if JSON appears to be truncated."""
     open_braces = json_str.count("{") - json_str.count("}")
     open_brackets = json_str.count("[") - json_str.count("]")
 
@@ -391,21 +380,17 @@ def is_truncated(json_str: str) -> bool:
 
 
 def extract_json_with_retry(raw_text: str, model, tokenizer) -> dict:
-    # Try primary prompt first
+    """Extract JSON with retry logic for truncation."""
     prompt = EXTRACTION_PROMPT.format(raw_text=raw_text)
 
     response = generate(model, tokenizer, prompt, MAX_JSON_TOKENS)
     result = robust_json_parse(response)
 
-    # If truncation/error, retry with more tokens
     if "error" in result or is_truncated(result.get("raw", "")):
-        log(
-            f"   ⚠️ Truncation/error detected, retrying with {MAX_RETRY_TOKENS} tokens..."
-        )
+        log(f"   ⚠️ Truncation/error detected, retrying with {MAX_RETRY_TOKENS} tokens...")
         response = generate(model, tokenizer, prompt, MAX_RETRY_TOKENS)
         result = robust_json_parse(response)
 
-    # If still failing, try FALLBACK shorter prompt (saves input tokens for output)
     if "error" in result or is_truncated(result.get("raw", "")):
         log("   ⚠️ Still truncating, trying FALLBACK shorter prompt...")
         fallback_prompt = FALLBACK_PROMPT.format(raw_text=raw_text)
@@ -421,6 +406,7 @@ def extract_json_with_retry(raw_text: str, model, tokenizer) -> dict:
 
 
 def robust_json_parse(response: str) -> dict:
+    """Parse JSON with robust error handling and repair."""
     response = response.strip()
 
     if response.startswith("```json"):
@@ -437,23 +423,19 @@ def robust_json_parse(response: str) -> dict:
 
     json_str = response[start:]
 
-    # First, fix known problematic patterns (do this BEFORE extracting object)
     json_str = repair_unescaped_quotes(json_str)
 
-    # Try to extract complete JSON object
     extracted = extract_first_json_object(json_str)
     if extracted:
         json_str = extracted
 
-    # Try direct parse
     try:
         return json.loads(json_str)
     except json.JSONDecodeError:
         pass
 
-    # Apply repairs in order of likelihood to fix
     repair_funcs = [
-        repair_unescaped_quotes,  # Fix quote escaping first
+        repair_unescaped_quotes,
         repair_trailing_commas,
         repair_unicode,
         repair_truncation,
@@ -467,7 +449,6 @@ def robust_json_parse(response: str) -> dict:
         except Exception:
             continue
 
-    # Last resort: aggressive repair
     try:
         repaired = repair_all(repair_unescaped_quotes(json_str))
         return json.loads(repaired)
@@ -478,6 +459,7 @@ def robust_json_parse(response: str) -> dict:
 
 
 def extract_first_json_object(s: str) -> str:
+    """Extract the first complete JSON object from a string."""
     if not s or s[0] != "{":
         return ""
 
@@ -509,29 +491,29 @@ def extract_first_json_object(s: str) -> str:
 
 def repair_unescaped_quotes(s: str) -> str:
     """Fix quotes that appear after / which are not properly escaped."""
-    # Pattern: something/" where " is likely part of content (e.g., units like pc/")
-    # These should be escaped as /" -> /\"
     s = re.sub(
         r'(\d+\s*(?:pc|km|m|cm|mm|Hz|kHz|MHz|GHz|s|ms|ns|arcsec|arcmin|deg))/"',
         r'\1/\\"',
         s,
     )
-    # Also handle parenthetical unit patterns like (53 pc/")
     s = re.sub(r'\((\d+\.?\d*\s*\w+)/"\)', r'(\1/\\")', s)
     return s
 
 
 def repair_trailing_commas(s: str) -> str:
+    """Remove trailing commas before closing brackets."""
     return re.sub(r",\s*([}\]])", r"\1", s)
 
 
 def repair_unicode(s: str) -> str:
+    """Fix unicode escape sequences."""
     s = re.sub(r"\\u[0-9a-fA-F]{0,3}(?![0-9a-fA-F])", "", s)
     s = re.sub(r"[\x00-\x1f]", " ", s)
     return s
 
 
 def repair_truncation(s: str) -> str:
+    """Attempt to close truncated JSON."""
     s = repair_trailing_commas(s)
 
     in_string = False
@@ -564,10 +546,8 @@ def repair_truncation(s: str) -> str:
         s = s.rstrip()
         if not s.endswith('"'):
             s += '"'
-        # If we were in a string value (like sectionContent), need to close the object too
-        # Check if we were inside a section by looking for recent sectionContent key
         if '"sectionContent":' in s[-1000:] or "sectionContent" in s[-500:]:
-            open_braces += 1  # Account for the section object
+            open_braces += 1
 
     s = s.rstrip()
     while s and s[-1] not in '{}[]"0123456789truefalsenull':
@@ -581,7 +561,8 @@ def repair_truncation(s: str) -> str:
 
 
 def repair_all(s: str) -> str:
-    s = repair_unescaped_quotes(s)  # Fix quote escaping first
+    """Apply all repair functions."""
+    s = repair_unescaped_quotes(s)
     s = repair_unicode(s)
     s = repair_trailing_commas(s)
     s = repair_truncation(s)
@@ -594,6 +575,7 @@ def repair_all(s: str) -> str:
 
 
 def get_all_text(d) -> str:
+    """Extract all text from a nested structure."""
     if isinstance(d, dict):
         return " ".join(get_all_text(v) for v in d.values())
     elif isinstance(d, list):
@@ -604,6 +586,7 @@ def get_all_text(d) -> str:
 
 
 def get_section_texts(d) -> list:
+    """Extract section texts from JSON."""
     sections = []
     if isinstance(d, dict):
         if "posterContent" in d and isinstance(d["posterContent"], dict):
@@ -623,28 +606,16 @@ def get_section_texts(d) -> list:
 
 
 def normalize_text(text) -> str:
-    # Handle non-string inputs
+    """Normalize text for comparison."""
     if isinstance(text, list):
         text = " ".join(str(t) for t in text)
     elif not isinstance(text, str):
         text = str(text)
 
     space_chars = [
-        "\xa0",
-        "\u2000",
-        "\u2001",
-        "\u2002",
-        "\u2003",
-        "\u2004",
-        "\u2005",
-        "\u2006",
-        "\u2007",
-        "\u2008",
-        "\u2009",
-        "\u200a",
-        "\u202f",
-        "\u205f",
-        "\u3000",
+        "\xa0", "\u2000", "\u2001", "\u2002", "\u2003", "\u2004",
+        "\u2005", "\u2006", "\u2007", "\u2008", "\u2009", "\u200a",
+        "\u202f", "\u205f", "\u3000",
     ]
     for space in space_chars:
         text = text.replace(space, " ")
@@ -673,12 +644,14 @@ def normalize_text(text) -> str:
 
 
 def strip_to_alphanumeric(text: str) -> str:
+    """Strip to alphanumeric characters only."""
     return re.sub(r"\s+", " ", re.sub(r"[^a-zA-Z0-9\s]", "", text)).strip().lower()
 
 
 def calculate_forgiving_rouge(
     gen_text: str, ref_text: str, gen_sections: list, ref_sections: list
 ) -> float:
+    """Calculate ROUGE-L with section-level matching."""
     scorer = rouge_scorer.RougeScorer(["rougeL"], use_stemmer=True)
 
     global_score = scorer.score(ref_text, gen_text)["rougeL"].fmeasure
@@ -702,6 +675,7 @@ def calculate_forgiving_rouge(
 
 
 def calculate_forgiving_number_capture(gen_text: str, ref_text: str) -> float:
+    """Calculate number capture rate."""
     gen_nums = set(re.findall(r"\d+\.?\d*", gen_text))
     ref_nums = set(re.findall(r"\d+\.?\d*", ref_text))
 
@@ -728,6 +702,7 @@ def calculate_forgiving_number_capture(gen_text: str, ref_text: str) -> float:
 
 
 def calculate_metrics(generated: dict, reference: dict) -> dict:
+    """Calculate all metrics comparing generated to reference."""
     gen_text = normalize_text(get_all_text(generated))
     ref_text = normalize_text(get_all_text(reference))
 
@@ -772,6 +747,7 @@ def calculate_metrics(generated: dict, reference: dict) -> dict:
 
 
 def passes(m: dict) -> bool:
+    """Check if metrics pass thresholds."""
     return (
         m["word_capture"] >= 0.75
         and m["rouge_l"] >= 0.75
@@ -781,6 +757,7 @@ def passes(m: dict) -> bool:
 
 
 def find_pairs(annotation_dir: str):
+    """Find poster/annotation pairs in directory."""
     pairs = []
     for subdir in Path(annotation_dir).iterdir():
         if not subdir.is_dir():
@@ -808,7 +785,6 @@ def process_poster_file(poster_path: str) -> dict:
     """
     log(f"Processing poster: {poster_path}")
 
-    # Extract raw text
     raw_text, source = get_raw_text(poster_path)
 
     if not raw_text or source == "unknown":
@@ -818,46 +794,41 @@ def process_poster_file(poster_path: str) -> dict:
 
     log(f"Extracted {len(raw_text)} characters using {source}")
 
-    # Load JSON model if not already loaded
     model, tokenizer = load_json_model()
 
-    # Convert to JSON
     try:
         generated = extract_json_with_retry(raw_text, model, tokenizer)
 
-        # Unload vision model if it was used (to free GPU memory)
         ext = Path(poster_path).suffix.lower()
         if ext in [".jpg", ".jpeg", ".png"]:
             unload_vision_model()
-
-        # Clean up GPU memory
-        torch.cuda.empty_cache()
 
         return generated
     except Exception as e:
         log(f"ERROR processing poster: {e}")
         import traceback
-
         traceback.print_exc()
         return {"error": str(e)}
 
 
 def run(annotation_dir: str, output_dir: str):
+    """Run extraction pipeline on all posters."""
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     pairs = find_pairs(annotation_dir)
 
     log("=" * 60)
-    log("POSTER EXTRACTION PIPELINE")
+    log("POSTER EXTRACTION PIPELINE (Ollama)")
     log("=" * 60)
     log(f"Posters: {len(pairs)}")
-    log(f"GPU: {torch.cuda.get_device_name(0)}")
+    log(f"JSON Model: {OLLAMA_JSON_MODEL}")
+    log(f"Vision Model: {OLLAMA_VISION_MODEL}")
 
     image_posters = [
         p for p in pairs if Path(p[0]).suffix.lower() in [".jpg", ".jpeg", ".png"]
     ]
     pdf_posters = [p for p in pairs if Path(p[0]).suffix.lower() == ".pdf"]
 
-    log(f"Image posters (Qwen Vision): {[p[2] for p in image_posters]}")
+    log(f"Image posters: {[p[2] for p in image_posters]}")
     log(f"PDF posters (pdfalto): {len(pdf_posters)}")
 
     # Phase 1: Extract raw text
@@ -935,11 +906,10 @@ def run(annotation_dir: str, output_dir: str):
         except Exception as e:
             log(f"   ERROR: {e}")
             import traceback
-
             traceback.print_exc()
             results.append({"poster_id": poster_id, "error": str(e), "passes": False})
 
-        torch.cuda.empty_cache()
+        gc.collect()
 
     # Summary
     log("\n" + "=" * 60)
@@ -977,6 +947,6 @@ def run(annotation_dir: str, output_dir: str):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--annotation-dir", required=True)
-    parser.add_argument("--output-dir", default="./llama_v24_output")
+    parser.add_argument("--output-dir", default="./output")
     args = parser.parse_args()
     run(args.annotation_dir, args.output_dir)

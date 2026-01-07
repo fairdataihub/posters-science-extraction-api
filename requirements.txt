@@ -1,8 +1,6 @@
-transformers>=4.40.0
-torch>=2.0.0
+# Core dependencies
+ollama>=0.4.0
 rouge-score
-qwen-vl-utils
-accelerate
 Pillow
 pymupdf
 numpy

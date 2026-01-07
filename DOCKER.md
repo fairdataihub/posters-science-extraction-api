@@ -7,7 +7,8 @@ This document describes how to run the poster extraction pipeline using Docker.
 - Docker Engine 20.10+
 - Docker Compose 2.0+
 - NVIDIA Docker runtime (for GPU support)
-- NVIDIA GPU with CUDA support (≥16GB VRAM recommended)
+- NVIDIA GPU with CUDA support (≥8GB VRAM recommended)
+- **Ollama running on the host** (the container communicates with host Ollama)
 
 ### Installing NVIDIA Docker Runtime
 
@@ -25,6 +26,22 @@ sudo apt-get install -y nvidia-docker2
 sudo systemctl restart docker
 ```
 
+### Installing Ollama on Host
+
+Ollama must be running on the host machine (not in Docker):
+
+```bash
+# Install Ollama
+curl -fsSL https://ollama.ai/install.sh | sh
+
+# Pull required models
+ollama pull llama3.1:8b-instruct-q8_0
+ollama pull qwen3-vl:4b-instruct-q8_0
+
+# Start Ollama server (if not running as service)
+ollama serve
+```
+
 ## Building the Image
 
 ```bash
@@ -35,18 +52,6 @@ Or build directly:
 
 ```bash
 docker build -t poster-extraction:latest .
-```
-
-### Building for Server Deployment
-
-For production server deployment, you may want to build and push to a registry:
-
-```bash
-# Build with a specific tag
-docker build -t your-registry/poster-extraction:v1.0.0 .
-
-# Push to registry
-docker push your-registry/poster-extraction:v1.0.0
 ```
 
 ## Running
@@ -61,7 +66,7 @@ This will:
 
 - Process all posters in `./manual_poster_annotation/`
 - Output results to `./output/`
-- Use GPU acceleration automatically
+- Connect to host Ollama for model inference
 
 ### Development Mode
 
@@ -71,7 +76,7 @@ For development with live code reloading:
 docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
 ```
 
-This mounts the source code as a volume, so changes to `poster_extraction.py` are reflected immediately (though you may need to restart the container for some changes).
+This mounts the source code as a volume, so changes to `poster_extraction.py` are reflected immediately.
 
 ### Running a Single Command
 
@@ -89,14 +94,20 @@ docker-compose run --rm poster-extraction \
 ### Prerequisites on Server
 
 1. **Install NVIDIA Docker Runtime** (see Prerequisites section above)
-2. **Verify GPU Access**:
+2. **Install and configure Ollama**:
+   ```bash
+   curl -fsSL https://ollama.ai/install.sh | sh
+   ollama pull llama3.1:8b-instruct-q8_0
+   ollama pull qwen3-vl:4b-instruct-q8_0
+   ```
+3. **Verify GPU Access**:
    ```bash
    docker run --rm --gpus all nvidia/cuda:11.8.0-base-ubuntu22.04 nvidia-smi
    ```
-3. **Ensure sufficient resources**:
-   - GPU: ≥16GB VRAM
-   - RAM: ≥32GB recommended
-   - Disk: ≥50GB free (for models and outputs)
+4. **Ensure sufficient resources**:
+   - GPU: ≥8GB VRAM
+   - RAM: ≥16GB recommended
+   - Disk: ≥20GB free (for Ollama models)
 
 ### Deployment Steps
 
@@ -104,7 +115,7 @@ docker-compose run --rm poster-extraction \
 
    ```bash
    git clone <repository-url>
-   cd posters-science-posterextraction-beta
+   cd poster-extraction-clean
    ```
 
 2. **Build the image**:
@@ -117,7 +128,6 @@ docker-compose run --rm poster-extraction \
 
    - Input directory: Where posters are stored
    - Output directory: Where results will be written
-   - Model cache: Persistent location for HuggingFace cache
 
 4. **Start the service**:
 
@@ -131,43 +141,6 @@ docker-compose run --rm poster-extraction \
    docker-compose logs -f poster-extraction
    ```
 
-6. **Check container health**:
-   ```bash
-   docker-compose ps
-   docker inspect poster-extraction | grep -A 10 Health
-   ```
-
-### Running as a Service
-
-For systemd service integration:
-
-Create `/etc/systemd/system/poster-extraction.service`:
-
-```ini
-[Unit]
-Description=Poster Extraction Service
-Requires=docker.service
-After=docker.service
-
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-WorkingDirectory=/path/to/posters-science-posterextraction-beta
-ExecStart=/usr/bin/docker-compose up -d
-ExecStop=/usr/bin/docker-compose down
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Then enable and start:
-
-```bash
-sudo systemctl enable poster-extraction.service
-sudo systemctl start poster-extraction.service
-```
-
 ## Configuration
 
 ### Environment Variables
@@ -175,16 +148,14 @@ sudo systemctl start poster-extraction.service
 You can override environment variables via `.env` file or directly in `docker-compose.yml`:
 
 - `CUDA_VISIBLE_DEVICES`: Which GPU to use (default: `0`)
-- `GPU_COUNT`: Number of GPUs to use (default: `1`)
-- `RESTART_POLICY`: Container restart policy (default: `unless-stopped`)
 - `PDFALTO_PATH`: Path to pdfalto binary (optional, auto-detected if in PATH)
+- `OLLAMA_HOST`: Ollama server URL (default: `http://host.docker.internal:11434`)
 
 Create a `.env` file in the project root:
 
 ```bash
 CUDA_VISIBLE_DEVICES=0
-GPU_COUNT=1
-RESTART_POLICY=unless-stopped
+OLLAMA_HOST=http://host.docker.internal:11434
 ```
 
 ### Volumes
@@ -193,7 +164,6 @@ The docker-compose setup mounts:
 
 - `./manual_poster_annotation` → `/app/input` (read-only)
 - `./output` → `/app/output` (read-write)
-- `~/.cache/huggingface` → `/root/.cache/huggingface` (for model cache)
 
 **For server deployment**, update volume paths to absolute paths:
 
@@ -201,18 +171,20 @@ The docker-compose setup mounts:
 volumes:
   - /data/posters/input:/app/input:ro
   - /data/posters/output:/app/output
-  - /data/huggingface-cache:/root/.cache/huggingface
 ```
 
-### Resource Limits
+### Connecting to Host Ollama
 
-The docker-compose file includes resource limits:
+The container needs to reach the Ollama server running on the host. On Linux, add this to your docker-compose.yml:
 
-- Memory limit: 32GB
-- Memory reservation: 16GB
-- GPU: 1 GPU (configurable via `GPU_COUNT`)
-
-Adjust these in `docker-compose.yml` based on your server's capabilities.
+```yaml
+services:
+  poster-extraction:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - OLLAMA_HOST=http://host.docker.internal:11434
+```
 
 ## Troubleshooting
 
@@ -222,6 +194,18 @@ Ensure NVIDIA Docker runtime is installed and verify GPU access:
 
 ```bash
 docker run --rm --gpus all nvidia/cuda:11.8.0-base-ubuntu22.04 nvidia-smi
+```
+
+### Cannot Connect to Ollama
+
+Ensure Ollama is running on the host and accessible:
+
+```bash
+# Check Ollama is running
+curl http://localhost:11434/api/tags
+
+# Verify models are available
+ollama list
 ```
 
 ### pdfalto Build Fails
@@ -236,18 +220,12 @@ If pdfalto fails to build in the Dockerfile, you can:
 
 If you encounter OOM errors:
 
+- Ensure Ollama has sufficient GPU memory
 - Reduce batch size or process fewer posters at once
-- Use a smaller model variant
-- Increase Docker memory limits in Docker Desktop settings
 - Adjust memory limits in `docker-compose.yml`
-
-## Model Downloads
-
-Models are automatically downloaded on first run and cached in `~/.cache/huggingface`. This volume is mounted to persist the cache between container runs, speeding up subsequent executions.
 
 ## Notes
 
-- The first run will take longer as models are downloaded
-- Ensure you have sufficient disk space for model cache (~15-20GB)
-- GPU memory usage peaks during model loading and inference
-- Health checks verify CUDA availability every 30 seconds
+- Ollama manages model loading and GPU memory
+- The first run will be faster if models are already cached in Ollama
+- pdfalto is built during Docker image creation for PDF processing
