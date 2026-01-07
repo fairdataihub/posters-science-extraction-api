@@ -122,6 +122,7 @@ def unload_vision_model():
     log("Vision model and processor unloaded, GPU memory cleared")
 
 
+
 def extract_text_with_qwen_vision(image_path: str) -> str:
     """
     Use Qwen2-VL-7B for high-quality image OCR.
@@ -388,6 +389,7 @@ def ensure_models_available():
         raise RuntimeError(f"Error checking model {OLLAMA_MODEL}: {e}")
 
 
+
 def load_json_model():
     """
     Verify that the Ollama model is available and pull it if needed.
@@ -410,6 +412,7 @@ def load_json_model():
 
     # Return None, None to maintain API compatibility
     return None, None
+
 
 
 def generate(model, tokenizer, prompt: str, max_tokens: int) -> str:
@@ -475,7 +478,6 @@ JSON SCHEMA:
   ],
   "titles": [{{"title": "Main Poster Title"}}],
   "posterContent": {{
-    "posterTitle": "Main Poster Title",
     "sections": [
       {{"sectionTitle": "First Section Header", "sectionContent": "Complete verbatim text of first section"}},
       {{"sectionTitle": "Second Section Header", "sectionContent": "Complete verbatim text of second section"}},
@@ -504,7 +506,6 @@ FALLBACK_PROMPT = """Convert poster text to JSON. RULES:
   "creators": [{{"name": "LastName, FirstName", "affiliation": [{{"name": "Institution"}}]}}],
   "titles": [{{"title": "Poster Title"}}],
   "posterContent": {{
-    "posterTitle": "Poster Title",
     "sections": [{{"sectionTitle": "Header", "sectionContent": "verbatim text"}}]
   }},
   "imageCaption": [{{"caption1": "Figure caption"}}],
