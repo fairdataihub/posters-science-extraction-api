@@ -185,7 +185,6 @@
       "subject": "Public health surveillance"
     }
   ],
-  "contributors": [],
   "dates": [
     {
       "date": "2025-04-25/2025-04-30",
@@ -276,7 +275,6 @@
     "conferenceAcronym": "AACR 2025"
   },
   "posterContent": {
-    "posterTitle": "CarD-T: LLM Automated Literature Review for the Nomination & Analysis of Potential Human Carcinogens",
     "sections": [
       {
         "sectionTitle": "Abstract",

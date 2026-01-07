@@ -17,8 +17,7 @@ This pipeline leverages the following Large Language Models:
 
 ### Meta Llama 3.1 8B Instruct
 
-The core JSON structuring is performed by [Meta's Llama 3.1 8B Instruct](https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct), selected for:
-
+The core JSON structuring is performed by [Llama 3.1 8B Poster Extraction](https://huggingface.co/jimnoneill/Llama-3.1-8B-Poster-Extraction), selected for:
 - Strong instruction-following capabilities for structured output generation
 - 128K context window supporting full poster text processing
 - Efficient inference on consumer GPUs (16GB+ VRAM)
@@ -162,7 +161,7 @@ pip install -r requirements.txt
 Meta's Llama 3.1 8B is a gated model requiring HuggingFace authentication:
 
 1. Create a HuggingFace account at https://huggingface.co
-2. Accept the Llama 3.1 license at https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct
+2. Accept the Llama 3.1 license at https://huggingface.co/jimnoneill/Llama-3.1-8B-Poster-Extraction
 3. Generate an access token at https://huggingface.co/settings/tokens
 4. Set the environment variable:
 

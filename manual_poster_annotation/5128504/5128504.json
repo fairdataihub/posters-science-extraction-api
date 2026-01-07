@@ -102,13 +102,6 @@
       ]
     }
   ],
-  "contributors": [
-    {
-      "contributorType": "Editor",
-      "name": "Chanover, Nancy",
-      "nameType": "Personal"
-    }
-  ],
   "titles": [
     {
       "title": "Isolating Sources of Ionization in Nearby Seyfert Galaxies"
@@ -240,7 +233,6 @@
     "conferenceAcronym": "APOSS21"
   },
   "posterContent": {
-    "posterTitle": "Isolating Sources of Ionization in Nearby Seyfert Galaxies",
     "sections": [
       {
         "sectionTitle": "Abstract",
