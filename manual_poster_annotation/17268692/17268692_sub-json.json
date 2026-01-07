@@ -1,7 +1,6 @@
 {
   "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
   "posterContent": {
-    "posterTitle": "Presenting the Actionable Guidelines for FAIR Research Software Task Force",
     "sections": [
       {
         "sectionTitle": "Background",

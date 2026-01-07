@@ -277,11 +277,9 @@ def load_json_model():
     global _json_model, _json_tokenizer
     if _json_model is None:
         log("Loading Llama 3.1 8B for JSON structuring...")
-        _json_tokenizer = AutoTokenizer.from_pretrained(
-            "akjindal53244/Llama-3.1-Storm-8B"
-        )
+        _json_tokenizer = AutoTokenizer.from_pretrained("jimnoneill/Llama-3.1-8B-Poster-Extraction")
         _json_model = AutoModelForCausalLM.from_pretrained(
-            "akjindal53244/Llama-3.1-Storm-8B",
+            "jimnoneill/Llama-3.1-8B-Poster-Extraction",
             torch_dtype=torch.bfloat16,
             device_map=DEVICE,
         )
@@ -335,7 +333,6 @@ JSON SCHEMA:
   ],
   "titles": [{{"title": "Main Poster Title"}}],
   "posterContent": {{
-    "posterTitle": "Main Poster Title",
     "sections": [
       {{"sectionTitle": "First Section Header", "sectionContent": "Complete verbatim text of first section"}},
       {{"sectionTitle": "Second Section Header", "sectionContent": "Complete verbatim text of second section"}},
@@ -364,7 +361,6 @@ FALLBACK_PROMPT = """Convert poster text to JSON. RULES:
   "creators": [{{"name": "LastName, FirstName", "affiliation": [{{"name": "Institution"}}]}}],
   "titles": [{{"title": "Poster Title"}}],
   "posterContent": {{
-    "posterTitle": "Poster Title",
     "sections": [{{"sectionTitle": "Header", "sectionContent": "verbatim text"}}]
   }},
   "imageCaption": [{{"caption1": "Figure caption"}}],
