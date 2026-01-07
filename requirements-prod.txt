@@ -1,3 +1,4 @@
+# Production dependencies only
 transformers>=4.40.0
 torch>=2.0.0
 rouge-score
@@ -13,16 +14,3 @@ flask>=2.3.0
 flask-cors>=4.0.0
 requests>=2.31.0
 
-# Formatters
-black
-isort
-
-# Linters
-flake8
-mypy
-pylint
-pydocstyle
-
-# jupyter
-jupyter
-ipython

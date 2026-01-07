@@ -6,17 +6,18 @@ Extracts structured metadata from scientific poster PDFs and images
 into JSON format conforming to the posters-science schema.
 
 Models:
-- Meta Llama 3.1 8B Instruct: JSON structuring
+- Ollama Llama 3.1 8B Instruct: JSON structuring
 - Qwen2-VL-7B-Instruct: Vision OCR for images
 
 Requirements:
 - pdfalto: PDF layout analysis tool (https://github.com/kermitt2/pdfalto)
+- Ollama: Local LLM server (https://ollama.ai) with llama3.1:8b-instruct-q8_0
 - CUDA-capable GPU with ≥16GB VRAM
 
 Environment Variables:
 - PDFALTO_PATH: Path to pdfalto binary (required for PDF processing)
 - CUDA_VISIBLE_DEVICES: GPU device(s) to use (default: 0)
-- HF_TOKEN: HuggingFace token for gated models (required for Llama)
+- HF_TOKEN: HuggingFace token for gated models (required for Qwen Vision)
 """
 
 import os
@@ -29,7 +30,6 @@ import time
 import argparse
 import subprocess
 import tempfile
-import shutil
 import gc
 import unicodedata
 import numpy as np
@@ -37,16 +37,18 @@ from pathlib import Path
 from datetime import datetime
 
 from PIL import Image
-
-from transformers import (
-    AutoModelForCausalLM,
-    AutoTokenizer,
-    Qwen2VLForConditionalGeneration,
-    AutoProcessor,
-)
+from transformers import Qwen2VLForConditionalGeneration, AutoProcessor
 from rouge_score import rouge_scorer
+import ollama
 
+
+# Configure Ollama host and GPU visibility at import time
+os.environ["OLLAMA_HOST"] = "http://host.docker.internal:11434"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
+
+# Ollama model configuration
+OLLAMA_MODEL = "llama3.1:8b-instruct-q8_0"
 
 # Find pdfalto: check environment variable, then PATH, then Downloads directory
 PDFALTO_PATH = os.environ.get("PDFALTO_PATH")
@@ -68,11 +70,18 @@ MAX_RETRY_TOKENS = 24000
 
 
 def log(msg: str):
+    """
+    Simple timestamped logger used across CLI and API entrypoints.
+
+    Using print() keeps behaviour the same whether the module is run
+    from the command line or imported from the Flask API.
+    """
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print(f"[{ts}] {msg}", flush=True)
 
 
 def free_gpu():
+    """Best‑effort GPU memory cleanup helper."""
     gc.collect()
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
@@ -90,14 +99,14 @@ _vision_processor = None
 def load_vision_model():
     global _vision_model, _vision_processor
     if _vision_model is None:
-        log("Loading Qwen2-VL-7B for image OCR...")
+        log("Loading Qwen2-VL-7B vision model for image OCR...")
         _vision_model = Qwen2VLForConditionalGeneration.from_pretrained(
             "Qwen/Qwen2-VL-7B-Instruct",
             torch_dtype=torch.bfloat16,
-            device_map=DEVICE,
+            device_map="cuda:0",
         )
         _vision_processor = AutoProcessor.from_pretrained("Qwen/Qwen2-VL-7B-Instruct")
-        log(f"   ✓ Qwen2-VL loaded on {next(_vision_model.parameters()).device}")
+        log(f"Vision model loaded on device: {next(_vision_model.parameters()).device}")
     return _vision_model, _vision_processor
 
 
@@ -110,11 +119,19 @@ def unload_vision_model():
         del _vision_processor
         _vision_processor = None
     free_gpu()
-    log("   ✓ Vision model unloaded")
+    log("Vision model and processor unloaded, GPU memory cleared")
+
 
 
 def extract_text_with_qwen_vision(image_path: str) -> str:
-    """Use Qwen2-VL-7B for high-quality image OCR."""
+    """
+    Use Qwen2-VL-7B for high-quality image OCR.
+
+    This is called for image posters (JPG/PNG). It loads the vision
+    model on first use, resizes the image if needed, and sends a single
+    instruction to transcribe all visible text.
+    """
+    log(f"Starting Qwen2-VL OCR on image: {image_path}")
     model, processor = load_vision_model()
 
     image = Image.open(image_path).convert("RGB")
@@ -161,14 +178,19 @@ Rules:
         text=[text], images=[image], return_tensors="pt", padding=True
     ).to(model.device)
 
+    # Time the vision generation step so we can see how long OCR takes
+    t0 = time.time()
     with torch.no_grad():
         output = model.generate(**inputs, max_new_tokens=4000, do_sample=False)
+    vision_elapsed = time.time() - t0
+    log(f"Qwen2-VL OCR generate() finished in {vision_elapsed:.2f} seconds")
 
     response = processor.batch_decode(output, skip_special_tokens=True)[0]
 
     if "assistant" in response:
         response = response.split("assistant")[-1].strip()
 
+    log(f"Completed Qwen2-VL OCR for image: {image_path}")
     return response
 
 
@@ -178,22 +200,41 @@ Rules:
 
 
 def extract_text_with_pdfalto(pdf_path: str) -> str:
+    """
+    Extract text from a PDF using pdfalto (preferred for layout-aware text).
+
+    Returns:
+        Extracted text as a single string, or None on error.
+    """
+    log(f"Attempting text extraction with pdfalto for: {pdf_path}")
     if PDFALTO_PATH is None:
         return None
     try:
         with tempfile.TemporaryDirectory() as tmpdir:
             xml_path = os.path.join(tmpdir, "output.xml")
+            t0 = time.time()
             result = subprocess.run(
                 [PDFALTO_PATH, "-noImage", "-readingOrder", pdf_path, xml_path],
                 capture_output=True,
                 text=True,
                 timeout=60,
             )
+            elapsed = time.time() - t0
             if result.returncode != 0:
-                raise RuntimeError(f"pdfalto returned code {result.returncode}: {result.stderr}")
+                raise RuntimeError(
+                    f"pdfalto returned code {result.returncode}: {result.stderr}"
+                )
             if not os.path.exists(xml_path):
                 raise RuntimeError("pdfalto did not produce output XML")
-            return parse_alto_xml(xml_path)
+            text = parse_alto_xml(xml_path)
+            if text is None:
+                log(f"pdfalto XML parsing failed for: {pdf_path}")
+            else:
+                log(
+                    f"pdfalto extracted {len(text)} characters from {pdf_path} "
+                    f"in {elapsed:.2f} seconds"
+                )
+            return text
     except subprocess.TimeoutExpired:
         raise RuntimeError(f"pdfalto timeout processing {pdf_path}")
     except Exception as e:
@@ -231,16 +272,37 @@ def parse_alto_xml(xml_path: str) -> str:
 
 
 def extract_text_with_pymupdf(pdf_path: str) -> str:
+    """
+    Fallback text extraction using PyMuPDF when pdfalto is unavailable
+    or fails to return enough content.
+    """
+    log(f"Attempting text extraction with PyMuPDF for: {pdf_path}")
+    t0 = time.time()
     doc = fitz.open(pdf_path)
     text = "\n".join(page.get_text("text") for page in doc)
     doc.close()
+    elapsed = time.time() - t0
+    log(
+        f"PyMuPDF extracted {len(text)} characters from {pdf_path} "
+        f"in {elapsed:.2f} seconds"
+    )
     return text.strip()
 
 
 def get_raw_text(
     poster_path: str, poster_id: str = None, output_dir: str = None
 ) -> tuple:
-    """Get raw text from poster."""
+    """
+    Get raw text from a poster file.
+
+    This handles both images (via Qwen2-VL) and PDFs (via pdfalto with
+    PyMuPDF fallback). When an output directory and poster_id are
+    provided, image OCR results may be cached as *_raw.txt files.
+
+    Returns:
+        (text, source) where source indicates which extractor was used.
+    """
+    log(f"Starting raw text extraction for: {poster_path}")
     ext = Path(poster_path).suffix.lower()
 
     if ext in [".jpg", ".jpeg", ".png"]:
@@ -251,60 +313,143 @@ def get_raw_text(
                 with open(cache_file) as f:
                     text = f.read()
                 if len(text) > 500:
+                    log(
+                        f"Using cached OCR text for image poster {poster_id} "
+                        f"({len(text)} characters)"
+                    )
                     return text, "qwen_vision_cached"
 
         text = extract_text_with_qwen_vision(poster_path)
+        log(f"Image OCR produced {len(text)} characters for {poster_path}")
         return text, "qwen_vision"
 
     if ext == ".pdf":
         text = extract_text_with_pdfalto(poster_path)
         if text and len(text) > 500:
+            log(f"Using pdfalto output for {poster_path} " f"({len(text)} characters)")
             return text, "pdfalto"
-        return extract_text_with_pymupdf(poster_path), "pymupdf"
+        # Either pdfalto failed or produced too little text; fall back
+        text = extract_text_with_pymupdf(poster_path)
+        log(f"Using PyMuPDF fallback for {poster_path} " f"({len(text)} characters)")
+        return text, "pymupdf"
 
     return "", "unknown"
 
 
 # ============================
-# JSON MODEL
+# JSON MODEL (OLLAMA)
 # ============================
 
-_json_model = None
-_json_tokenizer = None
+
+def ensure_ollama_available(max_retries=10, retry_delay=2):
+    """Ensure Ollama service is running and accessible.
+
+    Args:
+        max_retries: Maximum number of retry attempts (default: 10)
+        retry_delay: Delay between retries in seconds (default: 2)
+
+    Raises:
+        RuntimeError: If Ollama is not available after all retries
+    """
+    ollama_host = os.environ.get("OLLAMA_HOST", "http://host.docker.internal:11434")
+
+    for attempt in range(1, max_retries + 1):
+        try:
+            # Try to list models as a health check
+            ollama.list()
+            log(f"   ✓ Ollama is available at {ollama_host}")
+            return
+        except Exception as e:
+            if attempt < max_retries:
+                log(f"Ollama not available (attempt {attempt}/{max_retries}): {e}")
+                log(f"Retrying Ollama health check in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+            else:
+                raise RuntimeError(
+                    f"Ollama health check failed after {max_retries} attempts: {e}. "
+                    f"Please ensure Ollama is running and accessible at {ollama_host}"
+                )
+
+
+def ensure_models_available():
+    """Ensure all required Ollama models are available and pull if needed."""
+    log(f"Ensuring required Ollama model is available: {OLLAMA_MODEL}")
+    try:
+        # Check if model exists
+        ollama.show(OLLAMA_MODEL)
+        log(f"   ✓ Model {OLLAMA_MODEL} is ready")
+    except ollama.ResponseError:
+        log(f"   Model {OLLAMA_MODEL} not found, pulling...")
+        try:
+            ollama.pull(OLLAMA_MODEL)
+            log(f"   ✓ Model {OLLAMA_MODEL} pulled successfully")
+        except Exception as e:
+            raise RuntimeError(f"Failed to pull model {OLLAMA_MODEL}: {e}")
+    except Exception as e:
+        raise RuntimeError(f"Error checking model {OLLAMA_MODEL}: {e}")
+
 
 
 def load_json_model():
-    global _json_model, _json_tokenizer
-    if _json_model is None:
-        log("Loading Llama 3.1 8B for JSON structuring...")
-        _json_tokenizer = AutoTokenizer.from_pretrained("jimnoneill/Llama-3.1-8B-Poster-Extraction")
-        _json_model = AutoModelForCausalLM.from_pretrained(
-            "jimnoneill/Llama-3.1-8B-Poster-Extraction",
-            torch_dtype=torch.bfloat16,
-            device_map=DEVICE,
-        )
-        log(f"   ✓ Llama 3.1 8B loaded on {next(_json_model.parameters()).device}")
-    return _json_model, _json_tokenizer
+    """
+    Verify that the Ollama model is available and pull it if needed.
+
+    The returned (model, tokenizer) pair is kept for API compatibility,
+    but is not currently used because generation goes through the
+    local Ollama HTTP service.
+    """
+    log(f"Checking Ollama model: {OLLAMA_MODEL}")
+    try:
+        ollama.show(OLLAMA_MODEL)
+        log(f"   ✓ Ollama model ready: {OLLAMA_MODEL}")
+    except ollama.ResponseError:
+        log(f"   Model not found, pulling {OLLAMA_MODEL}...")
+        ollama.pull(OLLAMA_MODEL)
+        log(f"   ✓ Model pulled: {OLLAMA_MODEL}")
+    except Exception as e:
+        log(f"Ollama error while checking model {OLLAMA_MODEL}: {e}")
+        log("Attempting to use Ollama model anyway after error")
+
+    # Return None, None to maintain API compatibility
+    return None, None
+
 
 
 def generate(model, tokenizer, prompt: str, max_tokens: int) -> str:
-    messages = [{"role": "user", "content": prompt}]
-    input_text = tokenizer.apply_chat_template(
-        messages, tokenize=False, add_generation_prompt=True
-    )
-    inputs = tokenizer(input_text, return_tensors="pt").to(model.device)
+    """
+    Generate a response using Ollama with the Llama 3.1 chat template.
 
-    with torch.no_grad():
-        outputs = model.generate(
-            **inputs,
-            max_new_tokens=max_tokens,
-            do_sample=False,
-            pad_token_id=tokenizer.eos_token_id,
-        )
+    This is the single place where we talk to the local Ollama service.
+    Timing is measured here so that API and CLI users can see how long
+    each call to the language model takes.
+    """
+    # Apply Llama 3.1 chat template manually (matches transformers behavior)
+    formatted_prompt = f"""<|begin_of_text|><|start_header_id|>user<|end_header_id|>
 
-    return tokenizer.decode(
-        outputs[0][inputs["input_ids"].shape[1] :], skip_special_tokens=True
+{prompt}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+
+"""
+
+    log(
+        f"Calling Ollama generate() with max_tokens={max_tokens} "
+        f"and prompt length={len(prompt)} characters"
     )
+    t0 = time.time()
+    response = ollama.generate(
+        model=OLLAMA_MODEL,
+        prompt=formatted_prompt,
+        options={
+            "num_ctx": 32768,  # Large context for poster content + output
+            "num_predict": max_tokens,
+            "temperature": 0,
+            "top_p": 1.0,
+            "repeat_penalty": 1.0,
+        },
+        raw=True,  # Don't apply any additional template
+    )
+    elapsed = time.time() - t0
+    log(f"Ollama generate() completed in {elapsed:.2f} seconds")
+    return response["response"]
 
 
 # PRIMARY PROMPT (best quality - 90% pass rate)
@@ -386,27 +531,69 @@ def is_truncated(json_str: str) -> bool:
     return False
 
 
+def preprocess_raw_text(text: str) -> str:
+    """Remove/replace problematic quotes that cause Ollama JSON issues.
+
+    Ollama's Llama 3.1 tends to include literal quotes from source text,
+    causing double-quote artifacts in JSON output. This preprocessing
+    sanitizes quotes to prevent JSON parsing failures.
+    """
+    # Replace curly/smart quotes with nothing (they cause double-quote artifacts)
+    text = text.replace('"', "").replace('"', "")
+    text = text.replace(""", "'").replace(""", "'")
+    # Replace straight double quotes with single quotes
+    text = text.replace('"', "'")
+    return text
+
+
 def extract_json_with_retry(raw_text: str, model, tokenizer) -> dict:
+    """
+    Send raw poster text to the LLM and robustly parse the JSON response.
+
+    This function:
+      1. Preprocesses input text to reduce JSON quoting issues
+      2. Calls Ollama with a full prompt
+      3. Retries with more tokens if truncation is detected
+      4. Falls back to a shorter prompt if needed
+      5. Runs several repair passes to make the JSON parseable
+    """
+    # Preprocess to remove quotes that cause Ollama JSON artifacts
+    raw_text = preprocess_raw_text(raw_text)
+
     # Try primary prompt first
     prompt = EXTRACTION_PROMPT.format(raw_text=raw_text)
 
+    log("Starting primary JSON extraction with full prompt")
     response = generate(model, tokenizer, prompt, MAX_JSON_TOKENS)
     result = robust_json_parse(response)
+    if "error" in result:
+        log(f"Primary JSON parse reported error: {result['error']}")
+    else:
+        log("Primary JSON parse succeeded")
 
     # If truncation/error, retry with more tokens
     if "error" in result or is_truncated(result.get("raw", "")):
         log(
-            f"   ⚠️ Truncation/error detected, retrying with {MAX_RETRY_TOKENS} tokens..."
+            f"Truncation or error detected, retrying JSON extraction "
+            f"with max_tokens={MAX_RETRY_TOKENS}"
         )
         response = generate(model, tokenizer, prompt, MAX_RETRY_TOKENS)
         result = robust_json_parse(response)
+        if "error" in result:
+            log(f"Retry JSON parse reported error: {result['error']}")
+        else:
+            log("Retry JSON parse succeeded")
 
     # If still failing, try FALLBACK shorter prompt (saves input tokens for output)
     if "error" in result or is_truncated(result.get("raw", "")):
-        log("   ⚠️ Still truncating, trying FALLBACK shorter prompt...")
+        log("Still seeing truncation or errors, using FALLBACK shorter prompt")
         fallback_prompt = FALLBACK_PROMPT.format(raw_text=raw_text)
         response = generate(model, tokenizer, fallback_prompt, MAX_RETRY_TOKENS)
         result = robust_json_parse(response)
+        if "error" in result:
+            log(f"Fallback JSON parse reported error: {result['error']}")
+        else:
+            log("Fallback JSON parse succeeded")
 
     return result
 
@@ -416,15 +603,30 @@ def extract_json_with_retry(raw_text: str, model, tokenizer) -> dict:
 # ============================
 
 
+def repair_double_quote_values(s: str) -> str:
+    """Fix Ollama's pattern where values start with double quotes: "": ""text -> ": "text"""
+    # Pattern: ": "" followed by actual text (not end of value)
+    # This catches "sectionContent": ""This project... -> "sectionContent": "This project...
+    s = re.sub(r'": ""([^",}\]\n])', r'": "\1', s)
+    return s
+
+
 def robust_json_parse(response: str) -> dict:
     response = response.strip()
 
-    if response.startswith("```json"):
-        response = response[7:]
-    elif response.startswith("```"):
-        response = response[3:]
-    if response.endswith("```"):
-        response = response[:-3]
+    # Handle markdown code blocks (Ollama often wraps in ```)
+    if "```json" in response:
+        start_marker = response.find("```json")
+        end_marker = response.find("```", start_marker + 7)
+        if end_marker > start_marker:
+            response = response[start_marker + 7 : end_marker]
+    elif "```" in response:
+        # Find content between first ``` and next ```
+        start_marker = response.find("```")
+        end_marker = response.find("```", start_marker + 3)
+        if end_marker > start_marker:
+            response = response[start_marker + 3 : end_marker]
+
     response = response.strip()
 
     start = response.find("{")
@@ -434,6 +636,7 @@ def robust_json_parse(response: str) -> dict:
     json_str = response[start:]
 
     # First, fix known problematic patterns (do this BEFORE extracting object)
+    json_str = repair_double_quote_values(json_str)  # Ollama-specific fix
     json_str = repair_unescaped_quotes(json_str)
 
     # Try to extract complete JSON object
@@ -449,6 +652,7 @@ def robust_json_parse(response: str) -> dict:
 
     # Apply repairs in order of likelihood to fix
     repair_funcs = [
+        repair_double_quote_values,  # Ollama-specific fix
         repair_unescaped_quotes,  # Fix quote escaping first
         repair_trailing_commas,
         repair_unicode,
@@ -577,6 +781,7 @@ def repair_truncation(s: str) -> str:
 
 
 def repair_all(s: str) -> str:
+    s = repair_double_quote_values(s)  # Ollama-specific fix
     s = repair_unescaped_quotes(s)  # Fix quote escaping first
     s = repair_unicode(s)
     s = repair_trailing_commas(s)
@@ -802,24 +1007,50 @@ def process_poster_file(poster_path: str) -> dict:
     Returns:
         Dictionary containing the extracted JSON structure
     """
-    log(f"Processing poster: {poster_path}")
+    log(f"Processing single poster file: {poster_path}")
+
+    # Ensure Ollama is available (lightweight check for standalone usage).
+    # For API usage this gives fast feedback if the local model server
+    # is not running or reachable.
+    try:
+        ensure_ollama_available(max_retries=3, retry_delay=1)
+        ensure_models_available()
+    except RuntimeError as e:
+        return {"error": f"Ollama not available: {e}"}
 
     # Extract raw text
+    t_extract_start = time.time()
     raw_text, source = get_raw_text(poster_path)
+    t_extract_elapsed = time.time() - t_extract_start
 
     if not raw_text or source == "unknown":
         return {
-            "error": f"Failed to extract text from file. Unsupported format or extraction failed."
+            "error": "Failed to extract text from file. Unsupported format or extraction failed."
         }
 
-    log(f"Extracted {len(raw_text)} characters using {source}")
+    log(
+        f"Extracted {len(raw_text)} characters from {poster_path} "
+        f"using source={source} in {t_extract_elapsed:.2f} seconds"
+    )
 
     # Load JSON model if not already loaded
     model, tokenizer = load_json_model()
 
     # Convert to JSON
     try:
+        t_json_start = time.time()
         generated = extract_json_with_retry(raw_text, model, tokenizer)
+        t_json_elapsed = time.time() - t_json_start
+        if "error" in generated:
+            log(
+                f"JSON extraction finished with error after "
+                f"{t_json_elapsed:.2f} seconds"
+            )
+        else:
+            log(
+                f"JSON extraction finished successfully in "
+                f"{t_json_elapsed:.2f} seconds"
+            )
 
         # Unload vision model if it was used (to free GPU memory)
         ext = Path(poster_path).suffix.lower()
@@ -829,6 +1060,7 @@ def process_poster_file(poster_path: str) -> dict:
         # Clean up GPU memory
         torch.cuda.empty_cache()
 
+        log("Finished processing poster, returning JSON result")
         return generated
     except Exception as e:
         log(f"ERROR processing poster: {e}")
@@ -842,11 +1074,30 @@ def run(annotation_dir: str, output_dir: str):
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     pairs = find_pairs(annotation_dir)
 
+    # High-level summary before starting the full evaluation run
     log("=" * 60)
-    log("POSTER EXTRACTION PIPELINE")
+    log("POSTER EXTRACTION PIPELINE (Ollama)")
     log("=" * 60)
-    log(f"Posters: {len(pairs)}")
+    log(f"Ollama Model: {OLLAMA_MODEL}")
+    log(f"Total posters to process: {len(pairs)}")
     log(f"GPU: {torch.cuda.get_device_name(0)}")
+
+    # Ensure Ollama is available before starting processing
+    try:
+        log("Checking Ollama availability (will retry up to 10 times)...")
+        ensure_ollama_available(max_retries=10, retry_delay=2)
+        log("Ollama health check passed - service is ready")
+
+        # Ensure all required models are available
+        log("Ensuring all required models are available...")
+        ensure_models_available()
+        log("All required models are ready")
+    except RuntimeError as e:
+        log(f"Ollama health check failed after all retries: {e}")
+        log(
+            "Please ensure Ollama is running and accessible on host.docker.internal:11434"
+        )
+        raise
 
     image_posters = [
         p for p in pairs if Path(p[0]).suffix.lower() in [".jpg", ".jpeg", ".png"]
@@ -886,7 +1137,7 @@ def run(annotation_dir: str, output_dir: str):
 
     # Phase 2: JSON structuring
     log("\n" + "=" * 40)
-    log("PHASE 2: JSON Structuring")
+    log("PHASE 2: JSON Structuring (Ollama)")
     log("=" * 40)
 
     model, tokenizer = load_json_model()

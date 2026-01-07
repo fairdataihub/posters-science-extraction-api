@@ -15,12 +15,17 @@ This pipeline leverages the following Large Language Models:
 | **Llama 3.1 8B Instruct** | Meta AI  | 8B         | JSON structuring and text-to-schema conversion |
 | **Qwen2-VL-7B-Instruct**  | Alibaba  | 7B         | Vision-language OCR for image posters          |
 
-### Meta Llama 3.1 8B Instruct
+### Meta Llama 3.1 8B Instruct (via Ollama)
+
+The core JSON structuring is performed by [Meta's Llama 3.1 8B Instruct](https://ollama.ai/library/llama3.1) served through [Ollama](https://ollama.ai), selected for:
 
 The core JSON structuring is performed by [Llama 3.1 8B Poster Extraction](https://huggingface.co/jimnoneill/Llama-3.1-8B-Poster-Extraction), selected for:
 - Strong instruction-following capabilities for structured output generation
 - 128K context window supporting full poster text processing
 - Efficient inference on consumer GPUs (16GB+ VRAM)
+- Simplified deployment via Ollama without HuggingFace authentication
+
+The pipeline uses the Q8 quantized variant (`llama3.1:8b-instruct-q8_0`) for optimal balance between quality and speed.
 
 ### Qwen2-VL-7B-Instruct
 
@@ -42,8 +47,8 @@ Image-based posters (JPG/PNG) are processed using [Qwen2-VL-7B-Instruct](https:/
                               │                        │
                     ┌─────────┴─────────┐    ┌────────┴────────┐
                     │                   │    │                 │
-               [PDF Files]        [Image Files]    [Llama 3.1 8B]
-                    │                   │              │
+               [PDF Files]        [Image Files]    [Ollama]
+                    │                   │         Llama 3.1 8B
                [pdfalto]         [Qwen2-VL-7B]   Section-aware
                XML Layout        Vision OCR      JSON Generation
 ```
@@ -66,9 +71,16 @@ The pipeline automatically selects the extraction method based on input file typ
 - Prompt: "Extract ALL text from this scientific poster image exactly as written"
 - Outputs raw text preserving section headers and content
 
-### Stage 2: JSON Structuring (Llama 3.1 8B)
+### Stage 2: JSON Structuring (Ollama + Llama 3.1 8B)
 
-Raw text is converted to structured JSON using Meta's Llama 3.1 8B Instruct:
+Raw text is converted to structured JSON using Meta's Llama 3.1 8B Instruct via Ollama:
+
+#### Text Preprocessing
+
+- Removes/replaces problematic quote characters that cause JSON parsing issues
+- Normalizes smart quotes and curly quotes to prevent double-quote artifacts
+
+#### Primary Prompt Strategy
 
 #### Primary Prompt Strategy
 
@@ -146,7 +158,34 @@ git clone https://github.com/fairdataihub/posters-science-posterextraction-beta.
 cd posters-science-posterextraction-beta
 ```
 
-### 2. Create Python Environment
+### 2. Install Ollama (Required)
+
+Ollama is used to serve the Llama 3.1 8B model locally.
+
+**Linux:**
+```bash
+curl -fsSL https://ollama.ai/install.sh | sh
+```
+
+**macOS:**
+```bash
+brew install ollama
+```
+
+**Windows:**
+Download from https://ollama.ai/download
+
+1. Create a HuggingFace account at https://huggingface.co
+2. Accept the Llama 3.1 license at https://huggingface.co/jimnoneill/Llama-3.1-8B-Poster-Extraction
+3. Generate an access token at https://huggingface.co/settings/tokens
+4. Set the environment variable:
+
+**Start Ollama server (if not running as service):**
+```bash
+ollama serve
+```
+
+### 3. Create Python Environment
 
 ```bash
 python -m venv venv
@@ -155,21 +194,6 @@ source venv/bin/activate  # Linux/macOS
 
 pip install -r requirements.txt
 ```
-
-### 3. Configure HuggingFace Access (Required)
-
-Meta's Llama 3.1 8B is a gated model requiring HuggingFace authentication:
-
-1. Create a HuggingFace account at https://huggingface.co
-2. Accept the Llama 3.1 license at https://huggingface.co/jimnoneill/Llama-3.1-8B-Poster-Extraction
-3. Generate an access token at https://huggingface.co/settings/tokens
-4. Set the environment variable:
-
-```bash
-export HF_TOKEN="your_huggingface_token"
-```
-
-Or add to `~/.bashrc` / `~/.zshrc` for persistence.
 
 ### 4. Install pdfalto (Required)
 
@@ -198,7 +222,7 @@ export PDFALTO_PATH="/path/to/pdfalto/build/pdfalto"
 sudo cp /path/to/pdfalto/build/pdfalto /usr/local/bin/
 
 # Option 3: Place in auto-discovered location
-cp /path/to/pdfalto/build/pdfalto ~/pdfalto/pdfalto
+cp /path/to/pdfalto/build/pdfalto ~/Downloads/pdfalto
 ```
 
 The pipeline automatically searches these locations:
@@ -206,9 +230,7 @@ The pipeline automatically searches these locations:
 - System PATH (`which pdfalto`)
 - `/usr/local/bin/pdfalto`
 - `/usr/bin/pdfalto`
-- `~/pdfalto/pdfalto`
-- `~/.local/bin/pdfalto`
-- `./pdfalto/pdfalto` (relative to script)
+- `~/Downloads/pdfalto`
 
 ## Usage
 
@@ -230,7 +252,6 @@ CUDA_VISIBLE_DEVICES=0 python poster_extraction.py --annotation-dir ./posters
 PDFALTO_PATH=/opt/pdfalto/pdfalto python poster_extraction.py --annotation-dir ./posters
 
 # Full example
-HF_TOKEN="hf_xxx" \
 PDFALTO_PATH="/usr/local/bin/pdfalto" \
 CUDA_VISIBLE_DEVICES=0 \
 python poster_extraction.py \
@@ -256,6 +277,7 @@ python poster_extraction.py \
 
 - Python 3.10+
 - CUDA 11.8+ with compatible drivers
+- Ollama (latest version)
 - Linux, macOS, or Windows with WSL2
 
 ### Python Dependencies
@@ -268,6 +290,7 @@ qwen-vl-utils
 accelerate
 Pillow
 numpy
+ollama>=0.2.0
 ```
 
 Install all dependencies:
@@ -320,6 +343,7 @@ Output JSONs conform to the posters-science schema:
 posters-science-posterextraction-beta/
 ├── README.md
 ├── poster_extraction.py       # Main extraction pipeline
+├── requirements.txt           # Python dependencies
 ├── manual_poster_annotation/  # Reference posters and ground truth JSONs
 │   ├── {poster_id}/
 │   │   ├── {poster_id}.pdf    # Source poster
@@ -336,6 +360,14 @@ The pipeline automatically selects the appropriate OCR method based on file type
 - **PDF files**: Processed via `pdfalto` which preserves layout structure through XML intermediate representation
 - **Image files**: Processed via `Qwen2-VL-7B` vision-language model for direct pixel-to-text conversion
 
+### Text Preprocessing
+
+Before JSON structuring, the raw text undergoes preprocessing to handle characters that cause parsing issues:
+
+- Removes curly/smart quotes that Ollama tends to include literally in output
+- Normalizes quote characters to prevent double-quote JSON artifacts
+- This preprocessing step is specific to the Ollama integration
+
 ### Prompt Engineering
 
 The JSON structuring stage employs section-aware prompting that:
@@ -351,6 +383,16 @@ For documents exceeding model context limits:
 1. Initial attempt with primary prompt (18,000 output tokens)
 2. Retry with extended token budget (24,000 tokens)
 3. Fallback to condensed prompt format if truncation persists
+
+### JSON Repair
+
+The pipeline includes repair functions to handle common LLM output issues:
+
+- Double-quote artifacts at value boundaries
+- Unescaped quotes in scientific notation
+- Trailing commas in arrays/objects
+- Unicode encoding errors
+- Truncated JSON completion
 
 ## License
 
