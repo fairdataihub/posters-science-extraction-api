@@ -23,9 +23,13 @@ RUN apt-get update && apt-get install -y \
 RUN ln -s /usr/bin/python3.10 /usr/bin/python
 
 # Build pdfalto
-RUN git clone https://github.com/kermitt2/pdfalto.git /tmp/pdfalto && \
+# Use shallow clone and retry logic to handle network issues
+RUN for i in 1 2 3; do \
+        git clone --depth 1 --single-branch https://github.com/kermitt2/pdfalto.git /tmp/pdfalto && break || \
+        (echo "Clone attempt $i failed, retrying..." && sleep 5); \
+    done && \
     cd /tmp/pdfalto && \
-    git submodule update --init --recursive && \
+    git submodule update --init --recursive --depth 1 && \
     cmake . && \
     make && \
     chmod +x pdfalto && \
