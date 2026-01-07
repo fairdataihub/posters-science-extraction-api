@@ -1,12 +1,11 @@
-# ============================================
-# Stage 1: Build stage - compile pdfalto
-# ============================================
-FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04 AS builder
+FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
 
-ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    CUDA_VISIBLE_DEVICES=0
 
-# Install build dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Install dependencies
+RUN apt-get update && apt-get install -y \
     git \
     build-essential \
     cmake \
@@ -16,7 +15,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libtool \
     libpoppler-dev \
     libxerces-c-dev \
-    && rm -rf /var/lib/apt/lists/*
+    python3.10 \
+    python3-pip \
+    curl
+
+# Create symlink for python
+RUN ln -s /usr/bin/python3.10 /usr/bin/python
 
 # Build pdfalto
 RUN git clone https://github.com/kermitt2/pdfalto.git /tmp/pdfalto && \
@@ -24,49 +28,19 @@ RUN git clone https://github.com/kermitt2/pdfalto.git /tmp/pdfalto && \
     git submodule update --init --recursive && \
     cmake . && \
     make && \
-    chmod +x pdfalto
-
-# ============================================
-# Stage 2: Runtime stage - minimal production image
-# ============================================
-FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04
-
-# Set environment variables
-ENV DEBIAN_FRONTEND=noninteractive \
-    PYTHONUNBUFFERED=1 \
-    CUDA_VISIBLE_DEVICES=0 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
-
-# Install only runtime dependencies
-# Note: pdfalto may need runtime libraries - adjust based on actual requirements
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3.10 \
-    python3-pip \
-    curl \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
-
-# Create symlink for python
-RUN ln -s /usr/bin/python3.10 /usr/bin/python
-
-# Copy pdfalto binary from builder stage
-COPY --from=builder /tmp/pdfalto/pdfalto /usr/local/bin/pdfalto
+    chmod +x pdfalto && \
+    cp pdfalto /usr/local/bin/pdfalto
 
 # Set working directory
 WORKDIR /app
 
-# Copy production requirements first for better caching
+# Copy requirements and install Python dependencies
 COPY requirements-prod.txt requirements.txt
-
-# Install Python dependencies (production only)
-RUN pip3 install --upgrade pip setuptools wheel && \
-    pip3 install --no-cache-dir -r requirements.txt
+RUN pip3 install --upgrade pip && \
+    pip3 install -r requirements.txt
 
 # Copy application code
-COPY poster_extraction.py .
-COPY api.py .
+COPY poster_extraction.py api.py ./
 
 # Create directories for input/output
 RUN mkdir -p /app/input /app/output
