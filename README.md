@@ -1,4 +1,4 @@
-# FAIR Data Innovations Hub - Mchine-Actionable Poster Extraction Beta
+# FAIR Data Innovations Hub - Machine-Actionable Poster Extraction Beta
 
 Automated extraction of structured metadata from scientific poster PDFs and images using Large Language Models.
 
