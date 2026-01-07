@@ -1,4 +1,4 @@
-# Poster Science - Poster Extraction Beta
+# FAIR Data Innovations Hub - Mchine-Actionable Poster Extraction Beta
 
 Automated extraction of structured metadata from scientific poster PDFs and images using Large Language Models.
 
@@ -10,15 +10,16 @@ This pipeline converts scientific posters (PDF and image formats) into structure
 
 This pipeline leverages the following Large Language Models:
 
-| Model                     | Provider | Parameters | Purpose                                        | Interface |
-| ------------------------- | -------- | ---------- | ---------------------------------------------- | --------- |
-| **Llama 3.1 8B Instruct** | Meta AI  | 8B         | JSON structuring and text-to-schema conversion | Ollama    |
-| **Qwen2-VL-7B-Instruct**  | Alibaba  | 7B         | Vision-language OCR for image posters          | HuggingFace |
+| Model                     | Provider | Parameters | Purpose                                        |
+| ------------------------- | -------- | ---------- | ---------------------------------------------- |
+| **Llama 3.1 8B Instruct** | Meta AI  | 8B         | JSON structuring and text-to-schema conversion |
+| **Qwen2-VL-7B-Instruct**  | Alibaba  | 7B         | Vision-language OCR for image posters          |
 
 ### Meta Llama 3.1 8B Instruct (via Ollama)
 
 The core JSON structuring is performed by [Meta's Llama 3.1 8B Instruct](https://ollama.ai/library/llama3.1) served through [Ollama](https://ollama.ai), selected for:
 
+The core JSON structuring is performed by [Llama 3.1 8B Poster Extraction](https://huggingface.co/jimnoneill/Llama-3.1-8B-Poster-Extraction), selected for:
 - Strong instruction-following capabilities for structured output generation
 - 128K context window supporting full poster text processing
 - Efficient inference on consumer GPUs (16GB+ VRAM)
@@ -38,7 +39,7 @@ Image-based posters (JPG/PNG) are processed using [Qwen2-VL-7B-Instruct](https:/
 
 ### Pipeline Overview
 
-```
+```mermaid
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
 │  Input Poster   │────▶│  Raw Text       │────▶│  Structured     │
 │  (PDF/Image)    │     │  Extraction     │     │  JSON Output    │
@@ -78,6 +79,8 @@ Raw text is converted to structured JSON using Meta's Llama 3.1 8B Instruct via 
 
 - Removes/replaces problematic quote characters that cause JSON parsing issues
 - Normalizes smart quotes and curly quotes to prevent double-quote artifacts
+
+#### Primary Prompt Strategy
 
 #### Primary Prompt Strategy
 
@@ -133,18 +136,18 @@ The pipeline is validated against manually annotated reference JSONs using four 
 
 | Poster ID | Word | ROUGE-L | Numbers | Fields | OCR Method  |
 | --------- | ---- | ------- | ------- | ------ | ----------- |
-| 10890106  | 0.97 | 0.86    | 0.96    | 0.88   | pdfalto     |
-| 15963941  | 0.98 | 0.94    | 0.97    | 0.89   | pdfalto     |
-| 16083265  | 0.96 | 0.90    | 1.00    | 1.04   | pdfalto     |
-| 17268692  | 0.97 | 0.83    | 0.94    | 2.00   | pdfalto     |
-| 42        | 0.99 | 0.86    | 0.97    | 1.12   | pdfalto     |
-| 4737132   | 0.94 | 0.82    | 0.95    | 1.39   | qwen_vision |
-| 5128504   | 0.99 | 1.00    | 0.97    | 1.11   | pdfalto     |
-| 6724771   | 0.92 | 0.98    | 0.82    | 1.00   | pdfalto     |
-| 8228476   | 0.91 | 0.86    | 0.89    | 0.73   | pdfalto     |
-| 8228568   | 0.99 | 0.81    | 0.91    | 0.89   | pdfalto     |
+| 10890106  | 0.97 | 0.81    | 0.96    | 0.90   | pdfalto     |
+| 15963941  | 0.97 | 0.90    | 0.97    | 0.95   | pdfalto     |
+| 16083265  | 0.98 | 0.89    | 1.00    | 0.96   | pdfalto     |
+| 17268692  | 1.00 | 0.87    | 0.94    | 1.91   | pdfalto     |
+| 42        | 0.99 | 0.89    | 0.97    | 0.76   | pdfalto     |
+| 4737132   | 0.94 | 0.84    | 0.95    | 1.32   | qwen_vision |
+| 5128504   | 0.99 | 0.99    | 0.97    | 1.16   | pdfalto     |
+| 6724771   | 0.91 | 0.95    | 0.82    | 1.05   | pdfalto     |
+| 8228476   | 0.95 | 0.90    | 0.89    | 0.86   | pdfalto     |
+| 8228568   | 0.99 | 0.82    | 0.91    | 0.96   | pdfalto     |
 
-**Aggregate Performance**: w=0.963, r=0.887, n=0.936, f=1.105
+**Aggregate Performance**: w=0.969, r=0.887, n=0.936, f=1.083
 
 ## Installation
 
@@ -172,10 +175,10 @@ brew install ollama
 **Windows:**
 Download from https://ollama.ai/download
 
-**Pull the required model:**
-```bash
-ollama pull llama3.1:8b-instruct-q8_0
-```
+1. Create a HuggingFace account at https://huggingface.co
+2. Accept the Llama 3.1 license at https://huggingface.co/jimnoneill/Llama-3.1-8B-Poster-Extraction
+3. Generate an access token at https://huggingface.co/settings/tokens
+4. Set the environment variable:
 
 **Start Ollama server (if not running as service):**
 ```bash
@@ -258,10 +261,10 @@ python poster_extraction.py \
 
 ### Command Line Arguments
 
-| Argument           | Description                             | Default              |
-| ------------------ | --------------------------------------- | -------------------- |
-| `--annotation-dir` | Directory containing poster PDFs/images | Required             |
-| `--output-dir`     | Directory for extracted JSON outputs    | `./extraction_output`|
+| Argument           | Description                             | Default  |
+| ------------------ | --------------------------------------- | -------- |
+| `--annotation-dir` | Directory containing poster PDFs/images | Required |
+| `--output-dir`     | Directory for extracted JSON outputs    | Required |
 
 ## System Requirements
 
@@ -279,7 +282,7 @@ python poster_extraction.py \
 
 ### Python Dependencies
 
-```
+```bash
 transformers>=4.40.0
 torch>=2.0.0
 rouge-score
@@ -297,9 +300,8 @@ pip install -r requirements.txt
 
 ### External Tools
 
-- **Ollama** - Local LLM server (https://ollama.ai)
-  - Required model: `llama3.1:8b-instruct-q8_0`
-- **pdfalto** - PDF layout analysis tool (https://github.com/kermitt2/pdfalto)
+- `pdfalto` - PDF layout analysis tool (compiled binary required)
+  - Installation: https://github.com/kermitt2/pdfalto
 
 ## Output Structure
 
