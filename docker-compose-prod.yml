@@ -13,7 +13,7 @@ services:
       - HOST=0.0.0.0
     gpus: all
     ports:
-      - "47362:8000"
+      - "${APP_PORT:-47362}:8000"
     command: python api.py
     restart: ${RESTART_POLICY:-unless-stopped}
     networks:

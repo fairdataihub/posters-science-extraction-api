@@ -66,6 +66,9 @@ jobs:
           # Re-extract repository name and destination path
           REPO_NAME="${GITHUB_REPOSITORY#*/}"
           DEST="~/deploy/$REPO_NAME"
+          # Use APP_PORT secret if available, otherwise default to 47362
+          PORT="${{ secrets.APP_PORT }}"
+          PORT="${PORT:-47362}"
 
           # SSH into the server and execute deployment commands
           ssh -i ~/.ssh/id_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << EOF
@@ -73,6 +76,9 @@ jobs:
           set -euo pipefail
           # Navigate to the deployment directory
           cd $DEST
+
+          # Export port for docker-compose to use
+          export APP_PORT=${PORT:-47362}
 
           # Verify Docker and Docker Compose are available
           docker version
@@ -87,3 +93,62 @@ jobs:
           # Optional: clean up unused Docker images (currently commented out)
           # docker system prune -f --volumes
           EOF
+
+      # Health check: verify the application is running and healthy
+      - name: Health check
+        shell: bash
+        run: |
+          set -euo pipefail
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          PORT="${{ secrets.APP_PORT }}"
+          PORT="${PORT:-47362}"
+
+          ssh -i ~/.ssh/id_ed25519 \
+            -o StrictHostKeyChecking=yes \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "REPO_NAME='$REPO_NAME' PORT='$PORT' bash -s" <<'HEALTH_EOF'
+          set -euo pipefail
+          cd "$HOME/deploy/$REPO_NAME"
+
+          echo "Waiting for container to start..."
+          timeout=30
+          elapsed=0
+          while [ "$elapsed" -lt "$timeout" ]; do
+            if docker compose -f docker-compose-prod.yml ps | grep -q "Up"; then
+              echo "Container is running"
+              break
+            fi
+            sleep 2
+            elapsed=$((elapsed + 2))
+          done
+
+          echo "Performing health check on port $PORT..."
+          max_attempts=10
+          attempt=1
+          wait_time=15
+
+          while [ "$attempt" -le "$max_attempts" ]; do
+            echo "Attempt $attempt/$max_attempts..."
+
+            response="$(curl -s -w $'\n%{http_code}' "http://localhost:$PORT/health" 2>/dev/null || true)"
+            http_code="$(echo "$response" | tail -n1)"
+            body="$(echo "$response" | head -n-1)"
+
+            if [ "$http_code" = "200" ]; then
+              echo "✅ Health check passed! Application is healthy."
+              echo "Response: $body"
+              exit 0
+            elif [ "$http_code" = "503" ]; then
+              echo "⏳ Application is still booting (models loading)..."
+            else
+              echo "❌ Health check failed: HTTP $http_code"
+              echo "Response: $body"
+            fi
+
+            attempt=$((attempt + 1))
+            sleep "$wait_time"
+          done
+
+          echo "❌ Health check failed after $max_attempts attempts"
+          exit 1
+          HEALTH_EOF
