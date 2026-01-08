@@ -130,7 +130,7 @@ jobs:
           while [ "$attempt" -le "$max_attempts" ]; do
             echo "Attempt $attempt/$max_attempts..."
 
-            response="$(curl -s -w $'\n%{http_code}' "http://localhost:$PORT/health" 2>/dev/null || true)"
+            response="$(curl -s -w $'\n%{http_code}' "http://localhost:$PORT/up" 2>/dev/null || true)"
             http_code="$(echo "$response" | tail -n1)"
             body="$(echo "$response" | head -n-1)"
 
