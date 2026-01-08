@@ -37,6 +37,7 @@ def root():
 
 
 @app.route("/health", methods=["GET"])
+@app.route("/up", methods=["GET"])
 def health():
     """Health check endpoint including Ollama status."""
     checks = {"api": "ok"}
