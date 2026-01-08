@@ -85,5 +85,5 @@ jobs:
           # --remove-orphans: remove containers for services not in compose file
           docker compose -f docker-compose-prod.yml up -d --build --remove-orphans
           # Optional: clean up unused Docker images (currently commented out)
-          # docker image prune -f
+          # docker system prune -f --volumes
           EOF

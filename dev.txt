@@ -1,0 +1,22 @@
+# ufw status 
+
+sudo ufw status verbose
+Status: active
+Logging: on (low)
+Default: deny (incoming), allow (outgoing), deny (routed)
+New profiles: skip
+
+To                         Action      From
+--                         ------      ----
+22/tcp                     ALLOW IN    Anywhere
+80/tcp                     ALLOW IN    Anywhere
+443                        ALLOW IN    Anywhere
+11434/tcp on docker0       ALLOW IN    Anywhere
+11434/tcp on br-XXXX       ALLOW IN    Anywhere
+11434/tcp on br-aec6b0a3f4e6 ALLOW IN    Anywhere
+22/tcp (v6)                ALLOW IN    Anywhere (v6)
+80/tcp (v6)                ALLOW IN    Anywhere (v6)
+443 (v6)                   ALLOW IN    Anywhere (v6)
+11434/tcp (v6) on docker0  ALLOW IN    Anywhere (v6)
+11434/tcp (v6) on br-XXXX  ALLOW IN    Anywhere (v6)
+11434/tcp (v6) on br-aec6b0a3f4e6 ALLOW IN    Anywhere (v6)

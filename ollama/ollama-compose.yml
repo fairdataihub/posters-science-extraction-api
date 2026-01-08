@@ -1,0 +1,38 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+
+    volumes:
+      - ollama:/root/.ollama
+
+    # Expose to other containers on the same Docker network (no host port needed)
+    networks:
+      - ollama-network
+
+    # GPU
+    gpus: all
+
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+    # OPTIONAL: If you want host access (curl from host), uncomment this.
+    # WARNING: Will conflict if host Ollama already uses 11434.
+    # ports:
+    #   - "11434:11434"
+
+volumes:
+  ollama:
+
+networks:
+  ollama-network:
+    name: ollama-network
+    external: true
