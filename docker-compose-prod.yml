@@ -8,19 +8,24 @@ services:
     environment:
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
       - HF_TOKEN=${HF_TOKEN:-}
-      - OLLAMA_HOST=http://host.docker.internal:11434
+      - OLLAMA_HOST=http://ollama:11434
       - PORT=8000
       - HOST=0.0.0.0
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     gpus: all
     ports:
       - "47362:8000"
     command: python api.py
     restart: ${RESTART_POLICY:-unless-stopped}
+    networks:
+      - ollama-network
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 120s
+
+networks:
+  ollama-network:
+    external: true
+    name: ollama-network

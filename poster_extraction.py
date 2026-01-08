@@ -43,9 +43,9 @@ import ollama
 
 
 # Configure Ollama host and GPU visibility at import time
-os.environ["OLLAMA_HOST"] = "http://host.docker.internal:11434"
+OLLAMA_HOST = "http://ollama:11434"
+os.environ["OLLAMA_HOST"] = OLLAMA_HOST
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-
 
 # Ollama model configuration
 OLLAMA_MODEL = "llama3.1:8b-instruct-q8_0"
@@ -120,7 +120,6 @@ def unload_vision_model():
         _vision_processor = None
     free_gpu()
     log("Vision model and processor unloaded, GPU memory cleared")
-
 
 
 def extract_text_with_qwen_vision(image_path: str) -> str:
@@ -351,7 +350,7 @@ def ensure_ollama_available(max_retries=10, retry_delay=2):
     Raises:
         RuntimeError: If Ollama is not available after all retries
     """
-    ollama_host = os.environ.get("OLLAMA_HOST", "http://host.docker.internal:11434")
+    ollama_host = os.environ.get("OLLAMA_HOST", OLLAMA_HOST)
 
     for attempt in range(1, max_retries + 1):
         try:
@@ -389,7 +388,6 @@ def ensure_models_available():
         raise RuntimeError(f"Error checking model {OLLAMA_MODEL}: {e}")
 
 
-
 def load_json_model():
     """
     Verify that the Ollama model is available and pull it if needed.
@@ -412,7 +410,6 @@ def load_json_model():
 
     # Return None, None to maintain API compatibility
     return None, None
-
 
 
 def generate(model, tokenizer, prompt: str, max_tokens: int) -> str:
@@ -1094,9 +1091,7 @@ def run(annotation_dir: str, output_dir: str):
         log("All required models are ready")
     except RuntimeError as e:
         log(f"Ollama health check failed after all retries: {e}")
-        log(
-            "Please ensure Ollama is running and accessible on host.docker.internal:11434"
-        )
+        log(f"Please ensure Ollama is running and accessible on {OLLAMA_HOST}")
         raise
 
     image_posters = [
