@@ -1021,6 +1021,8 @@ def process_poster_file(poster_path: str) -> dict:
         import traceback
 
         traceback.print_exc()
+        # Still unload models on error to free GPU memory
+        unload_json_model()
         return {"error": str(e)}
 
 
@@ -1125,6 +1127,11 @@ def run(annotation_dir: str, output_dir: str):
             results.append({"poster_id": poster_id, "error": str(e), "passes": False})
 
         torch.cuda.empty_cache()
+
+    # Final cleanup - unload all models before exit
+    unload_json_model()
+    unload_vision_model()
+    log("   ✓ All models unloaded, GPU memory freed")
 
     # Summary
     log("\n" + "=" * 60)
