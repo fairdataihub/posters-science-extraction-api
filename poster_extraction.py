@@ -548,14 +548,23 @@ def remove_empty_sections(generated: dict) -> dict:
     This prevents hallucinated sections where the model creates a section
     header (e.g., "Discussion") but has no content to fill it.
     """
+    def has_content(section):
+        """Check if a section has non-empty content."""
+        if not isinstance(section, dict):
+            return False
+        content = section.get("sectionContent", "")
+        # Handle both string and list content
+        if isinstance(content, str):
+            return bool(content.strip())
+        elif isinstance(content, list):
+            return len(content) > 0
+        return bool(content)
+    
     if "posterContent" in generated and isinstance(generated["posterContent"], dict):
         sections = generated["posterContent"].get("sections", [])
         if isinstance(sections, list):
             original_count = len(sections)
-            filtered = [
-                s for s in sections
-                if isinstance(s, dict) and s.get("sectionContent", "").strip()
-            ]
+            filtered = [s for s in sections if has_content(s)]
             if len(filtered) < original_count:
                 log(f"   Removed {original_count - len(filtered)} empty section(s)")
             generated["posterContent"]["sections"] = filtered
