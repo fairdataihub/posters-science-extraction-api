@@ -1,0 +1,65 @@
+A Dataset for Metaphor Detection in Early Medieval Hebrew Poetry
+Michael Toker 1
+tok@cs.technion.ac.il
+Oren Mishali 1
+omishali@cs.technion.ac.il
+Adir Cohen 1
+adircohen@campus.technion.ac.il
+Ophir M ·· unz-Manor 2
+ophirmm@openu.ac.il
+1 Technion − Israel Institute of Technology 2 The Open University of Israel
+Benny Kimelfeld 1
+bennyk@cs.technion.ac.il
+Yonatan Belinkov 1
+belinkov@technion.ac.il
+The corpus of late antique and medieval Hebrew is vast and represents a crucial linguistic and cultural bridge between Biblical and modern Hebrew. Poetry is prominent in texts from these time periods and one of its characteristics is the use of metaphor. Distinguishing ﬁgurative and literal words or phrases is a major task for scholars in the Humanities, especially in the ﬁelds of literature, linguistics, and hermeneutics. We present a new, challenging dataset of early medieval Hebrew poetry with expert annotations of metaphors with baseline results.
+The Dataset
+• Early medieval Hebrew poems. • 180 labeled texts, 7,000 sentences, 45,000 words. • 15% of the words are metaphors.
+Hebrew English Meaning
+‫ים‬ ‫כשטופי‬ ‫בגזרות,‬ ‫טבענו‬ We drowned in decrees, like sea washed There are too many decrees
+‫נר‬ ‫ויבער‬ ‫נשמה‬ ‫הצית‬ Ignite a soul, ﬁre a candle Create a soul
+‫פרי‬ ‫עשו‬ ‫לא‬ ‫עשירי‬ ‫דור‬ ‫עד‬ Until the tenth generation they did not bear fruit
+Inter Annotator Agreement
+For ten generations, they did no good deeds
+Inter-annotator agreement evaluates how consistently diﬀerent annotators label data for NLP research (measured in Cohen’s kappa). The score for our dataset is 0.618 (considered substantial).
+Methods
+LM adaptation Fine-tuning for metaphor detection
+Metaphor
+Metaphor
+Metaphor
+Not a Metaphor Not a Metaphor
+Pre-trained/Adapted Language Model
+‫עיצ_‬ ‫_בון‬ ‫במשלח‬ ‫ידי_‬ ‫_נו‬
+‫במשלח‬ ‫עיצ_‬
+Pre-trained Language Model
+<mask> ‫_בון‬ <mask> ‫ידי_‬ ‫_נו‬
+‫עיצ_‬ ‫_בון‬ ‫במשלח‬ ‫ידי_‬ ‫_נו‬
+A medieval Hebrew poem from the Worms Prayerbook, Germany, 13th Century, The National Library of Israel, "Ktiv" Project
+Language models (pre-trained & adapted)
+BEREL 220 Milion Medieval
+AlephBERT 2 Bilion Modern
+AlephBERT Adapted
+Data Size (words) Data Type
+2 Bilion + 10 Milion
+Modern + Medieval
+Trained on additional prose and poetic medieval texts (Project Ben-Yehuda*) + Piyyut dataset
+Tokenizer
+Tokenizer
+‫ידינו‬ ‫במשלח‬ ‫עיצבון‬
+Error Analysis Results
+• AlephBERT is outperformed by AlephBERT Adapted. • BEREL, pre-trained on medieval texts, shows the best results.
+49
+36.75
+24.5
+12.25
+0
+46.56 48.3 44.404
+AlephBERT BEREL AlephBERT - adapted
+f1 Score on test set
+‫ידינו‬ ‫במשלח‬ ‫עיצבון‬
+*Project Ben-Yehuda is a volunteer-based online library of free Hebrew literature.
+‫חשקתיו‬ ‫לניחוח‬ ‫ילד‬
+Berel
+‫חשקתיו‬ ‫לניחוח‬ ‫ילד‬
+(A child for a scent - I have desired)
+Expert explanation: The child is a non-metaphorical epithet for Isaac. “Scent” is a metonymic term for “sacriﬁce”.

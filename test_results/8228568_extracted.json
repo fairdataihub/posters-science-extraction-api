@@ -1,0 +1,55 @@
+{
+  "creators": [
+    {
+      "name": "Ma, Rongqian",
+      "affiliation": [
+        {
+          "name": "Indiana University Bloomington"
+        }
+      ]
+    }
+  ],
+  "titles": [
+    {
+      "title": "Revisiting Connotations of Digital Humanists"
+    }
+  ],
+  "posterContent": {
+    "sections": [
+      {
+        "sectionTitle": "Abstract",
+        "sectionContent": "Exploratory Interviews\nRongqian Ma, Indiana University Bloomington\nDH 2023, Graz, Austria, July 12-14\nThis ongoing study revisits the connotations of “digital humanists” and explores the reasons why a researcher does or does not self-identify as a digital humanist. Building on semi-structured interview data collected from fourteen researchers and practitioners engaging in digital humanities (DH) projects, this poster illustrates researchers’ various understandings of “digital humanist” as a term and highlights the complexity of “digital humanists” as a research community. This study provides insights into the collective imaginations of “digital humanist” as a research community."
+      },
+      {
+        "sectionTitle": "Background",
+        "sectionContent": "Who is in and who is out? Early deliberations of digital humanists\nq Alvarado (2012): Someone who (1) aims to develop the deep domain knowledge of the traditional humanist, (2) learns a wide variety of technologies and programming languages, and (3) critically situates the technologies as cultural artifacts “participating in the production of social and cognitive structures. \nq Ramsay (2011): A (humanities) scholar who can build something with digital methods. \nq Jänicke (2016): Inclusive conception of digital humanists, advocating for active participation from researchers of various knowledge domains, especially those from scientific fields."
+      },
+      {
+        "sectionTitle": "Research Questions Qualitative Semi-structured Interviews",
+        "sectionContent": "RQ 1: How do researchers currently understand the connotations of “digital humanists” as a research identity?\nRQ 2: Why do (or do not) researchers self-identify as a digital humanist?\nParticipants (n=14)\n1\n2\nDo you self-identify as a digital humanist, depending on your personal understanding of the term?\nWhy or why not?\nInclusive screening criterion: Any researcher or practitioner who has been actively engaging in DH projects\nq 8 DOMAINS: History, religious studies, English, art history, sociology, information science, math, anthropology\nq 6 LEVELS OF TRAINING: Master’s students (n=2), PhD candidates (n=5), postdoc (n=1), assistant professors (n=4), associate professors (n=1), and curator (n=1)."
+      },
+      {
+        "sectionTitle": "Results",
+        "sectionContent": "Researchers’ self-confidence in technical literacy and the nature of research questions affect their self-identification as a digital humanist.\nReason Participant (n=8)\nCompetent in digital methods (programming and coding in particular)\nActive working, teaching, or supervising students in DH\nExample\nP2, P6, P7, P9, P11 “I have a background in anthropology and museum studies, and I know coding and know how to do data analysis. …” (P9) “I can code and I use computational and quantitative methods to study literature.” (P11)\nP4, P10, P14 “I self-identify as a digital humanist in the same way as I self-identify as an information designer, a programmer, and a statistician. I do research in digital humanities, so I guess technically I can say I am a digital humanist.” (P4)\nReason Participant (n=6)\nExample\nNot a “humanist” P12, P13 “I wouldn’t think I’m a humanist because my research question is not a humanities research question. I approach cultural heritage research from information science and design perspectives…. although I think what I’m doing is digital humanities work.” (P13)\nConcerned with technical skills (programming in particular)\nDH does not raise new research questions\nDigital methods are not necessary\nP8 “I just started learning programming and digital methods. Being a digital humanist will be my final goal, but I am not there yet.” (P8)\nP3 “…new constructs such as “DH” did not generate fundamentally new questions distinct from those in conventional or analog humanities.” (P3)\nP1, P5 “My research questions are not ultimately bound with digital methods; they can be addressed with digital methods, but not necessarily have to be.” (P5)"
+      },
+      {
+        "sectionTitle": "Key Findings",
+        "sectionContent": "Researchers’ self-confidence in technical literacy and the nature of research questions affect their self-identification as a digital humanist."
+      },
+      {
+        "sectionTitle": "Discussion",
+        "sectionContent": ""
+      },
+      {
+        "sectionTitle": "References",
+        "sectionContent": "Alvarado, R. C. (2012). The digital humanities situation. In M. Gold (Ed.), Debates in the Digital Humanities. University of Minnesota Press.\nJänicke, S. (2016). Valuable Research for Visualization and Digital Humanities: A Balancing Act. Workshop on Visualization for the Digital Humanities, IEEE VIS 2016, Baltimore, Maryland, USA.\nRamsay, S. (2011). Who’s in and who’s out. In M. Terras, J. Nyhan, & E. Vanhoutte (Eds.), Defining digital humanities: A reader. Ashgate."
+      },
+      {
+        "sectionTitle": "Contact",
+        "sectionContent": "INDIANA UNIVERSITY BLOOMINGTON"
+      }
+    ]
+  },
+  "imageCaption": [],
+  "tableCaption": []
+}
