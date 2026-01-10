@@ -1,0 +1,142 @@
+[
+  {
+    "poster_id": "10890106",
+    "metrics": {
+      "word_capture": 0.9754385964912281,
+      "rouge_l": 0.8179455893423839,
+      "number_capture": 0.9565217391304348,
+      "field_proportion": 1.161764705882353,
+      "gen_sections": 26,
+      "ref_sections": 13
+    },
+    "passes": true,
+    "error": false,
+    "source": "pdfalto"
+  },
+  {
+    "poster_id": "15963941",
+    "metrics": {
+      "word_capture": 0.9726027397260274,
+      "rouge_l": 0.9027522935779817,
+      "number_capture": 0.9696969696969697,
+      "field_proportion": 0.9534883720930233,
+      "gen_sections": 7,
+      "ref_sections": 5
+    },
+    "passes": true,
+    "error": false,
+    "source": "pdfalto"
+  },
+  {
+    "poster_id": "16083265",
+    "metrics": {
+      "word_capture": 0.9601593625498008,
+      "rouge_l": 0.9046991592456318,
+      "number_capture": 1.0,
+      "field_proportion": 1.0980392156862746,
+      "gen_sections": 19,
+      "ref_sections": 15
+    },
+    "passes": true,
+    "error": false,
+    "source": "pdfalto"
+  },
+  {
+    "poster_id": "17268692",
+    "metrics": {
+      "word_capture": 0.9530516431924883,
+      "rouge_l": 0.9307692307692307,
+      "number_capture": 0.9,
+      "field_proportion": 1.125,
+      "gen_sections": 14,
+      "ref_sections": 10
+    },
+    "passes": true,
+    "error": false,
+    "source": "pdfalto"
+  },
+  {
+    "poster_id": "42",
+    "metrics": {
+      "word_capture": 0.9856115107913669,
+      "rouge_l": 0.8840579710144928,
+      "number_capture": 0.9666666666666667,
+      "field_proportion": 0.75,
+      "gen_sections": 12,
+      "ref_sections": 15
+    },
+    "passes": true,
+    "error": false,
+    "source": "pdfalto"
+  },
+  {
+    "poster_id": "4737132",
+    "metrics": {
+      "word_capture": 0.9425287356321839,
+      "rouge_l": 0.8156123822341858,
+      "number_capture": 0.9454545454545454,
+      "field_proportion": 1.3333333333333333,
+      "gen_sections": 16,
+      "ref_sections": 10
+    },
+    "passes": true,
+    "error": false,
+    "source": "qwen_vision"
+  },
+  {
+    "poster_id": "5128504",
+    "metrics": {
+      "word_capture": 0.9884057971014493,
+      "rouge_l": 0.9922935790782177,
+      "number_capture": 0.9714285714285714,
+      "field_proportion": 1.1590909090909092,
+      "gen_sections": 13,
+      "ref_sections": 8
+    },
+    "passes": true,
+    "error": false,
+    "source": "pdfalto"
+  },
+  {
+    "poster_id": "6724771",
+    "metrics": {
+      "word_capture": 0.9203539823008849,
+      "rouge_l": 0.9805003679175864,
+      "number_capture": 0.8181818181818182,
+      "field_proportion": 1.0731707317073171,
+      "gen_sections": 11,
+      "ref_sections": 6
+    },
+    "passes": true,
+    "error": false,
+    "source": "pdfalto"
+  },
+  {
+    "poster_id": "8228476",
+    "metrics": {
+      "word_capture": 0.949685534591195,
+      "rouge_l": 0.8779220779220779,
+      "number_capture": 0.8888888888888888,
+      "field_proportion": 0.8225806451612904,
+      "gen_sections": 14,
+      "ref_sections": 7
+    },
+    "passes": true,
+    "error": false,
+    "source": "pdfalto"
+  },
+  {
+    "poster_id": "8228568",
+    "metrics": {
+      "word_capture": 0.9896373056994818,
+      "rouge_l": 0.6940231935771632,
+      "number_capture": 0.7272727272727273,
+      "field_proportion": 0.8518518518518519,
+      "gen_sections": 7,
+      "ref_sections": 9
+    },
+    "passes": false,
+    "error": false,
+    "source": "pdfalto"
+  }
+]

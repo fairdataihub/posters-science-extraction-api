@@ -1,0 +1,105 @@
+Institut für Bibliotheks- und Informationswissenschaft
+
+Frederik Arnold
+
+Verfahren zur Entdeckung und Charakterisierung von im Projekt Schlüsselstellen in der Literatur Was ist wichtig? – Schlüsselstellen in der Literatur
+
+Erkennung wörtlicher Zitate
+
+Text 1
+0 w1 w2 w3 w4 w5 w6 w7
+7 w8 w9 w10 w11 w12 w13 w14
+14 w15 w16 w17 w18 w19 w20 w21
+21 w22 w23 w24 w25 w26 w27 w28
+28 w29 w30 w31 w32 w33 w34 w35
+35 w10 w11 w12 w13 w14 w15 w16
+
+Text 2
+50 … … … … … … … …
+60 w17 w18 w19 w20 w21 w22 …
+75 w8 w9 w10 w11 w12 …
+90 … … … … … … … …
+120 w8 w9 w10 w11 w12 …
+130 w27 w28 w29 […] w33 w34 w35
+
+Korpus
+- erstellt im ArguLit- Projekt3
+- 45 Interpretationstexte der Juden- buche
+- 52 Interpretationstexte des Michael Kohlhaas
+
+Segmentierung
+Zitierte Stellen aus Interpretationstexten
+w1 w2 w3 w4 w5 w6 w7 w8 w9 w10
+w3 w4 w5 w6 w7 w8 w9
+w2 w3 w4
+w1 w2 w3
+w8 w9 w10
+
+Literatur
+w1 | w2 | w3 | w4 | w5 w6 w7 | w8 w9 | w10
+2 | 3 | 4 | 3 | 2 | 3 | 2
+
+Comic
+https://kiid.com/1262 (Stand: 12.03.2021)
+
+Algorithmus
+
+1. Positionen in Text 1 erfassen
+Wortfolge Startpositionen
+w1 w2 w3 [0]
+w2 w3 w4 [1]
+… … …
+w8 w9 w10 [7]
+w9 w10 w11 [8]
+w10 w11 w12 [9, 35]
+w33 w34 w35 [32]
+
+2. Forward references erstellen
+Text 1 Startpos. Text 2 Startpos.
+0 [] 1 []
+1 [] 7 [75, 120]
+8 [] 8 [121]
+9 [] 9 [77, 122]
+35 [] 35 [77, 122]
+32 [] 32 [145]
+
+3. Gefundene Matches erweitern
+• Ellipsen "überspringen"
+• Token zusammenfassen / auslassen
+
+Weitere Schritte
+• Tokenisierung
+• ä, ö, ü etc. vereinheitlichen
+• Satzzeichen markieren oder entfernen
+• Fuzzy matching
+• Matches zusammenfassen
+• Zu kurze Matches entfernen
+• Satzgrenzen berücksichtigen
+
+Auswertung
+45 Interpretationstexte der Judenbuche
+Precision: 0.80 Recall: 0.91 F-score: 0.85
+
+Quellen
+• "sim_text" von Dick Grune1
+• Similarity texter: A text-compari- son web tool based on the "sim_text" algorithm von Sofia Kalaidopoulou (2016)2
+• Programmiersprache: Python
+
+1 https://dickgrune.com/Programs/similarity_tester/
+2 https://people.f4.haw-berlin.de/webervu/ simtext/522789_Sofia-Kalaidopoulou_ bachelor-thesis.pdf (Stand: 12.03.2021)
+
+Visualisierungswebseite
+
+Heatmap
+Annette von Droste-Hülshoff: Die Judenbuche
+
+Literatur
+Ausgewählte Textstelle
+
+Literatur
+
+Häufig zitierte Stellen
+
+Interpretationstexte, die die ausgewählte Textstelle zitieren
+
+Inspiriert von: To Quote or Not to Quote (https://shakespeare.visualizingbroadway.com/index.html (Stand: 12.03.2021))
