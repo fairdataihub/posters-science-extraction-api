@@ -8,24 +8,28 @@ services:
     environment:
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
       - HF_TOKEN=${HF_TOKEN:-}
-      - OLLAMA_HOST=http://ollama:11434
       - PORT=8000
       - HOST=0.0.0.0
-    gpus: all
+    deploy:
+      resources:
+        limits:
+          memory: 48G
+        reservations:
+          memory: 24G
+          devices:
+            - driver: nvidia
+              count: ${GPU_COUNT:-1}
+              capabilities: [gpu]
     ports:
       - "${APP_PORT:-47362}:8000"
+    volumes:
+      # Persistent HuggingFace model cache
+      - ${HF_CACHE:-~/.cache/huggingface}:/root/.cache/huggingface
     command: python api.py
     restart: ${RESTART_POLICY:-unless-stopped}
-    networks:
-      - ollama-network
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 120s
-
-networks:
-  ollama-network:
-    external: true
-    name: ollama-network
+      start_period: 180s
