@@ -15,7 +15,7 @@ Requirements:
 
 Environment Variables:
 - PDFALTO_PATH: Path to pdfalto binary (required for PDF processing)
-- CUDA_VISIBLE_DEVICES: GPU device(s) to use (default: 0)
+- CUDA_VISIBLE_DEVICES: GPU device(s) to use (default: all available)
 - HF_TOKEN: HuggingFace token for gated models
 """
 
@@ -45,8 +45,8 @@ from transformers import (
 from rouge_score import rouge_scorer
 
 
-# Configure GPU visibility at import time
-os.environ["CUDA_VISIBLE_DEVICES"] = os.environ.get("CUDA_VISIBLE_DEVICES", "0")
+# GPU visibility can be controlled via CUDA_VISIBLE_DEVICES environment variable
+# If not set, all available GPUs will be used with device_map="auto"
 
 # Model configuration - HuggingFace transformers
 JSON_MODEL_ID = "jimnoneill/Llama-3.1-8B-Poster-Extraction"
@@ -105,7 +105,7 @@ def load_vision_model():
         _vision_model = Qwen2VLForConditionalGeneration.from_pretrained(
             VISION_MODEL_ID,
             torch_dtype=torch.bfloat16,
-            device_map="cuda:0",
+            device_map="auto",
         )
         _vision_processor = AutoProcessor.from_pretrained(VISION_MODEL_ID)
         log(f"   ✓ Vision model loaded on {next(_vision_model.parameters()).device}")
@@ -359,7 +359,7 @@ def load_json_model():
         _json_model = AutoModelForCausalLM.from_pretrained(
             JSON_MODEL_ID,
             torch_dtype=torch.bfloat16,
-            device_map="cuda:0",
+            device_map="auto",
         )
         log(f"   ✓ JSON model loaded on {next(_json_model.parameters()).device}")
     return _json_model, _json_tokenizer
