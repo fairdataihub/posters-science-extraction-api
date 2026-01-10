@@ -11,7 +11,7 @@ Models:
 
 Requirements:
 - pdfalto: PDF layout analysis tool (https://github.com/kermitt2/pdfalto)
-- CUDA-capable GPU with ≥24GB VRAM (for both models)
+- CUDA-capable GPU with ≥16GB VRAM (models loaded one at a time)
 
 Environment Variables:
 - PDFALTO_PATH: Path to pdfalto binary (required for PDF processing)
@@ -977,7 +977,13 @@ def process_poster_file(poster_path: str) -> dict:
         f"using source={source} in {t_extract_elapsed:.2f} seconds"
     )
 
-    # Load JSON model if not already loaded
+    # IMPORTANT: Unload vision model BEFORE loading JSON model to free GPU memory
+    # This ensures only one large model is loaded at a time
+    ext = Path(poster_path).suffix.lower()
+    if ext in [".jpg", ".jpeg", ".png"]:
+        unload_vision_model()
+
+    # Load JSON model (vision model is now unloaded)
     model, tokenizer = load_json_model()
 
     # Convert to JSON
@@ -996,13 +1002,8 @@ def process_poster_file(poster_path: str) -> dict:
                 f"{t_json_elapsed:.2f} seconds"
             )
 
-        # Unload vision model if it was used (to free GPU memory)
-        ext = Path(poster_path).suffix.lower()
-        if ext in [".jpg", ".jpeg", ".png"]:
-            unload_vision_model()
-
-        # Clean up GPU memory
-        torch.cuda.empty_cache()
+        # Unload JSON model to free GPU memory for next request
+        unload_json_model()
 
         log("Finished processing poster, returning JSON result")
         return generated
