@@ -535,7 +535,31 @@ def extract_json_with_retry(raw_text: str, model, tokenizer) -> dict:
         else:
             log("Fallback JSON parse succeeded")
 
+    # Post-process to remove empty sections (prevents hallucinated empty sections)
+    result = remove_empty_sections(result)
+
     return result
+
+
+def remove_empty_sections(generated: dict) -> dict:
+    """
+    Remove sections with empty or whitespace-only content.
+    
+    This prevents hallucinated sections where the model creates a section
+    header (e.g., "Discussion") but has no content to fill it.
+    """
+    if "posterContent" in generated and isinstance(generated["posterContent"], dict):
+        sections = generated["posterContent"].get("sections", [])
+        if isinstance(sections, list):
+            original_count = len(sections)
+            filtered = [
+                s for s in sections
+                if isinstance(s, dict) and s.get("sectionContent", "").strip()
+            ]
+            if len(filtered) < original_count:
+                log(f"   Removed {original_count - len(filtered)} empty section(s)")
+            generated["posterContent"]["sections"] = filtered
+    return generated
 
 
 # ============================
