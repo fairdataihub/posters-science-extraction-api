@@ -1,0 +1,54 @@
+{
+  "title": "Machine Actionable Poster Extraction v1.0.0",
+  "description": "A tool for extracting structured, machine-readable metadata from scientific conference posters using Llama 3.1 8B. The extraction pipeline processes PDF and image posters, outputting JSON-formatted metadata including titles, authors, affiliations, poster content sections, and figure/table captions.",
+  "creators": [
+    {
+      "name": "O'Neill, James",
+      "affiliation": "FAIR Data Innovations Hub",
+      "orcid": "0000-0003-4539-4064"
+    },
+    {
+      "name": "Patel, Bhavesh",
+      "affiliation": "FAIR Data Innovations Hub"
+    },
+    {
+      "name": "Soundarajan, Sanjay",
+      "affiliation": "FAIR Data Innovations Hub"
+    }
+  ],
+  "upload_type": "software",
+  "access_right": "open",
+  "license": "Apache-2.0",
+  "keywords": [
+    "poster extraction",
+    "machine-actionable metadata",
+    "scientific posters",
+    "FAIR data",
+    "large language models",
+    "Llama 3.1",
+    "natural language processing",
+    "document understanding",
+    "JSON extraction",
+    "biomedical informatics"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://huggingface.co/jimnoneill/Llama-3.1-8B-Poster-Extraction",
+      "relation": "isSupplementedBy",
+      "resource_type": "model"
+    },
+    {
+      "identifier": "https://posters.science/",
+      "relation": "isPartOf",
+      "resource_type": "other"
+    }
+  ],
+  "communities": [
+    {
+      "identifier": "fairdataihub"
+    }
+  ],
+  "grants": [],
+  "notes": "Validated on 10 manually annotated scientific posters with 90% passing rate. Average metrics: word_capture=0.964, ROUGE-L=0.880, number_capture=0.914, field_proportion=1.033."
+}
+
