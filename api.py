@@ -8,10 +8,11 @@ import os
 import tempfile
 from pathlib import Path
 
+import torch
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-from poster_extraction import process_poster_file, log, ensure_ollama_available
+from poster_extraction import process_poster_file, log, load_json_model
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -39,17 +40,33 @@ def root():
 @app.route("/health", methods=["GET"])
 @app.route("/up", methods=["GET"])
 def health():
-    """Health check endpoint including Ollama status."""
+    """Health check endpoint including model status."""
     checks = {"api": "ok"}
 
     try:
-        # Fast, single-attempt Ollama health check to avoid long blocking retries
-        ensure_ollama_available(max_retries=5, retry_delay=1)
-        checks["ollama"] = "ok"
-        status = "healthy"
-        http_status = 200
+        # Check if CUDA is available
+        if torch.cuda.is_available():
+            checks["cuda"] = "ok"
+            checks["gpu"] = torch.cuda.get_device_name(0)
+        else:
+            checks["cuda"] = "unavailable"
+
+        # Try loading the JSON model (will be cached after first load)
+        try:
+            load_json_model()
+            checks["json_model"] = "ok"
+        except Exception as e:
+            checks["json_model"] = f"error: {str(e)}"
+
+        # Determine overall status
+        if checks.get("cuda") == "ok" and checks.get("json_model") == "ok":
+            status = "healthy"
+            http_status = 200
+        else:
+            status = "degraded"
+            http_status = 200  # Still return 200 if API is running
     except Exception as e:
-        checks["ollama"] = f"error: {str(e)}"
+        checks["error"] = str(e)
         status = "unhealthy"
         http_status = 503
 

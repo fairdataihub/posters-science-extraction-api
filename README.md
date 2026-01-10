@@ -4,28 +4,25 @@ Automated extraction of structured metadata from scientific poster PDFs and imag
 
 ## Overview
 
-This pipeline converts scientific posters (PDF and image formats) into structured JSON following the [posters-science JSON schema](https://github.com/fairdataihub/posters-science-schema). The system achieves **100% compliance** (10/10 posters) on validation metrics with a ≥0.75 threshold across all measures.
+This pipeline converts scientific posters (PDF and image formats) into structured JSON following the [posters-science JSON schema](https://github.com/fairdataihub/posters-science-schema). The system achieves **90% compliance** (9/10 posters) on validation metrics with a ≥0.75 threshold across all measures.
 
 ## Models Used
 
-This pipeline leverages the following Large Language Models:
+This pipeline leverages the following Large Language Models via HuggingFace transformers:
 
 | Model                     | Provider | Parameters | Purpose                                        |
 | ------------------------- | -------- | ---------- | ---------------------------------------------- |
-| **Llama 3.1 8B Instruct** | Meta AI  | 8B         | JSON structuring and text-to-schema conversion |
+| **Llama 3.1 8B Poster Extraction** | Meta AI / FAIR Data Hub  | 8B         | JSON structuring and text-to-schema conversion |
 | **Qwen2-VL-7B-Instruct**  | Alibaba  | 7B         | Vision-language OCR for image posters          |
 
-### Meta Llama 3.1 8B Instruct (via Ollama)
+### Llama 3.1 8B Poster Extraction
 
-The core JSON structuring is performed by [Meta's Llama 3.1 8B Instruct](https://ollama.ai/library/llama3.1) served through [Ollama](https://ollama.ai), selected for:
+The core JSON structuring is performed by [Llama 3.1 8B Poster Extraction](https://huggingface.co/jimnoneill/Llama-3.1-8B-Poster-Extraction), a fine-tuned version of Meta's Llama 3.1 8B Instruct optimized for scientific poster metadata extraction. Key features:
 
-The core JSON structuring is performed by [Llama 3.1 8B Poster Extraction](https://huggingface.co/jimnoneill/Llama-3.1-8B-Poster-Extraction), selected for:
 - Strong instruction-following capabilities for structured output generation
 - 128K context window supporting full poster text processing
 - Efficient inference on consumer GPUs (16GB+ VRAM)
-- Simplified deployment via Ollama without HuggingFace authentication
-
-The pipeline uses the Q8 quantized variant (`llama3.1:8b-instruct-q8_0`) for optimal balance between quality and speed.
+- Loaded via HuggingFace transformers for seamless integration
 
 ### Qwen2-VL-7B-Instruct
 
@@ -39,7 +36,7 @@ Image-based posters (JPG/PNG) are processed using [Qwen2-VL-7B-Instruct](https:/
 
 ### Pipeline Overview
 
-```mermaid
+```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
 │  Input Poster   │────▶│  Raw Text       │────▶│  Structured     │
 │  (PDF/Image)    │     │  Extraction     │     │  JSON Output    │
@@ -47,7 +44,7 @@ Image-based posters (JPG/PNG) are processed using [Qwen2-VL-7B-Instruct](https:/
                               │                        │
                     ┌─────────┴─────────┐    ┌────────┴────────┐
                     │                   │    │                 │
-               [PDF Files]        [Image Files]    [Ollama]
+               [PDF Files]        [Image Files]    [Transformers]
                     │                   │         Llama 3.1 8B
                [pdfalto]         [Qwen2-VL-7B]   Section-aware
                XML Layout        Vision OCR      JSON Generation
@@ -71,16 +68,9 @@ The pipeline automatically selects the extraction method based on input file typ
 - Prompt: "Extract ALL text from this scientific poster image exactly as written"
 - Outputs raw text preserving section headers and content
 
-### Stage 2: JSON Structuring (Ollama + Llama 3.1 8B)
+### Stage 2: JSON Structuring (Transformers + Llama 3.1 8B)
 
-Raw text is converted to structured JSON using Meta's Llama 3.1 8B Instruct via Ollama:
-
-#### Text Preprocessing
-
-- Removes/replaces problematic quote characters that cause JSON parsing issues
-- Normalizes smart quotes and curly quotes to prevent double-quote artifacts
-
-#### Primary Prompt Strategy
+Raw text is converted to structured JSON using Llama 3.1 8B Poster Extraction via HuggingFace transformers:
 
 #### Primary Prompt Strategy
 
@@ -132,7 +122,7 @@ The pipeline is validated against manually annotated reference JSONs using four 
 
 ## Validation Results
 
-**Production Release**: 10/10 (100%) passing
+**Production Release**: 9/10 (90%) passing
 
 | Poster ID | Word | ROUGE-L | Numbers | Fields | OCR Method  |
 | --------- | ---- | ------- | ------- | ------ | ----------- |
@@ -145,9 +135,9 @@ The pipeline is validated against manually annotated reference JSONs using four 
 | 5128504   | 0.99 | 0.99    | 0.97    | 1.16   | pdfalto     |
 | 6724771   | 0.91 | 0.95    | 0.82    | 1.05   | pdfalto     |
 | 8228476   | 0.95 | 0.90    | 0.89    | 0.86   | pdfalto     |
-| 8228568   | 0.99 | 0.82    | 0.91    | 0.96   | pdfalto     |
+| 8228568   | 0.99 | 0.75    | 0.91    | 0.96   | pdfalto     |
 
-**Aggregate Performance**: w=0.969, r=0.887, n=0.936, f=1.083
+**Aggregate Performance**: w=0.969, r=0.879, n=0.938, f=1.083
 
 ## Installation
 
@@ -158,31 +148,22 @@ git clone https://github.com/fairdataihub/posters-science-posterextraction-beta.
 cd posters-science-posterextraction-beta
 ```
 
-### 2. Install Ollama (Required)
+### 2. HuggingFace Authentication
 
-Ollama is used to serve the Llama 3.1 8B model locally.
-
-**Linux:**
-```bash
-curl -fsSL https://ollama.ai/install.sh | sh
-```
-
-**macOS:**
-```bash
-brew install ollama
-```
-
-**Windows:**
-Download from https://ollama.ai/download
+The Llama 3.1 model requires HuggingFace authentication:
 
 1. Create a HuggingFace account at https://huggingface.co
-2. Accept the Llama 3.1 license at https://huggingface.co/jimnoneill/Llama-3.1-8B-Poster-Extraction
+2. Accept the model license at https://huggingface.co/jimnoneill/Llama-3.1-8B-Poster-Extraction
 3. Generate an access token at https://huggingface.co/settings/tokens
 4. Set the environment variable:
 
-**Start Ollama server (if not running as service):**
 ```bash
-ollama serve
+export HF_TOKEN="your_token_here"
+```
+
+Or login via CLI:
+```bash
+huggingface-cli login
 ```
 
 ### 3. Create Python Environment
@@ -195,7 +176,7 @@ source venv/bin/activate  # Linux/macOS
 pip install -r requirements.txt
 ```
 
-### 4. Install pdfalto (Required)
+### 4. Install pdfalto (Required for PDF processing)
 
 `pdfalto` is required for PDF text extraction with layout preservation.
 
@@ -252,6 +233,7 @@ CUDA_VISIBLE_DEVICES=0 python poster_extraction.py --annotation-dir ./posters
 PDFALTO_PATH=/opt/pdfalto/pdfalto python poster_extraction.py --annotation-dir ./posters
 
 # Full example
+HF_TOKEN="your_token" \
 PDFALTO_PATH="/usr/local/bin/pdfalto" \
 CUDA_VISIBLE_DEVICES=0 \
 python poster_extraction.py \
@@ -266,23 +248,51 @@ python poster_extraction.py \
 | `--annotation-dir` | Directory containing poster PDFs/images | Required |
 | `--output-dir`     | Directory for extracted JSON outputs    | Required |
 
+## Docker Deployment
+
+### Build and Run
+
+```bash
+# Build the image
+docker-compose build
+
+# Run with GPU support
+docker-compose up
+
+# For production deployment
+docker-compose -f docker-compose-prod.yml up -d
+```
+
+### Environment Variables
+
+Create a `.env` file in the project root:
+
+```bash
+HF_TOKEN=your_huggingface_token
+CUDA_VISIBLE_DEVICES=0
+GPU_COUNT=1
+RESTART_POLICY=unless-stopped
+```
+
+See [DOCKER.md](DOCKER.md) for detailed deployment instructions.
+
 ## System Requirements
 
 ### Hardware
 
-- CUDA-capable GPU with ≥16GB VRAM (tested on NVIDIA RTX 4090)
+- CUDA-capable GPU with ≥24GB VRAM (both models loaded simultaneously)
+  - Or ≥16GB VRAM if processing PDFs and images separately
 - Sufficient system RAM for model loading (~32GB recommended)
 
 ### Software
 
 - Python 3.10+
 - CUDA 11.8+ with compatible drivers
-- Ollama (latest version)
 - Linux, macOS, or Windows with WSL2
 
 ### Python Dependencies
 
-```bash
+```
 transformers>=4.40.0
 torch>=2.0.0
 rouge-score
@@ -290,7 +300,8 @@ qwen-vl-utils
 accelerate
 Pillow
 numpy
-ollama>=0.2.0
+flask>=2.3.0
+flask-cors>=4.0.0
 ```
 
 Install all dependencies:
@@ -343,7 +354,11 @@ Output JSONs conform to the posters-science schema:
 posters-science-posterextraction-beta/
 ├── README.md
 ├── poster_extraction.py       # Main extraction pipeline
+├── api.py                     # Flask API server
 ├── requirements.txt           # Python dependencies
+├── Dockerfile                 # Container build instructions
+├── docker-compose.yml         # Docker orchestration
+├── DOCKER.md                  # Docker deployment guide
 ├── manual_poster_annotation/  # Reference posters and ground truth JSONs
 │   ├── {poster_id}/
 │   │   ├── {poster_id}.pdf    # Source poster
@@ -359,14 +374,6 @@ The pipeline automatically selects the appropriate OCR method based on file type
 
 - **PDF files**: Processed via `pdfalto` which preserves layout structure through XML intermediate representation
 - **Image files**: Processed via `Qwen2-VL-7B` vision-language model for direct pixel-to-text conversion
-
-### Text Preprocessing
-
-Before JSON structuring, the raw text undergoes preprocessing to handle characters that cause parsing issues:
-
-- Removes curly/smart quotes that Ollama tends to include literally in output
-- Normalizes quote characters to prevent double-quote JSON artifacts
-- This preprocessing step is specific to the Ollama integration
 
 ### Prompt Engineering
 
@@ -388,11 +395,37 @@ For documents exceeding model context limits:
 
 The pipeline includes repair functions to handle common LLM output issues:
 
-- Double-quote artifacts at value boundaries
 - Unescaped quotes in scientific notation
 - Trailing commas in arrays/objects
 - Unicode encoding errors
 - Truncated JSON completion
+
+## API Usage
+
+The pipeline includes a Flask API for web integration:
+
+```bash
+# Start the API server
+python api.py
+
+# Or via Docker
+docker-compose up
+```
+
+### Endpoints
+
+| Endpoint | Method | Description |
+| -------- | ------ | ----------- |
+| `/` | GET | Health check |
+| `/health` | GET | Detailed health status |
+| `/extract` | POST | Extract JSON from uploaded poster |
+
+### Example Request
+
+```bash
+curl -X POST http://localhost:8000/extract \
+  -F "file=@poster.pdf"
+```
 
 ## License
 

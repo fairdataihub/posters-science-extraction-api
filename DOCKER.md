@@ -7,7 +7,8 @@ This document describes how to run the poster extraction pipeline using Docker.
 - Docker Engine 20.10+
 - Docker Compose 2.0+
 - NVIDIA Docker runtime (for GPU support)
-- NVIDIA GPU with CUDA support (≥16GB VRAM recommended)
+- NVIDIA GPU with CUDA support (≥24GB VRAM recommended)
+- HuggingFace account and access token
 
 ### Installing NVIDIA Docker Runtime
 
@@ -59,9 +60,9 @@ docker-compose up
 
 This will:
 
-- Process all posters in `./manual_poster_annotation/`
-- Output results to `./output/`
+- Start the Flask API server on port 8000
 - Use GPU acceleration automatically
+- Load models from HuggingFace (cached after first run)
 
 ### Development Mode
 
@@ -94,7 +95,7 @@ docker-compose run --rm poster-extraction \
    docker run --rm --gpus all nvidia/cuda:11.8.0-base-ubuntu22.04 nvidia-smi
    ```
 3. **Ensure sufficient resources**:
-   - GPU: ≥16GB VRAM
+   - GPU: ≥24GB VRAM (for both Llama 3.1 and Qwen2-VL models)
    - RAM: ≥32GB recommended
    - Disk: ≥50GB free (for models and outputs)
 
@@ -107,22 +108,26 @@ docker-compose run --rm poster-extraction \
    cd posters-science-posterextraction-beta
    ```
 
-2. **Build the image**:
+2. **Configure environment**:
+
+   Create a `.env` file with your HuggingFace token:
+   ```bash
+   HF_TOKEN=your_huggingface_token_here
+   CUDA_VISIBLE_DEVICES=0
+   GPU_COUNT=1
+   RESTART_POLICY=unless-stopped
+   ```
+
+3. **Build the image**:
 
    ```bash
    docker-compose build
    ```
 
-3. **Configure volumes** (update paths in `docker-compose.yml` as needed):
-
-   - Input directory: Where posters are stored
-   - Output directory: Where results will be written
-   - Model cache: Persistent location for HuggingFace cache
-
 4. **Start the service**:
 
    ```bash
-   docker-compose up -d
+   docker-compose -f docker-compose-prod.yml up -d
    ```
 
 5. **Monitor logs**:
@@ -153,7 +158,7 @@ After=docker.service
 Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=/path/to/posters-science-posterextraction-beta
-ExecStart=/usr/bin/docker-compose up -d
+ExecStart=/usr/bin/docker-compose -f docker-compose-prod.yml up -d
 ExecStop=/usr/bin/docker-compose down
 Restart=on-failure
 
@@ -174,6 +179,7 @@ sudo systemctl start poster-extraction.service
 
 You can override environment variables via `.env` file or directly in `docker-compose.yml`:
 
+- `HF_TOKEN`: HuggingFace access token (required for model download)
 - `CUDA_VISIBLE_DEVICES`: Which GPU to use (default: `0`)
 - `GPU_COUNT`: Number of GPUs to use (default: `1`)
 - `RESTART_POLICY`: Container restart policy (default: `unless-stopped`)
@@ -182,6 +188,7 @@ You can override environment variables via `.env` file or directly in `docker-co
 Create a `.env` file in the project root:
 
 ```bash
+HF_TOKEN=hf_xxxxxxxxxxxxxxxxxxxxx
 CUDA_VISIBLE_DEVICES=0
 GPU_COUNT=1
 RESTART_POLICY=unless-stopped
@@ -208,8 +215,8 @@ volumes:
 
 The docker-compose file includes resource limits:
 
-- Memory limit: 32GB
-- Memory reservation: 16GB
+- Memory limit: 48GB
+- Memory reservation: 24GB
 - GPU: 1 GPU (configurable via `GPU_COUNT`)
 
 Adjust these in `docker-compose.yml` based on your server's capabilities.
@@ -236,18 +243,32 @@ If pdfalto fails to build in the Dockerfile, you can:
 
 If you encounter OOM errors:
 
+- Process PDFs and images separately (unloads vision model between phases)
 - Reduce batch size or process fewer posters at once
-- Use a smaller model variant
 - Increase Docker memory limits in Docker Desktop settings
 - Adjust memory limits in `docker-compose.yml`
+
+### Model Download Issues
+
+If models fail to download:
+
+1. Verify your HuggingFace token is valid
+2. Accept the model license at https://huggingface.co/jimnoneill/Llama-3.1-8B-Poster-Extraction
+3. Check network connectivity
+4. Pre-download models by running: `huggingface-cli download jimnoneill/Llama-3.1-8B-Poster-Extraction`
 
 ## Model Downloads
 
 Models are automatically downloaded on first run and cached in `~/.cache/huggingface`. This volume is mounted to persist the cache between container runs, speeding up subsequent executions.
 
+Required models:
+- `jimnoneill/Llama-3.1-8B-Poster-Extraction` (~16GB)
+- `Qwen/Qwen2-VL-7B-Instruct` (~15GB)
+
 ## Notes
 
-- The first run will take longer as models are downloaded
-- Ensure you have sufficient disk space for model cache (~15-20GB)
+- The first run will take longer as models are downloaded (~31GB total)
+- Ensure you have sufficient disk space for model cache
 - GPU memory usage peaks during model loading and inference
 - Health checks verify CUDA availability every 30 seconds
+- The API includes a `/health` endpoint for load balancer integration
