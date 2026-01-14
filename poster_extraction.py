@@ -649,6 +649,114 @@ def remove_empty_sections(generated: dict) -> dict:
 SCHEMA_URL = "https://posters.science/schema/v0.1/poster_schema.json"
 
 
+def clean_unicode_artifacts(text: str) -> str:
+    """
+    Remove bidirectional Unicode markers, zero-width characters, and other 
+    invisible/problematic Unicode artifacts that cause JSON display issues.
+    """
+    if not isinstance(text, str):
+        return text
+    
+    # Remove bidirectional text control characters
+    bidi_chars = [
+        '\u200e',  # LEFT-TO-RIGHT MARK
+        '\u200f',  # RIGHT-TO-LEFT MARK
+        '\u202a',  # LEFT-TO-RIGHT EMBEDDING
+        '\u202b',  # RIGHT-TO-LEFT EMBEDDING
+        '\u202c',  # POP DIRECTIONAL FORMATTING
+        '\u202d',  # LEFT-TO-RIGHT OVERRIDE
+        '\u202e',  # RIGHT-TO-LEFT OVERRIDE
+        '\u2066',  # LEFT-TO-RIGHT ISOLATE
+        '\u2067',  # RIGHT-TO-LEFT ISOLATE
+        '\u2068',  # FIRST STRONG ISOLATE
+        '\u2069',  # POP DIRECTIONAL ISOLATE
+        '\u200b',  # ZERO WIDTH SPACE
+        '\u200c',  # ZERO WIDTH NON-JOINER
+        '\u200d',  # ZERO WIDTH JOINER
+        '\ufeff',  # BYTE ORDER MARK / ZERO WIDTH NO-BREAK SPACE
+        '\u00ad',  # SOFT HYPHEN
+    ]
+    
+    for char in bidi_chars:
+        text = text.replace(char, '')
+    
+    # Replace non-standard whitespace with regular space
+    text = re.sub(r'[\u00a0\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]', ' ', text)
+    
+    # Normalize multiple spaces
+    text = re.sub(r' {2,}', ' ', text)
+    
+    return text.strip()
+
+
+def detect_chart_axis_data(content: str) -> bool:
+    """
+    Detect if section content contains chart/figure axis labels and data points.
+    These are patterns like: "1 -10 -20 25 20 15 4.5 4.0 3.5 3.0..."
+    """
+    # Pattern: sequences of numbers (possibly negative or decimal) separated by spaces
+    number_sequence = re.findall(r'(?:^|\s)(-?\d+\.?\d*)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)', content)
+    if len(number_sequence) >= 5:
+        return True
+    
+    # Pattern: axis label patterns like "vs expression Relative"
+    axis_patterns = [
+        r'vs\s+expression\s+Relative',
+        r'Relative\s+\*?\s*\*?',
+        r'-CTRL\s+vs\s+expression',
+        r'progenitor\s+CD\d+\s+vs',
+        r'\d+\s+\d+\s+\d+\s+\d+\s+\d+',  # 5+ consecutive numbers
+    ]
+    for pattern in axis_patterns:
+        if re.search(pattern, content, re.IGNORECASE):
+            return True
+    
+    return False
+
+
+def clean_chart_axis_data(content: str, title: str) -> str:
+    """
+    Remove chart/figure axis data from section content, keeping only meaningful text.
+    Returns cleaned content or original if no chart data detected.
+    """
+    if not detect_chart_axis_data(content):
+        return content
+    
+    # Split into lines and keep only lines that look like sentences
+    lines = content.split('\n')
+    meaningful_lines = []
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        
+        # Skip lines that are mostly numbers and symbols
+        word_chars = len(re.findall(r'[a-zA-Z]', line))
+        num_chars = len(re.findall(r'[\d\.\-\*]', line))
+        
+        # Keep line if it has more letters than numbers and is reasonably long
+        if word_chars > num_chars and len(line) > 30:
+            # Additional check: skip if it has axis-like patterns
+            if not re.search(r'vs\s+expression|Relative\s+\*|\d+\.\d+\s+\d+\.\d+', line, re.IGNORECASE):
+                meaningful_lines.append(line)
+    
+    if meaningful_lines:
+        cleaned = ' '.join(meaningful_lines)
+        # Clean up any remaining number sequences
+        cleaned = re.sub(r'(\s+-?\d+\.?\d*){5,}', '', cleaned)
+        cleaned = re.sub(r'\s{2,}', ' ', cleaned)
+        return cleaned.strip()
+    
+    # If nothing meaningful remains, return first sentence if it exists
+    sentences = re.split(r'(?<=[.!?])\s+', content)
+    for sent in sentences:
+        if len(sent) > 50 and not detect_chart_axis_data(sent):
+            return sent.strip()
+    
+    return content
+
+
 def is_empty_or_self_referential(section: dict) -> bool:
     """Check if a section has no meaningful content."""
     if not isinstance(section, dict):
@@ -871,9 +979,11 @@ def postprocess_json(data: dict) -> dict:
     2. Moves figure/table sections to caption arrays
     3. Removes duplicate sections
     4. Cleans table data from Results sections
-    5. Deduplicates captions
-    6. Removes caption text embedded in sections
-    7. Adds schema URL
+    5. Cleans chart/axis data from sections
+    6. Deduplicates captions
+    7. Removes caption text embedded in sections
+    8. Cleans Unicode/bidirectional characters
+    9. Adds schema URL
     """
     result = data.copy()
     
@@ -886,6 +996,18 @@ def postprocess_json(data: dict) -> dict:
         result["imageCaption"] = []
     if "tableCaption" not in result:
         result["tableCaption"] = []
+    
+    # Clean Unicode from top-level string fields
+    for key in ["posterTitle", "domain"]:
+        if key in result and isinstance(result[key], str):
+            result[key] = clean_unicode_artifacts(result[key])
+    
+    # Clean posterContent title
+    if "posterContent" in result and isinstance(result["posterContent"], dict):
+        if "posterTitle" in result["posterContent"]:
+            result["posterContent"]["posterTitle"] = clean_unicode_artifacts(
+                result["posterContent"].get("posterTitle", "")
+            )
     
     # Process sections
     if "posterContent" in result and isinstance(result["posterContent"], dict):
@@ -907,24 +1029,35 @@ def postprocess_json(data: dict) -> dict:
                     content = " ".join(str(c) for c in content)
                 content = content.strip() if isinstance(content, str) else ""
                 
+                # Clean Unicode artifacts from title and content
+                title = clean_unicode_artifacts(title)
+                content = clean_unicode_artifacts(content)
+                
                 # Skip empty/self-referential sections
-                if is_empty_or_self_referential(section):
+                if is_empty_or_self_referential({"sectionTitle": title, "sectionContent": content}):
                     log(f"   Removing empty/self-referential section: '{title}'")
                     continue
                 
                 # Extract figure sections to imageCaption
-                if is_figure_section(section):
+                if is_figure_section({"sectionTitle": title, "sectionContent": content}):
                     caption_text = content if content.startswith("Figure") else f"{title}. {content}"
                     extracted_figures.append({"caption1": caption_text, "caption2": ""})
                     log(f"   Moving figure section to imageCaption: '{title}'")
                     continue
                 
                 # Extract table sections to tableCaption  
-                if is_table_section(section):
+                if is_table_section({"sectionTitle": title, "sectionContent": content}):
                     caption_text = content if content.startswith("Table") else f"{title}. {content}"
                     extracted_tables.append({"caption1": caption_text, "caption2": ""})
                     log(f"   Moving table section to tableCaption: '{title}'")
                     continue
+                
+                # Clean chart/axis data from sections (e.g., "1 -10 -20 25 20 15...")
+                if detect_chart_axis_data(content):
+                    original_len = len(content)
+                    content = clean_chart_axis_data(content, title)
+                    if len(content) < original_len:
+                        log(f"   Cleaned chart axis data from section: '{title}' ({original_len} -> {len(content)} chars)")
                 
                 # Clean table data from Results/Findings sections
                 if detect_table_data_in_content(content):
@@ -932,9 +1065,12 @@ def postprocess_json(data: dict) -> dict:
                     content = clean_table_data_from_content(content, title)
                     if len(content) < original_len:
                         log(f"   Cleaned table data from section: '{title}' ({original_len} -> {len(content)} chars)")
-                        section = {"sectionTitle": title, "sectionContent": content}
                 
-                cleaned_sections.append(section)
+                # Only add if content is still meaningful
+                if content and len(content) > 10:
+                    cleaned_sections.append({"sectionTitle": title, "sectionContent": content})
+                else:
+                    log(f"   Section '{title}' has no meaningful content, removing")
             
             # Remove duplicates
             cleaned_sections = remove_duplicate_sections(cleaned_sections)
@@ -950,6 +1086,14 @@ def postprocess_json(data: dict) -> dict:
             result["imageCaption"] = normalize_captions(all_figures)
             result["tableCaption"] = normalize_captions(all_tables)
             
+            # Clean Unicode from captions
+            for cap_list in [result["imageCaption"], result["tableCaption"]]:
+                for cap in cap_list:
+                    if isinstance(cap, dict):
+                        for key in cap:
+                            if isinstance(cap[key], str):
+                                cap[key] = clean_unicode_artifacts(cap[key])
+            
             # Remove caption text from section content where it duplicates the caption arrays
             cleaned_sections = remove_caption_text_from_sections(
                 cleaned_sections, result["imageCaption"], "Figure"
@@ -959,6 +1103,17 @@ def postprocess_json(data: dict) -> dict:
             )
             
             result["posterContent"]["sections"] = cleaned_sections
+    
+    # Clean creators and titles
+    if "creators" in result and isinstance(result["creators"], list):
+        for creator in result["creators"]:
+            if isinstance(creator, dict) and "name" in creator:
+                creator["name"] = clean_unicode_artifacts(creator.get("name", ""))
+    
+    if "titles" in result and isinstance(result["titles"], list):
+        for title_obj in result["titles"]:
+            if isinstance(title_obj, dict) and "title" in title_obj:
+                title_obj["title"] = clean_unicode_artifacts(title_obj.get("title", ""))
     
     return result
 

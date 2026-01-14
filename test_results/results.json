@@ -3,7 +3,7 @@
     "poster_id": "10890106",
     "metrics": {
       "word_capture": 0.9789473684210527,
-      "rouge_l": 0.8474735677425428,
+      "rouge_l": 0.8538294077146815,
       "number_capture": 1.0,
       "field_proportion": 0.8823529411764706,
       "gen_sections": 17,

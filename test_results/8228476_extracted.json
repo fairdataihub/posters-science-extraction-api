@@ -66,7 +66,7 @@
       },
       {
         "sectionTitle": "Hebrew English Meaning",
-        "sectionContent": "‫ים‬ ‫כשטופי‬ ‫בגזרות,‬ ‫טבענו‬ We drowned in decrees, like sea washed There are too many decrees\n‫נר‬ ‫ויבער‬ ‫נשמה‬ ‫הצית‬ Ignite a soul, ﬁre a candle Create a soul\n‫פרי‬ ‫עשו‬ ‫לא‬ ‫עשירי‬ ‫דור‬ ‫עד‬ Until the tenth generation they did not bear fruit\nInter Annotator Agreement\nFor ten generations, they did no good deeds"
+        "sectionContent": "ים כשטופי בגזרות, טבענו We drowned in decrees, like sea washed There are too many decrees\nנר ויבער נשמה הצית Ignite a soul, ﬁre a candle Create a soul\nפרי עשו לא עשירי דור עד Until the tenth generation they did not bear fruit\nInter Annotator Agreement\nFor ten generations, they did no good deeds"
       },
       {
         "sectionTitle": "Inter Annotator Agreement",
@@ -74,7 +74,7 @@
       },
       {
         "sectionTitle": "Methods",
-        "sectionContent": "LM adaptation Fine-tuning for metaphor detection\nMetaphor\nMetaphor\nMetaphor\nNot a Metaphor Not a Metaphor\nPre-trained/Adapted Language Model\n‫עיצ_‬ ‫_בון‬ ‫במשלח‬ ‫ידי_‬ ‫_נו‬\n‫במשלח‬ ‫עיצ_‬\nPre-trained Language Model\n<mask> ‫_בון‬ <mask> ‫ידי_‬ ‫_נו‬\n‫עיצ_‬ ‫_בון‬ ‫במשלח‬ ‫ידי_‬ ‫_נו‬"
+        "sectionContent": "LM adaptation Fine-tuning for metaphor detection\nMetaphor\nMetaphor\nMetaphor\nNot a Metaphor Not a Metaphor\nPre-trained/Adapted Language Model\nעיצ_ _בון במשלח ידי_ _נו\nבמשלח עיצ_\nPre-trained Language Model\n<mask> _בון <mask> ידי_ _נו\nעיצ_ _בון במשלח ידי_ _נו"
       },
       {
         "sectionTitle": "Language Models",
@@ -86,7 +86,7 @@
       },
       {
         "sectionTitle": "Tokenizer",
-        "sectionContent": "Tokenizer\n‫ידינו‬ ‫במשלח‬ ‫עיצבון‬"
+        "sectionContent": "Tokenizer\nידינו במשלח עיצבון"
       },
       {
         "sectionTitle": "Error Analysis Results",
@@ -94,7 +94,7 @@
       },
       {
         "sectionTitle": "Example",
-        "sectionContent": "‫ידינו‬ ‫במשלח‬ ‫עיצבון‬\n*Project Ben-Yehuda is a volunteer-based online library of free Hebrew literature.\n‫חשקתיו‬ ‫לניחוח‬ ‫ילד‬\nBerel\n‫חשקתיו‬ ‫לניחוח‬ ‫ילד‬\n(A child for a scent - I have desired)\nExpert explanation: The child is a non-metaphorical epithet for Isaac. “Scent” is a metonymic term for “sacriﬁce”."
+        "sectionContent": "ידינו במשלח עיצבון\n*Project Ben-Yehuda is a volunteer-based online library of free Hebrew literature.\nחשקתיו לניחוח ילד\nBerel\nחשקתיו לניחוח ילד\n(A child for a scent - I have desired)\nExpert explanation: The child is a non-metaphorical epithet for Isaac. “Scent” is a metonymic term for “sacriﬁce”."
       },
       {
         "sectionTitle": "Key Findings",

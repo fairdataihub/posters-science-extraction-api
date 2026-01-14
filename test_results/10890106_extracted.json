@@ -90,11 +90,11 @@
       },
       {
         "sectionTitle": "Results: characterization MUTZ-3 dendritic cells",
-        "sectionContent": "A B progenitor CD34 vs expression Relative 0 -5 -10 -50 -100 P r o g e n i t o r Markers progenitor cells Markers mDCs CD14 C m i D C D progenitor vs expression Relative 0 -20 -40 -60 P r o g e n i t o r C m i D C D progenitor vs expression Relative 20 15 10 5 0 p r o g e n i t o r CD80 C m i D C D progenitor vs expression Relative 3 2 1 0 p r o g e n i t o r CD11c C m i D C D progenitor vs expression Relative 7000 6000 5000 10 8 6 4 2 0 p r o g e n i t o r DC LAMP C m i D C D progenitor vs expression Relative 200 150 100 4 2 0 p r o g e n i t o r OX40L C m i D C D progenitor vs expression Relative 6000 5000 4000 5 4 3 2 1 0 p r o g e n i t o r CCR7 C m i D C D"
+        "sectionContent": "A) Differentiation protocol of MUTZ-3-derived DCs B) Gene expression of markers for progenitors cells and mature DCs (mDCs) measured at D0, D7 and D9."
       },
       {
         "sectionTitle": "Results: characterization co-culture model",
-        "sectionContent": "A Results: exposure of iDCs to microplastics  A B progenitor CD14 vs expression Relative -CTRL vs expression Relative 1 -10 -20 25 20 15 4.5 4.0 3.5 3.0 2.5 2.0 1.5 1.0 0.5 0.0 * * * IL-6 * * * * Relative * * progenitor CD34 vs expression 1 -10 -20 -30 -40 -50 -CTRL vs expression Relative 4 3 2 1 0 Progenitor cells * Relative * * * IL-8 * * * * -CTRL -CTRL vs expression 4 3 2 1 0 100 vs expression Relative 80 60 4.5 4.0 3.5 3.0 2.5 2.0 1.5 1.0 0.5 0.0 * * CD80 IL-12β -CTRL vs expression Relative -CTRL 20 10 1.6 1.4 1.2 1.0 0.8 0.6 0.4 0.2 0.0 120 110 vs 100 expression Relative 4.5 4.0 3.5 3.0 2.5 2.0 1.5 1.0 0.5 0.0 CD83 * IL-15 * -CTRL 200 vs 100 expression Relative -CTRL vs expression Relative 3.0 2.5 2.0 1.5 1.0 0.5 0.0 1.5 1.0 0.5 0.0 OX40L * * * IL-18 * -CTRL vs expression Relative -CTRL 300 200 vs 100 expression Relative 3.0 2.5 2.0 1.5 1.0 0.5 0.0 2.5 2.0 1.5 1.0 0.5 0.0 CCR7 * * * IL-23 -CTRL vs expression Relative -CTRL 100 vs expression Relative 3.0 2.5 2.0 1.5 1.0 0.5 0.0 2.5 2.0 1.5 1.0 0.5 0.0 DC-LAMP * * TNFα * * * -CTRL (iDC) +CTRL (mDC) HDPE296 (25, 20, 100 μg/ml) PET_c000 (25, 50, 100 μg/ml) PS394Eu (25, 50, 100 μg/ml)"
+        "sectionContent": "A Results: exposure of iDCs to microplastics Table 1."
       },
       {
         "sectionTitle": "Conclusions",
