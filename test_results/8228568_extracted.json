@@ -22,7 +22,7 @@
       },
       {
         "sectionTitle": "Background",
-        "sectionContent": "Who is in and who is out? Early deliberations of digital humanists\nq Alvarado (2012): Someone who (1) aims to develop the deep domain knowledge of the traditional humanist, (2) learns a wide variety of technologies and programming languages, and (3) critically situates the technologies as cultural artifacts “participating in the production of social and cognitive structures. \nq Ramsay (2011): A (humanities) scholar who can build something with digital methods. \nq Jänicke (2016): Inclusive conception of digital humanists, advocating for active participation from researchers of various knowledge domains, especially those from scientific fields."
+        "sectionContent": "Who is in and who is out? Early deliberations of digital humanists\nq Alvarado (2012): Someone who (1) aims to develop the deep domain knowledge of the traditional humanist, (2) learns a wide variety of technologies and programming languages, and (3) critically situates the technologies as cultural artifacts “participating in the production of social and cognitive structures. q Ramsay (2011): A (humanities) scholar who can build something with digital methods. q Jänicke (2016): Inclusive conception of digital humanists, advocating for active participation from researchers of various knowledge domains, especially those from scientific fields."
       },
       {
         "sectionTitle": "Research Questions Qualitative Semi-structured Interviews",
@@ -30,15 +30,7 @@
       },
       {
         "sectionTitle": "Results",
-        "sectionContent": "Researchers’ self-confidence in technical literacy and the nature of research questions affect their self-identification as a digital humanist.\nReason Participant (n=8)\nCompetent in digital methods (programming and coding in particular)\nActive working, teaching, or supervising students in DH\nExample\nP2, P6, P7, P9, P11 “I have a background in anthropology and museum studies, and I know coding and know how to do data analysis. …” (P9) “I can code and I use computational and quantitative methods to study literature.” (P11)\nP4, P10, P14 “I self-identify as a digital humanist in the same way as I self-identify as an information designer, a programmer, and a statistician. I do research in digital humanities, so I guess technically I can say I am a digital humanist.” (P4)\nReason Participant (n=6)\nExample\nNot a “humanist” P12, P13 “I wouldn’t think I’m a humanist because my research question is not a humanities research question. I approach cultural heritage research from information science and design perspectives…. although I think what I’m doing is digital humanities work.” (P13)\nConcerned with technical skills (programming in particular)\nDH does not raise new research questions\nDigital methods are not necessary\nP8 “I just started learning programming and digital methods. Being a digital humanist will be my final goal, but I am not there yet.” (P8)\nP3 “…new constructs such as “DH” did not generate fundamentally new questions distinct from those in conventional or analog humanities.” (P3)\nP1, P5 “My research questions are not ultimately bound with digital methods; they can be addressed with digital methods, but not necessarily have to be.” (P5)"
-      },
-      {
-        "sectionTitle": "Key Findings",
         "sectionContent": "Researchers’ self-confidence in technical literacy and the nature of research questions affect their self-identification as a digital humanist."
-      },
-      {
-        "sectionTitle": "Discussion",
-        "sectionContent": ""
       },
       {
         "sectionTitle": "References",
@@ -51,5 +43,6 @@
     ]
   },
   "imageCaption": [],
-  "tableCaption": []
+  "tableCaption": [],
+  "$schema": "https://posters.science/schema/v0.1/poster_schema.json"
 }

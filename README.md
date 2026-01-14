@@ -124,20 +124,20 @@ The pipeline is validated against manually annotated reference JSONs using four 
 
 **Production Release**: 9/10 (90%) passing
 
-| Poster ID | Word | ROUGE-L | Numbers | Fields | OCR Method  |
-| --------- | ---- | ------- | ------- | ------ | ----------- |
-| 10890106  | 0.97 | 0.81    | 0.96    | 0.90   | pdfalto     |
-| 15963941  | 0.97 | 0.90    | 0.97    | 0.95   | pdfalto     |
-| 16083265  | 0.98 | 0.89    | 1.00    | 0.96   | pdfalto     |
-| 17268692  | 1.00 | 0.87    | 0.94    | 1.91   | pdfalto     |
-| 42        | 0.99 | 0.89    | 0.97    | 0.76   | pdfalto     |
-| 4737132   | 0.94 | 0.84    | 0.95    | 1.32   | qwen_vision |
-| 5128504   | 0.99 | 0.99    | 0.97    | 1.16   | pdfalto     |
-| 6724771   | 0.91 | 0.95    | 0.82    | 1.05   | pdfalto     |
-| 8228476   | 0.95 | 0.90    | 0.89    | 0.86   | pdfalto     |
-| 8228568   | 0.99 | 0.75    | 0.91    | 0.96   | pdfalto     |
+| Poster ID | Word | ROUGE-L | Numbers | Fields | OCR Method  | Status |
+| --------- | ---- | ------- | ------- | ------ | ----------- | ------ |
+| 10890106  | 0.98 | 0.85    | 1.00    | 0.88   | pdfalto     | ✅ |
+| 15963941  | 0.98 | 0.93    | 1.00    | 0.84   | pdfalto     | ✅ |
+| 16083265  | 0.90 | 0.90    | 0.82    | 0.92   | pdfalto     | ✅ |
+| 17268692  | 1.00 | 0.83    | 1.00    | 1.76   | pdfalto     | ✅ |
+| 42        | 0.99 | 0.88    | 1.00    | 0.77   | pdfalto     | ✅ |
+| 4737132   | 0.89 | 0.74    | 0.91    | 1.10   | qwen_vision | ❌ |
+| 5128504   | 0.99 | 1.00    | 1.00    | 1.05   | pdfalto     | ✅ |
+| 6724771   | 0.89 | 0.95    | 0.85    | 0.96   | pdfalto     | ✅ |
+| 8228476   | 0.94 | 0.87    | 0.89    | 0.90   | pdfalto     | ✅ |
+| 8228568   | 0.99 | 0.91    | 0.82    | 0.78   | pdfalto     | ✅ |
 
-**Aggregate Performance**: w=0.969, r=0.879, n=0.938, f=1.083
+**Aggregate Performance**: w=0.954, r=0.885, n=0.929, f=0.996
 
 ## Installation
 
@@ -300,7 +300,7 @@ pip install -r requirements.txt
 
 ```bash
 output/
-├── {poster_id}_raw.txt        # Extracted raw text from OCR
+├── {poster_id}_raw.md         # Extracted raw text from OCR
 ├── {poster_id}_extracted.json # Structured JSON per schema
 └── results.json               # Evaluation metrics summary
 ```

@@ -15,7 +15,7 @@ Requirements:
 
 Environment Variables:
 - PDFALTO_PATH: Path to pdfalto binary (required for PDF processing)
-- CUDA_VISIBLE_DEVICES: GPU device(s) to use (default: all available)
+- CUDA_VISIBLE_DEVICES: GPU device(s) to use (default: 0)
 - HF_TOKEN: HuggingFace token for gated models
 """
 
@@ -52,20 +52,25 @@ from rouge_score import rouge_scorer
 JSON_MODEL_ID = "jimnoneill/Llama-3.1-8B-Poster-Extraction"
 VISION_MODEL_ID = "Qwen/Qwen2-VL-7B-Instruct"
 
-# Find pdfalto: check environment variable, then PATH, then Downloads directory
+# Find pdfalto: check environment variable, then known paths, then PATH
 PDFALTO_PATH = os.environ.get("PDFALTO_PATH")
 if not PDFALTO_PATH:
-    # Check if pdfalto is in PATH
-    pdfalto_in_path = shutil.which("pdfalto")
-    if pdfalto_in_path:
-        PDFALTO_PATH = pdfalto_in_path
-    else:
-        # Fall back to Downloads directory (for local development)
-        home_dir = Path.home()
-        downloads_dir = home_dir / "Downloads"
-        PDFALTO_PATH = downloads_dir / "pdfalto"
-        if not Path(PDFALTO_PATH).exists():
-            PDFALTO_PATH = None
+    # Check known project locations first
+    known_paths = [
+        "/home/joneill/vaults/jmind/calmi2/poster_science/pdfalto/pdfalto",
+        Path.home() / "Downloads" / "pdfalto",
+        "/usr/local/bin/pdfalto",
+        "/usr/bin/pdfalto",
+    ]
+    for p in known_paths:
+        if Path(p).exists():
+            PDFALTO_PATH = str(p)
+            break
+    # Finally check PATH
+    if not PDFALTO_PATH:
+        pdfalto_in_path = shutil.which("pdfalto")
+        if pdfalto_in_path:
+            PDFALTO_PATH = pdfalto_in_path
 
 MAX_JSON_TOKENS = 18000
 MAX_RETRY_TOKENS = 24000
@@ -83,11 +88,49 @@ def log(msg: str):
 
 
 def free_gpu():
-    """Best‑effort GPU memory cleanup helper."""
+    """Best-effort GPU memory cleanup helper."""
     gc.collect()
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
         torch.cuda.synchronize()
+
+
+def get_best_gpu(min_memory_gb: int = 16):
+    """
+    Get the GPU with most available memory for model loading.
+    Returns device string like 'cuda:0' or 'cpu' if no GPU available.
+    Works automatically across any multi-GPU configuration.
+    Uses torch.cuda.mem_get_info() to get actual free memory (not just this process).
+    
+    Args:
+        min_memory_gb: Minimum free memory required in GB (default: 16 for 8B models)
+    """
+    if not torch.cuda.is_available():
+        return "cpu"
+    
+    num_gpus = torch.cuda.device_count()
+    if num_gpus == 0:
+        return "cpu"
+    
+    # Find GPU with most actual free memory (accounts for all processes)
+    best_gpu = 0
+    max_free = 0
+    for i in range(num_gpus):
+        free_mem, total_mem = torch.cuda.mem_get_info(i)
+        free_gb = free_mem / (1024**3)
+        total_gb = total_mem / (1024**3)
+        log(f"   GPU {i}: {free_gb:.1f}GB free / {total_gb:.1f}GB total")
+        if free_mem > max_free:
+            max_free = free_mem
+            best_gpu = i
+    
+    max_free_gb = max_free / (1024**3)
+    if max_free_gb < min_memory_gb:
+        log(f"   ⚠ WARNING: Best GPU has only {max_free_gb:.1f}GB free, model needs ~{min_memory_gb}GB")
+        log(f"   ⚠ Other processes may be using GPU memory. Consider waiting or killing them.")
+    
+    log(f"   Selected GPU {best_gpu} with {max_free_gb:.1f}GB free")
+    return f"cuda:{best_gpu}"
 
 
 # ============================
@@ -101,14 +144,15 @@ _vision_processor = None
 def load_vision_model():
     global _vision_model, _vision_processor
     if _vision_model is None:
-        log(f"Loading {VISION_MODEL_ID} for image OCR...")
+        device = get_best_gpu()
+        log(f"Loading {VISION_MODEL_ID} for image OCR on {device}...")
         _vision_model = Qwen2VLForConditionalGeneration.from_pretrained(
             VISION_MODEL_ID,
             torch_dtype=torch.bfloat16,
-            device_map="auto",
+            device_map=device,
         )
         _vision_processor = AutoProcessor.from_pretrained(VISION_MODEL_ID)
-        log(f"   ✓ Vision model loaded on {next(_vision_model.parameters()).device}")
+        log(f"   ✓ Vision model loaded on {device}")
     return _vision_model, _vision_processor
 
 
@@ -307,9 +351,12 @@ def get_raw_text(
     ext = Path(poster_path).suffix.lower()
 
     if ext in [".jpg", ".jpeg", ".png"]:
-        # Check cache if output_dir is provided
+        # Check cache if output_dir is provided (check both .md and legacy .txt)
         if output_dir and poster_id:
-            cache_file = Path(output_dir) / f"{poster_id}_raw.txt"
+            cache_file = Path(output_dir) / f"{poster_id}_raw.md"
+            # Also check legacy .txt format for backwards compatibility
+            if not cache_file.exists():
+                cache_file = Path(output_dir) / f"{poster_id}_raw.txt"
             if cache_file.exists():
                 with open(cache_file) as f:
                     text = f.read()
@@ -349,19 +396,43 @@ def load_json_model():
     """
     Load the Llama 3.1 8B model for JSON structuring via HuggingFace transformers.
 
+    Automatically uses 8-bit quantization if GPU memory is limited (<16GB free).
+    
     Returns:
         (model, tokenizer) tuple for use with generate().
     """
     global _json_model, _json_tokenizer
     if _json_model is None:
-        log(f"Loading {JSON_MODEL_ID} for JSON structuring...")
+        device = get_best_gpu()
+        
+        # Check available memory
+        if device != "cpu":
+            gpu_id = int(device.split(":")[1])
+            free_mem, _ = torch.cuda.mem_get_info(gpu_id)
+            free_gb = free_mem / (1024**3)
+        else:
+            free_gb = 32  # Assume enough RAM
+        
+        log(f"Loading {JSON_MODEL_ID} for JSON structuring on {device}...")
         _json_tokenizer = AutoTokenizer.from_pretrained(JSON_MODEL_ID)
-        _json_model = AutoModelForCausalLM.from_pretrained(
-            JSON_MODEL_ID,
-            torch_dtype=torch.bfloat16,
-            device_map="auto",
-        )
-        log(f"   ✓ JSON model loaded on {next(_json_model.parameters()).device}")
+        
+        if free_gb < 16 and device != "cpu":
+            # Use 8-bit quantization for limited memory
+            log(f"   Using 8-bit quantization (only {free_gb:.1f}GB free)")
+            _json_model = AutoModelForCausalLM.from_pretrained(
+                JSON_MODEL_ID,
+                load_in_8bit=True,
+                device_map=device,
+                low_cpu_mem_usage=True,
+            )
+        else:
+            _json_model = AutoModelForCausalLM.from_pretrained(
+                JSON_MODEL_ID,
+                torch_dtype=torch.bfloat16,
+                device_map=device,
+                low_cpu_mem_usage=True,
+            )
+        log(f"   ✓ JSON model loaded on {device}")
     return _json_model, _json_tokenizer
 
 
@@ -535,8 +606,8 @@ def extract_json_with_retry(raw_text: str, model, tokenizer) -> dict:
         else:
             log("Fallback JSON parse succeeded")
 
-    # Post-process to remove empty sections (prevents hallucinated empty sections)
-    result = remove_empty_sections(result)
+    # Comprehensive post-processing for schema compliance
+    result = postprocess_json(result)
 
     return result
 
@@ -569,6 +640,327 @@ def remove_empty_sections(generated: dict) -> dict:
                 log(f"   Removed {original_count - len(filtered)} empty section(s)")
             generated["posterContent"]["sections"] = filtered
     return generated
+
+
+# ============================
+# POST-PROCESSING
+# ============================
+
+SCHEMA_URL = "https://posters.science/schema/v0.1/poster_schema.json"
+
+
+def is_empty_or_self_referential(section: dict) -> bool:
+    """Check if a section has no meaningful content."""
+    if not isinstance(section, dict):
+        return True
+    
+    title = section.get("sectionTitle", "").strip()
+    content = section.get("sectionContent", "")
+    
+    if isinstance(content, list):
+        content = " ".join(str(c) for c in content)
+    content = content.strip() if isinstance(content, str) else ""
+    
+    if not content:
+        return True
+    if content == title:
+        return True
+    if len(content) < 5 and not any(c.isalpha() for c in content):
+        return True
+    
+    return False
+
+
+def is_figure_section(section: dict) -> bool:
+    """Check if this section is actually a figure caption misclassified as section."""
+    title = section.get("sectionTitle", "").strip()
+    content = section.get("sectionContent", "")
+    
+    if isinstance(content, list):
+        content = " ".join(str(c) for c in content)
+    content = content.strip() if isinstance(content, str) else ""
+    
+    if re.match(r'^Figure\s+\d+', title, re.IGNORECASE):
+        return True
+    if re.match(r'^Figure\s+\d+\.', content, re.IGNORECASE):
+        return True
+    
+    return False
+
+
+def is_table_section(section: dict) -> bool:
+    """Check if this section is actually a table caption misclassified as section."""
+    title = section.get("sectionTitle", "").strip()
+    content = section.get("sectionContent", "")
+    
+    if isinstance(content, list):
+        content = " ".join(str(c) for c in content)
+    content = content.strip() if isinstance(content, str) else ""
+    
+    if re.match(r'^Table\s+\d+', title, re.IGNORECASE):
+        return True
+    if re.match(r'^Table\s+\d+\.', content, re.IGNORECASE):
+        return True
+    
+    return False
+
+
+def detect_table_data_in_content(content: str) -> bool:
+    """Detect if section content contains raw table data."""
+    table_indicators = [
+        r'Reason\s+Participant\s*\(n=\d+\)',
+        r'(?:Column\s+\d+|Row\s+\d+)',
+        r'\|\s*\w+\s*\|',
+        r'(?:\w+\s+){2,}\n(?:\w+\s+){2,}',
+    ]
+    for pattern in table_indicators:
+        if re.search(pattern, content, re.IGNORECASE):
+            return True
+    return False
+
+
+def clean_table_data_from_content(content: str, title: str) -> str:
+    """Remove raw table data from section content, keeping only summary text."""
+    if "Results" in title or "Findings" in title:
+        sentences = re.split(r'(?<=[.!?])\s+', content)
+        if sentences:
+            first_sentence = sentences[0].strip()
+            if len(first_sentence) > 20 and not re.match(r'^(Reason|Participant|Example)', first_sentence):
+                return first_sentence
+    return content
+
+
+def normalize_captions(captions: list) -> list:
+    """Normalize caption keys and deduplicate (including substring matches)."""
+    normalized = []
+    
+    for caption in captions:
+        if not isinstance(caption, dict):
+            continue
+        
+        caption_text = ""
+        for key in sorted(caption.keys()):
+            val = caption.get(key, "")
+            if val and isinstance(val, str) and val.strip():
+                caption_text = val.strip()
+                break
+        
+        if not caption_text:
+            continue
+        
+        is_duplicate = False
+        for existing in normalized:
+            existing_text = existing.get("caption1", "")
+            if caption_text == existing_text:
+                is_duplicate = True
+                break
+            if caption_text in existing_text:
+                is_duplicate = True
+                break
+            if existing_text in caption_text:
+                existing["caption1"] = caption_text
+                is_duplicate = True
+                break
+        
+        if not is_duplicate:
+            normalized.append({"caption1": caption_text, "caption2": ""})
+    
+    return normalized
+
+
+def remove_duplicate_sections(sections: list) -> list:
+    """Remove sections with duplicate content."""
+    seen_content = {}
+    unique = []
+    
+    for section in sections:
+        if not isinstance(section, dict):
+            continue
+        
+        content = section.get("sectionContent", "")
+        if isinstance(content, list):
+            content = " ".join(str(c) for c in content)
+        
+        content_key = content.strip().lower()[:200]
+        
+        if content_key and content_key in seen_content:
+            log(f"   Removing duplicate section: '{section.get('sectionTitle')}' (same as '{seen_content[content_key]}')")
+            continue
+        
+        if content_key:
+            seen_content[content_key] = section.get("sectionTitle", "")
+        unique.append(section)
+    
+    return unique
+
+
+def remove_caption_text_from_sections(sections: list, captions: list, caption_type: str) -> list:
+    """Remove figure/table caption text that's embedded in section content."""
+    if not captions:
+        return sections
+    
+    caption_texts = []
+    for cap in captions:
+        if isinstance(cap, dict):
+            text = cap.get("caption1", "") or cap.get("caption2", "")
+            if text:
+                caption_texts.append(text.strip())
+    
+    if not caption_texts:
+        return sections
+    
+    updated_sections = []
+    for section in sections:
+        if not isinstance(section, dict):
+            updated_sections.append(section)
+            continue
+        
+        title = section.get("sectionTitle", "")
+        content = section.get("sectionContent", "")
+        
+        if isinstance(content, list):
+            content = " ".join(str(c) for c in content)
+        
+        if not content:
+            updated_sections.append(section)
+            continue
+        
+        original_content = content
+        content_modified = False
+        
+        for caption_text in caption_texts:
+            match_key = caption_text[:100] if len(caption_text) > 100 else caption_text
+            
+            if match_key in content:
+                if caption_text in content:
+                    content = content.replace(caption_text, "").strip()
+                    content_modified = True
+                elif match_key in content:
+                    idx = content.find(match_key)
+                    end_idx = len(content)
+                    for end_char in ['\n\n', '\n', '. ', '.']:
+                        pos = content.find(end_char, idx + len(match_key))
+                        if pos != -1 and pos < end_idx:
+                            end_idx = pos + len(end_char)
+                            break
+                    content = (content[:idx] + content[end_idx:]).strip()
+                    content_modified = True
+        
+        if content_modified:
+            content = re.sub(r'^\s*[A-Z]\s+[A-Z](?:\s+[A-Z])*\s*$', '', content, flags=re.MULTILINE)
+            content = re.sub(r'\n\s*\n\s*\n+', '\n\n', content)
+            content = content.strip()
+            
+            if len(content) < len(original_content):
+                log(f"   Removed {caption_type} caption text from section: '{title}' ({len(original_content)} -> {len(content)} chars)")
+        
+        if content:
+            updated_sections.append({"sectionTitle": title, "sectionContent": content})
+        else:
+            log(f"   Section '{title}' became empty after caption removal, removing section")
+    
+    return updated_sections
+
+
+def postprocess_json(data: dict) -> dict:
+    """
+    Comprehensive post-processing for extracted JSON.
+    
+    Cleans up extraction artifacts:
+    1. Removes empty/self-referential sections
+    2. Moves figure/table sections to caption arrays
+    3. Removes duplicate sections
+    4. Cleans table data from Results sections
+    5. Deduplicates captions
+    6. Removes caption text embedded in sections
+    7. Adds schema URL
+    """
+    result = data.copy()
+    
+    # Add schema if missing
+    if "$schema" not in result:
+        result["$schema"] = SCHEMA_URL
+    
+    # Ensure required fields exist
+    if "imageCaption" not in result:
+        result["imageCaption"] = []
+    if "tableCaption" not in result:
+        result["tableCaption"] = []
+    
+    # Process sections
+    if "posterContent" in result and isinstance(result["posterContent"], dict):
+        sections = result["posterContent"].get("sections", [])
+        
+        if isinstance(sections, list):
+            cleaned_sections = []
+            extracted_figures = []
+            extracted_tables = []
+            
+            for section in sections:
+                if not isinstance(section, dict):
+                    continue
+                
+                title = section.get("sectionTitle", "").strip()
+                content = section.get("sectionContent", "")
+                
+                if isinstance(content, list):
+                    content = " ".join(str(c) for c in content)
+                content = content.strip() if isinstance(content, str) else ""
+                
+                # Skip empty/self-referential sections
+                if is_empty_or_self_referential(section):
+                    log(f"   Removing empty/self-referential section: '{title}'")
+                    continue
+                
+                # Extract figure sections to imageCaption
+                if is_figure_section(section):
+                    caption_text = content if content.startswith("Figure") else f"{title}. {content}"
+                    extracted_figures.append({"caption1": caption_text, "caption2": ""})
+                    log(f"   Moving figure section to imageCaption: '{title}'")
+                    continue
+                
+                # Extract table sections to tableCaption  
+                if is_table_section(section):
+                    caption_text = content if content.startswith("Table") else f"{title}. {content}"
+                    extracted_tables.append({"caption1": caption_text, "caption2": ""})
+                    log(f"   Moving table section to tableCaption: '{title}'")
+                    continue
+                
+                # Clean table data from Results/Findings sections
+                if detect_table_data_in_content(content):
+                    original_len = len(content)
+                    content = clean_table_data_from_content(content, title)
+                    if len(content) < original_len:
+                        log(f"   Cleaned table data from section: '{title}' ({original_len} -> {len(content)} chars)")
+                        section = {"sectionTitle": title, "sectionContent": content}
+                
+                cleaned_sections.append(section)
+            
+            # Remove duplicates
+            cleaned_sections = remove_duplicate_sections(cleaned_sections)
+            
+            # Merge extracted captions with existing
+            existing_figures = result.get("imageCaption", [])
+            existing_tables = result.get("tableCaption", [])
+            
+            all_figures = existing_figures + extracted_figures
+            all_tables = existing_tables + extracted_tables
+            
+            # Normalize and deduplicate captions
+            result["imageCaption"] = normalize_captions(all_figures)
+            result["tableCaption"] = normalize_captions(all_tables)
+            
+            # Remove caption text from section content where it duplicates the caption arrays
+            cleaned_sections = remove_caption_text_from_sections(
+                cleaned_sections, result["imageCaption"], "Figure"
+            )
+            cleaned_sections = remove_caption_text_from_sections(
+                cleaned_sections, result["tableCaption"], "Table"
+            )
+            
+            result["posterContent"]["sections"] = cleaned_sections
+    
+    return result
 
 
 # ============================
@@ -1062,7 +1454,7 @@ def run(annotation_dir: str, output_dir: str):
             raw_texts[poster_id] = (text, source)
             log(f"   {len(text)} chars ({source}) [{time.time() - t0:.1f}s]")
 
-            with open(f"{output_dir}/{poster_id}_raw.txt", "w") as f:
+            with open(f"{output_dir}/{poster_id}_raw.md", "w") as f:
                 f.write(text)
 
         unload_vision_model()
@@ -1072,7 +1464,7 @@ def run(annotation_dir: str, output_dir: str):
         raw_texts[poster_id] = (text, source)
         log(f"   {poster_id}: {len(text)} chars ({source})")
 
-        with open(f"{output_dir}/{poster_id}_raw.txt", "w") as f:
+        with open(f"{output_dir}/{poster_id}_raw.md", "w") as f:
             f.write(text)
 
     # Phase 2: JSON structuring
