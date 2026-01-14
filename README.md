@@ -2,35 +2,285 @@
 
 Automated extraction of structured metadata from scientific poster PDFs and images using Large Language Models.
 
+## Table of Contents
+
+- [Overview](#overview)
+- [System Requirements](#system-requirements)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Basic Usage](#basic-usage)
+  - [Command Line Arguments](#command-line-arguments)
+  - [API Usage](#api-usage)
+- [Docker Deployment](#docker-deployment)
+  - [Development Mode](#development-mode-hot-reload)
+- [Architecture](#architecture)
+  - [Pipeline Overview](#pipeline-overview)
+  - [Models Used](#models-used)
+  - [Stage 1: Raw Text Extraction](#stage-1-raw-text-extraction)
+  - [Stage 2: JSON Structuring](#stage-2-json-structuring-transformers--llama-31-8b)
+- [Evaluation](#evaluation)
+  - [Metrics](#metrics)
+  - [Validation Results](#validation-results)
+- [Project Structure](#project-structure)
+- [Contributing](#contributing)
+- [License](#license)
+- [Citation](#citation)
+
 ## Overview
 
 This pipeline converts scientific posters (PDF and image formats) into structured JSON following the [posters-science JSON schema](https://github.com/fairdataihub/posters-science-schema). The system achieves **90% compliance** (9/10 posters) on validation metrics with a ≥0.75 threshold across all measures.
 
-## Models Used
+## System Requirements
 
-This pipeline leverages the following Large Language Models via HuggingFace transformers:
+### Hardware
 
-| Model                     | Provider | Parameters | Purpose                                        |
-| ------------------------- | -------- | ---------- | ---------------------------------------------- |
-| **Llama 3.1 8B Poster Extraction** | Meta AI / FAIR Data Hub  | 8B         | JSON structuring and text-to-schema conversion |
-| **Qwen2-VL-7B-Instruct**  | Alibaba  | 7B         | Vision-language OCR for image posters          |
+- CUDA-capable GPU with ≥24GB VRAM (both models loaded simultaneously)
+  - Or ≥16GB VRAM if processing PDFs and images separately
+- Sufficient system RAM for model loading (~32GB recommended)
 
-### Llama 3.1 8B Poster Extraction
+### Software
 
-The core JSON structuring is performed by [Llama 3.1 8B Poster Extraction](https://huggingface.co/jimnoneill/Llama-3.1-8B-Poster-Extraction), a fine-tuned version of Meta's Llama 3.1 8B Instruct optimized for scientific poster metadata extraction. Key features:
+- Python 3.10+
+- CUDA 11.8+ with compatible drivers
+- Linux, macOS, or Windows with WSL2
 
-- Strong instruction-following capabilities for structured output generation
-- 128K context window supporting full poster text processing
-- Efficient inference on consumer GPUs (16GB+ VRAM)
-- Loaded via HuggingFace transformers for seamless integration
+### External Tools
 
-### Qwen2-VL-7B-Instruct
+- `pdfalto` - PDF layout analysis tool (compiled binary required)
+  - Installation instructions below
 
-Image-based posters (JPG/PNG) are processed using [Qwen2-VL-7B-Instruct](https://huggingface.co/Qwen/Qwen2-VL-7B-Instruct), a vision-language model that provides:
+## Installation
 
-- Direct pixel-to-text extraction without traditional OCR preprocessing
-- Multi-language support for international poster content
-- Layout-aware text recognition preserving reading order
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/fairdataihub/posters-science-posterextraction-beta.git
+cd posters-science-posterextraction-beta
+```
+
+### 2. Create Python Environment
+
+```bash
+python -m venv venv
+source venv/bin/activate  # Linux/macOS
+# or: venv\Scripts\activate  # Windows
+
+pip install -r requirements.txt
+```
+
+### Python Dependencies
+
+```
+transformers>=4.40.0
+torch>=2.0.0
+rouge-score
+qwen-vl-utils
+accelerate
+Pillow
+numpy
+flask>=2.3.0
+flask-cors>=4.0.0
+jsonschema>=4.20.0
+```
+
+### 3. Install pdfalto (Required for PDF processing)
+
+`pdfalto` is required for PDF text extraction with layout preservation.
+
+#### Option A: Build with Docker (Linux/macOS/Windows)
+> **Windows users**: Use Docker deployment or WSL2. Native Windows builds are not supported.
+
+The easiest cross-platform method is to build using Docker. This produces a Linux binary suitable for use in Docker containers or WSL2.
+
+```bash
+# Clone the repository
+git clone --recurse-submodules https://github.com/kermitt2/pdfalto.git
+cd pdfalto
+
+# Create a build Dockerfile
+cat > Dockerfile.build << 'EOF'
+FROM ubuntu:22.04
+RUN apt-get update && apt-get install -y build-essential cmake git && rm -rf /var/lib/apt/lists/*
+WORKDIR /pdfalto
+COPY . .
+RUN cmake . && make -j$(nproc)
+EOF
+```
+
+Build and extract the binary:
+
+```bash
+# Build the builder image
+docker build -f Dockerfile.build -t pdfalto-builder .
+
+# Create a container and copy the compiled binary out
+container=$(docker create pdfalto-builder)
+docker cp "${container}":/pdfalto/pdfalto ./pdfalto
+docker rm "${container}"
+
+# Place in the repo executables folder
+mkdir -p <this_repo>/executables
+mv ./pdfalto <this_repo>/executables/pdfalto
+chmod +x <this_repo>/executables/pdfalto
+```
+
+#### Option B: Build from source (Linux/macOS only)
+
+Requires `cmake` and a C++ compiler (gcc/clang) installed on your system.
+
+```bash
+git clone --recurse-submodules https://github.com/kermitt2/pdfalto.git
+cd pdfalto
+cmake .
+make -j$(nproc)
+# Binary will be at: ./pdfalto
+```
+
+#### Configure the path (Linux/macOS only)
+
+After building from source, configure pdfalto using one of these methods:
+
+```bash
+# Option 1: Set environment variable (recommended)
+export PDFALTO_PATH="/path/to/pdfalto"
+
+# Option 2: Add to system PATH
+sudo cp /path/to/pdfalto /usr/local/bin/
+
+# Option 3: Place in auto-discovered location
+cp /path/to/pdfalto ~/Downloads/pdfalto
+```
+
+The pipeline automatically searches these locations:
+
+- `PDFALTO_PATH` environment variable
+- System PATH (`which pdfalto`)
+- `/usr/local/bin/pdfalto`
+- `/usr/bin/pdfalto`
+- `~/Downloads/pdfalto`
+
+## Usage
+
+### Basic Usage
+
+```bash
+python poster_extraction.py \
+    --annotation-dir "./posters" \
+    --output-dir "./output"
+```
+
+### Command Line Arguments
+
+| Argument           | Description                             | Default  |
+| ------------------ | --------------------------------------- | -------- |
+| `--annotation-dir` | Directory containing poster PDFs/images | Required |
+| `--output-dir`     | Directory for extracted JSON outputs    | Required |
+
+### With Environment Variables
+
+```bash
+# Specify GPU device
+CUDA_VISIBLE_DEVICES=0 python poster_extraction.py --annotation-dir ./posters
+
+# Custom pdfalto location
+PDFALTO_PATH=/opt/pdfalto/pdfalto python poster_extraction.py --annotation-dir ./posters
+
+# Full example
+HF_TOKEN="your_token" \
+PDFALTO_PATH="/usr/local/bin/pdfalto" \
+CUDA_VISIBLE_DEVICES=0 \
+python poster_extraction.py \
+    --annotation-dir "./manual_poster_annotation" \
+    --output-dir "./extraction_output"
+```
+
+### API Usage
+
+The pipeline includes a Flask API for web integration:
+
+```bash
+# Start the API server
+python api.py
+
+# Or via Docker
+docker-compose up
+```
+
+#### Endpoints
+
+| Endpoint | Method | Description |
+| -------- | ------ | ----------- |
+| `/` | GET | Health check |
+| `/health` | GET | Detailed health status |
+| `/extract` | POST | Extract JSON from uploaded poster |
+
+#### Example Request
+
+```bash
+curl -X POST http://localhost:8000/extract \
+  -F "file=@poster.pdf"
+```
+
+## Docker Deployment
+
+### Build and Run
+
+```bash
+# Build the image
+docker compose build
+
+# Run with GPU support
+docker compose up
+
+# For production deployment
+docker compose -f docker-compose-prod.yml up -d
+```
+
+### Environment Variables
+
+Create a `.env` file in the project root:
+
+```bash
+CUDA_VISIBLE_DEVICES=0
+GPU_COUNT=1
+RESTART_POLICY=unless-stopped
+```
+
+### Development Mode (Hot Reload)
+
+For active development, use the dev configuration which mounts source files as volumes. This allows you to edit code locally and apply changes with a quick restart instead of a full rebuild.
+
+```bash
+# First time setup (builds image, downloads models ~16GB each)
+docker compose -f docker-compose.dev.yml up --build
+
+# After editing .py files, restart to apply changes
+docker compose -f docker-compose.dev.yml restart
+
+# View logs
+docker compose -f docker-compose.dev.yml logs -f
+
+# Stop the container
+docker compose -f docker-compose.dev.yml down
+```
+
+The dev configuration:
+
+- Mounts `poster_extraction.py` and `api.py` as volumes for live editing
+- Persists model cache in a named volume (survives container rebuilds)
+- Uses a separate container name (`poster-extraction-dev`) to avoid conflicts
+
+**Note:** If you change the model IDs (`JSON_MODEL_ID` or `VISION_MODEL_ID` in `poster_extraction.py`), you need to clear the cached models:
+
+```bash
+# Clear model cache and rebuild
+docker compose -f docker-compose.dev.yml down -v
+docker compose -f docker-compose.dev.yml up --build
+```
+
+The `-v` flag removes the named volumes, forcing a fresh model download.
+
+See [DOCKER.md](DOCKER.md) for detailed deployment instructions.
 
 ## Architecture
 
@@ -49,6 +299,32 @@ Image-based posters (JPG/PNG) are processed using [Qwen2-VL-7B-Instruct](https:/
                [pdfalto]         [Qwen2-VL-7B]   Section-aware
                XML Layout        Vision OCR      JSON Generation
 ```
+
+### Models Used
+
+This pipeline leverages the following Large Language Models via HuggingFace transformers:
+
+| Model                     | Provider | Parameters | Purpose                                        |
+| ------------------------- | -------- | ---------- | ---------------------------------------------- |
+| **Llama 3.1 8B Poster Extraction** | Meta AI / FAIR Data Hub  | 8B         | JSON structuring and text-to-schema conversion |
+| **Qwen2-VL-7B-Instruct**  | Alibaba  | 7B         | Vision-language OCR for image posters          |
+
+#### Llama 3.1 8B Poster Extraction
+
+The core JSON structuring is performed by [Llama 3.1 8B Poster Extraction](https://huggingface.co/jimnoneill/Llama-3.1-8B-Poster-Extraction), a fine-tuned version of Meta's Llama 3.1 8B Instruct optimized for scientific poster metadata extraction. Key features:
+
+- Strong instruction-following capabilities for structured output generation
+- 128K context window supporting full poster text processing
+- Efficient inference on consumer GPUs (16GB+ VRAM)
+- Loaded via HuggingFace transformers for seamless integration
+
+#### Qwen2-VL-7B-Instruct
+
+Image-based posters (JPG/PNG) are processed using [Qwen2-VL-7B-Instruct](https://huggingface.co/Qwen/Qwen2-VL-7B-Instruct), a vision-language model that provides:
+
+- Direct pixel-to-text extraction without traditional OCR preprocessing
+- Multi-language support for international poster content
+- Layout-aware text recognition preserving reading order
 
 ### Stage 1: Raw Text Extraction
 
@@ -84,7 +360,18 @@ Raw text is converted to structured JSON using Llama 3.1 8B Poster Extraction vi
 2. If truncation detected → retry with 24,000 tokens
 3. If still truncating → switch to condensed prompt format (saves input tokens for output)
 
-## Evaluation Metrics
+### JSON Repair
+
+The pipeline includes repair functions to handle common LLM output issues:
+
+- Unescaped quotes in scientific notation
+- Trailing commas in arrays/objects
+- Unicode encoding errors
+- Truncated JSON completion
+
+## Evaluation
+
+### Metrics
 
 The pipeline is validated against manually annotated reference JSONs using four complementary metrics:
 
@@ -95,7 +382,7 @@ The pipeline is validated against manually annotated reference JSONs using four 
 | **Number Capture (n)**   | Proportion of numeric values preserved                            | ≥0.75     | Validates quantitative data integrity |
 | **Field Proportion (f)** | Ratio of extracted to reference JSON structural elements          | 0.30–2.50 | Accommodates layout variability       |
 
-### Metric Implementation
+### Metric Implementation Details
 
 #### Text Normalization
 
@@ -120,7 +407,7 @@ The pipeline is validated against manually annotated reference JSONs using four 
 - Excludes DOI components and publication years from reference sections
 - Focuses on scientifically meaningful numeric content (measurements, statistics, counts)
 
-## Validation Results
+### Validation Results
 
 **Production Release**: 9/10 (90%) passing
 
@@ -139,227 +426,9 @@ The pipeline is validated against manually annotated reference JSONs using four 
 
 **Aggregate Performance**: w=0.969, r=0.879, n=0.938, f=1.083
 
-## Installation
+## Project Structure
 
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/fairdataihub/posters-science-posterextraction-beta.git
-cd posters-science-posterextraction-beta
-```
-
-### 2. Create Python Environment
-
-```bash
-python -m venv venv
-source venv/bin/activate  # Linux/macOS
-# or: venv\Scripts\activate  # Windows
-
-pip install -r requirements.txt
-```
-
-### 3. Install pdfalto (Required for PDF processing)
-
-`pdfalto` is required for PDF text extraction with layout preservation.
-
-> **Note**: If using Docker deployment, skip this step - the binary is pre-included in `executables/pdfalto`.
-
-#### Option A: Build with Docker (Recommended)
-
-The easiest cross-platform method is to build using Docker:
-
-```bash
-# Clone the repository
-git clone --recurse-submodules https://github.com/kermitt2/pdfalto.git
-cd pdfalto
-
-# Create a build Dockerfile
-cat > Dockerfile.build << 'EOF'
-FROM ubuntu:22.04
-RUN apt-get update && apt-get install -y build-essential cmake git && rm -rf /var/lib/apt/lists/*
-WORKDIR /pdfalto
-COPY . .
-RUN cmake . && make -j$(nproc)
-EOF
-
-# Build and extract the binary
-docker build -f Dockerfile.build -t pdfalto-builder .
-docker create --name pdfalto-temp pdfalto-builder
-docker cp pdfalto-temp:/pdfalto/pdfalto ./pdfalto
-docker rm pdfalto-temp
-
-# The binary is now at ./pdfalto
-```
-
-#### Option B: Build from source (Linux/macOS)
-
-```bash
-git clone --recurse-submodules https://github.com/kermitt2/pdfalto.git
-cd pdfalto
-cmake .
-make -j$(nproc)
-# Binary will be at: ./pdfalto
-```
-
-> **Note**: The GitHub releases page has no pre-built binaries available.
-
-#### Configure the path
-
-After building, configure pdfalto using one of these methods:
-
-```bash
-# Option 1: Set environment variable (recommended)
-export PDFALTO_PATH="/path/to/pdfalto"
-
-# Option 2: Add to system PATH
-sudo cp /path/to/pdfalto /usr/local/bin/
-
-# Option 3: Place in auto-discovered location
-cp /path/to/pdfalto ~/Downloads/pdfalto
-```
-
-The pipeline automatically searches these locations:
-- `PDFALTO_PATH` environment variable
-- System PATH (`which pdfalto`)
-- `/usr/local/bin/pdfalto`
-- `/usr/bin/pdfalto`
-- `~/Downloads/pdfalto`
-
-## Usage
-
-### Basic Usage
-
-```bash
-python poster_extraction.py \
-    --annotation-dir "./posters" \
-    --output-dir "./output"
-```
-
-### With Environment Variables
-
-```bash
-# Specify GPU device
-CUDA_VISIBLE_DEVICES=0 python poster_extraction.py --annotation-dir ./posters
-
-# Custom pdfalto location
-PDFALTO_PATH=/opt/pdfalto/pdfalto python poster_extraction.py --annotation-dir ./posters
-
-# Full example
-HF_TOKEN="your_token" \
-PDFALTO_PATH="/usr/local/bin/pdfalto" \
-CUDA_VISIBLE_DEVICES=0 \
-python poster_extraction.py \
-    --annotation-dir "./manual_poster_annotation" \
-    --output-dir "./extraction_output"
-```
-
-### Command Line Arguments
-
-| Argument           | Description                             | Default  |
-| ------------------ | --------------------------------------- | -------- |
-| `--annotation-dir` | Directory containing poster PDFs/images | Required |
-| `--output-dir`     | Directory for extracted JSON outputs    | Required |
-
-## Docker Deployment
-
-### Build and Run
-
-```bash
-# Build the image
-docker-compose build
-
-# Run with GPU support
-docker-compose up
-
-# For production deployment
-docker-compose -f docker-compose-prod.yml up -d
-```
-
-### Environment Variables
-
-Create a `.env` file in the project root:
-
-```bash
-CUDA_VISIBLE_DEVICES=0
-GPU_COUNT=1
-RESTART_POLICY=unless-stopped
-```
-
-See [DOCKER.md](DOCKER.md) for detailed deployment instructions.
-
-## System Requirements
-
-### Hardware
-
-- CUDA-capable GPU with ≥24GB VRAM (both models loaded simultaneously)
-  - Or ≥16GB VRAM if processing PDFs and images separately
-- Sufficient system RAM for model loading (~32GB recommended)
-
-### Software
-
-- Python 3.10+
-- CUDA 11.8+ with compatible drivers
-- Linux, macOS, or Windows with WSL2
-
-### Python Dependencies
-
-```
-transformers>=4.40.0
-torch>=2.0.0
-rouge-score
-qwen-vl-utils
-accelerate
-Pillow
-numpy
-flask>=2.3.0
-flask-cors>=4.0.0
-```
-
-Install all dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-### External Tools
-
-- `pdfalto` - PDF layout analysis tool (compiled binary required)
-  - Installation: https://github.com/kermitt2/pdfalto
-
-## Output Structure
-
-```bash
-output/
-├── {poster_id}_raw.txt        # Extracted raw text from OCR
-├── {poster_id}_extracted.json # Structured JSON per schema
-└── results.json               # Evaluation metrics summary
-```
-
-### JSON Schema
-
-Output JSONs conform to the posters-science schema:
-
-```json
-{
-  "creators": [
-    {
-      "name": "LastName, FirstName",
-      "affiliation": [{ "name": "Institution" }]
-    }
-  ],
-  "titles": [{ "title": "Poster Title" }],
-  "posterContent": {
-    "posterTitle": "Poster Title",
-    "sections": [
-      { "sectionTitle": "Abstract", "sectionContent": "..." },
-      { "sectionTitle": "Methods", "sectionContent": "..." }
-    ]
-  },
-  "imageCaption": [{ "caption1": "Figure 1 description" }],
-  "tableCaption": [{ "caption1": "Table 1 description" }]
-}
-```
-
-## Directory Structure
+### Directory Layout
 
 ```bash
 posters-science-posterextraction-beta/
@@ -377,66 +446,22 @@ posters-science-posterextraction-beta/
 └── example_output/            # Sample extraction results
 ```
 
-## Methodology
-
-### OCR Selection Logic
-
-The pipeline automatically selects the appropriate OCR method based on file type:
-
-- **PDF files**: Processed via `pdfalto` which preserves layout structure through XML intermediate representation
-- **Image files**: Processed via `Qwen2-VL-7B` vision-language model for direct pixel-to-text conversion
-
-### Prompt Engineering
-
-The JSON structuring stage employs section-aware prompting that:
-
-1. Explicitly enumerates common scientific poster sections (Abstract, Introduction, Methods, Results, Discussion, Conclusions, References)
-2. Distinguishes between semantically similar sections (e.g., "Key Findings" vs "References")
-3. Instructs verbatim text preservation to maintain scientific accuracy
-
-### Truncation Handling
-
-For documents exceeding model context limits:
-
-1. Initial attempt with primary prompt (18,000 output tokens)
-2. Retry with extended token budget (24,000 tokens)
-3. Fallback to condensed prompt format if truncation persists
-
-### JSON Repair
-
-The pipeline includes repair functions to handle common LLM output issues:
-
-- Unescaped quotes in scientific notation
-- Trailing commas in arrays/objects
-- Unicode encoding errors
-- Truncated JSON completion
-
-## API Usage
-
-The pipeline includes a Flask API for web integration:
+### Output Structure
 
 ```bash
-# Start the API server
-python api.py
-
-# Or via Docker
-docker-compose up
+output/
+├── {poster_id}_raw.txt        # Extracted raw text from OCR
+├── {poster_id}_extracted.json # Structured JSON per schema
+└── results.json               # Evaluation metrics summary
 ```
 
-### Endpoints
+### JSON Schema
 
-| Endpoint | Method | Description |
-| -------- | ------ | ----------- |
-| `/` | GET | Health check |
-| `/health` | GET | Detailed health status |
-| `/extract` | POST | Extract JSON from uploaded poster |
+Output JSONs conform to the [posters-science schema](https://posters.science/schemas/)
 
-### Example Request
+## Contributing
 
-```bash
-curl -X POST http://localhost:8000/extract \
-  -F "file=@poster.pdf"
-```
+Contributions are welcome. Please open an issue to discuss proposed changes before submitting a pull request.
 
 ## License
 
@@ -445,7 +470,3 @@ MIT License
 ## Citation
 
 Part of the [FAIR Data Innovations Hub](https://fairdataihub.org/) posters-science project.
-
-## Contributing
-
-Contributions are welcome. Please open an issue to discuss proposed changes before submitting a pull request.
