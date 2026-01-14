@@ -162,30 +162,60 @@ pip install -r requirements.txt
 
 `pdfalto` is required for PDF text extraction with layout preservation.
 
-**Option A: Build from source**
+> **Note**: If using Docker deployment, skip this step - the binary is pre-included in `executables/pdfalto`.
+
+#### Option A: Build with Docker (Recommended)
+
+The easiest cross-platform method is to build using Docker:
+
 ```bash
-git clone https://github.com/kermitt2/pdfalto.git
+# Clone the repository
+git clone --recurse-submodules https://github.com/kermitt2/pdfalto.git
 cd pdfalto
-mkdir build && cd build
-cmake ..
-make
-# Binary will be at: pdfalto/build/pdfalto
+
+# Create a build Dockerfile
+cat > Dockerfile.build << 'EOF'
+FROM ubuntu:22.04
+RUN apt-get update && apt-get install -y build-essential cmake git && rm -rf /var/lib/apt/lists/*
+WORKDIR /pdfalto
+COPY . .
+RUN cmake . && make -j$(nproc)
+EOF
+
+# Build and extract the binary
+docker build -f Dockerfile.build -t pdfalto-builder .
+docker create --name pdfalto-temp pdfalto-builder
+docker cp pdfalto-temp:/pdfalto/pdfalto ./pdfalto
+docker rm pdfalto-temp
+
+# The binary is now at ./pdfalto
 ```
 
-**Option B: Download pre-built binary**
-- Check releases at https://github.com/kermitt2/pdfalto/releases
-
-**Configure the path (one of the following):**
+#### Option B: Build from source (Linux/macOS)
 
 ```bash
-# Option 1: Set environment variable
-export PDFALTO_PATH="/path/to/pdfalto/build/pdfalto"
+git clone --recurse-submodules https://github.com/kermitt2/pdfalto.git
+cd pdfalto
+cmake .
+make -j$(nproc)
+# Binary will be at: ./pdfalto
+```
+
+> **Note**: The GitHub releases page has no pre-built binaries available.
+
+#### Configure the path
+
+After building, configure pdfalto using one of these methods:
+
+```bash
+# Option 1: Set environment variable (recommended)
+export PDFALTO_PATH="/path/to/pdfalto"
 
 # Option 2: Add to system PATH
-sudo cp /path/to/pdfalto/build/pdfalto /usr/local/bin/
+sudo cp /path/to/pdfalto /usr/local/bin/
 
 # Option 3: Place in auto-discovered location
-cp /path/to/pdfalto/build/pdfalto ~/Downloads/pdfalto
+cp /path/to/pdfalto ~/Downloads/pdfalto
 ```
 
 The pipeline automatically searches these locations:
@@ -250,7 +280,6 @@ docker-compose -f docker-compose-prod.yml up -d
 Create a `.env` file in the project root:
 
 ```bash
-HF_TOKEN=your_huggingface_token
 CUDA_VISIBLE_DEVICES=0
 GPU_COUNT=1
 RESTART_POLICY=unless-stopped
