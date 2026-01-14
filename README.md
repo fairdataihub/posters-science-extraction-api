@@ -148,25 +148,7 @@ git clone https://github.com/fairdataihub/posters-science-posterextraction-beta.
 cd posters-science-posterextraction-beta
 ```
 
-### 2. HuggingFace Authentication
-
-The Llama 3.1 model requires HuggingFace authentication:
-
-1. Create a HuggingFace account at https://huggingface.co
-2. Accept the model license at https://huggingface.co/jimnoneill/Llama-3.1-8B-Poster-Extraction
-3. Generate an access token at https://huggingface.co/settings/tokens
-4. Set the environment variable:
-
-```bash
-export HF_TOKEN="your_token_here"
-```
-
-Or login via CLI:
-```bash
-huggingface-cli login
-```
-
-### 3. Create Python Environment
+### 2. Create Python Environment
 
 ```bash
 python -m venv venv
@@ -176,7 +158,7 @@ source venv/bin/activate  # Linux/macOS
 pip install -r requirements.txt
 ```
 
-### 4. Install pdfalto (Required for PDF processing)
+### 3. Install pdfalto (Required for PDF processing)
 
 `pdfalto` is required for PDF text extraction with layout preservation.
 
