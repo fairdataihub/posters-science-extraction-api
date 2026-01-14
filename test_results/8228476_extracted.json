@@ -77,8 +77,12 @@
         "sectionContent": "LM adaptation Fine-tuning for metaphor detection\nMetaphor\nMetaphor\nMetaphor\nNot a Metaphor Not a Metaphor\nPre-trained/Adapted Language Model\n‫עיצ_‬ ‫_בון‬ ‫במשלח‬ ‫ידי_‬ ‫_נו‬\n‫במשלח‬ ‫עיצ_‬\nPre-trained Language Model\n<mask> ‫_בון‬ <mask> ‫ידי_‬ ‫_נו‬\n‫עיצ_‬ ‫_בון‬ ‫במשלח‬ ‫ידי_‬ ‫_נו‬"
       },
       {
-        "sectionTitle": "Language models (pre-trained & adapted)",
-        "sectionContent": "BEREL 220 Milion Medieval\nAlephBERT 2 Bilion Modern\nAlephBERT Adapted\nData Size (words) Data Type\n2 Bilion + 10 Milion\nModern + Medieval\nTrained on additional prose and poetic medieval texts (Project Ben-Yehuda*) + Piyyut dataset"
+        "sectionTitle": "Language Models",
+        "sectionContent": "Language models (pre-trained & adapted)\nBEREL 220 Milion Medieval\nAlephBERT 2 Bilion Modern\nAlephBERT Adapted"
+      },
+      {
+        "sectionTitle": "Data",
+        "sectionContent": "Data Size (words) Data Type\n2 Bilion + 10 Milion\nModern + Medieval\nTrained on additional prose and poetic medieval texts (Project Ben-Yehuda*) + Piyyut dataset"
       },
       {
         "sectionTitle": "Tokenizer",
@@ -86,34 +90,41 @@
       },
       {
         "sectionTitle": "Error Analysis Results",
-        "sectionContent": "• AlephBERT is outperformed by AlephBERT Adapted. • BEREL, pre-trained on medieval texts, shows the best results.\n49\n36.75\n24.5\n12.25\n0\n46.56 48.3 44.404\nAlephBERT BEREL AlephBERT - adapted\nf1 Score on test set\n‫ידינו‬ ‫במשלח‬ ‫עיצבון‬"
+        "sectionContent": "• AlephBERT is outperformed by AlephBERT Adapted. • BEREL, pre-trained on medieval texts, shows the best results.\n49\n36.75\n24.5\n12.25\n0\n46.56 48.3 44.404\nAlephBERT BEREL AlephBERT - adapted"
       },
       {
-        "sectionTitle": "Expert explanation",
-        "sectionContent": "Berel\n‫חשקתיו‬ ‫לניחוח‬ ‫ילד‬\nBerel\n‫חשקתיו‬ ‫לניחוח‬ ‫ילד‬\n(A child for a scent - I have desired)\nExpert explanation: The child is a non-metaphorical epithet for Isaac. “Scent” is a metonymic term for “sacriﬁce”."
+        "sectionTitle": "Example",
+        "sectionContent": "‫ידינו‬ ‫במשלח‬ ‫עיצבון‬\n*Project Ben-Yehuda is a volunteer-based online library of free Hebrew literature.\n‫חשקתיו‬ ‫לניחוח‬ ‫ילד‬\nBerel\n‫חשקתיו‬ ‫לניחוח‬ ‫ילד‬\n(A child for a scent - I have desired)\nExpert explanation: The child is a non-metaphorical epithet for Isaac. “Scent” is a metonymic term for “sacriﬁce”."
+      },
+      {
+        "sectionTitle": "Key Findings",
+        "sectionContent": "• AlephBERT is outperformed by AlephBERT Adapted.\n• BEREL, pre-trained on medieval texts, shows the best results."
       },
       {
         "sectionTitle": "References",
-        "sectionContent": "1. Project Ben-Yehuda is a volunteer-based online library of free Hebrew literature."
+        "sectionContent": "1. Toker, M., Mishali, O., Cohen, A., Munz-Manor, O., Kimelfeld, B., & Belinkov, Y. (2023). A Dataset for Metaphor Detection in Early Medieval Hebrew Poetry. Poster presented at the annual meeting of the Association for Computational Linguistics."
       },
       {
         "sectionTitle": "Contact",
-        "sectionContent": "Michael Toker (tok@cs.technion.ac.il), Oren Mishali (omishali@cs.technion.ac.il), Adir Cohen (adircohen@campus.technion.ac.il), Ophir Munz-Manor (ophirmm@openu.ac.il), Benny Kimelfeld (bennyk@cs.technion.ac.il), Yonatan Belinkov (belinkov@technion.ac.il)"
+        "sectionContent": "Michael Toker (tok@cs.technion.ac.il), Oren Mishali (omishali@cs.technion.ac.il), Adir Cohen (adircohen@campus.technion.ac.il), Ophir Munz-Manor (ophirmm@openu.ac.il)"
       },
       {
         "sectionTitle": "Funding",
-        "sectionContent": "No funding information provided"
+        "sectionContent": "This research was supported by the Israel Science Foundation (ISF) and the Technion − Israel Institute of Technology"
       }
     ]
   },
   "imageCaption": [
     {
-      "caption1": "A medieval Hebrew poem from the Worms Prayerbook, Germany, 13th Century, The National Library of Israel, \"Ktiv\" Project"
+      "caption1": "A medieval Hebrew poem from the Worms Prayerbook, Germany, 13th Century, The National Library of Israel, \"Ktiv\" Project",
+      "caption2": ""
     }
   ],
   "tableCaption": [
     {
-      "caption1": "Error Analysis Results"
+      "caption1": "Error Analysis Results",
+      "caption2": ""
     }
-  ]
+  ],
+  "$schema": "https://posters.science/schema/v0.1/poster_schema.json"
 }

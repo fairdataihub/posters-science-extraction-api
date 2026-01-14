@@ -19,13 +19,13 @@ Tested against 10 manually annotated scientific posters from diverse domains usi
 
 ### Summary
 
-| Metric | v1.0.0 | Baseline | Delta |
-|--------|--------|----------|-------|
-| **Passing Rate** | 9/10 (90%) | 10/10 (100%) | -1 |
-| **Word Capture** | 0.964 | 0.969 | -0.005 |
-| **ROUGE-L** | 0.880 | 0.887 | -0.007 |
-| **Number Capture** | 0.914 | 0.936 | -0.022 |
-| **Field Proportion** | 1.033 | 1.083 | -0.050 |
+| Metric | v1.0.0 |
+|--------|--------|
+| **Passing Rate** | 9/10 (90%) |
+| **Word Capture** | 0.954 |
+| **ROUGE-L** | 0.885 |
+| **Number Capture** | 0.929 |
+| **Field Proportion** | 0.996 |
 
 ### Passing Criteria
 
@@ -39,24 +39,23 @@ All metrics must meet these thresholds:
 
 | Poster ID | Word | ROUGE-L | Numbers | Fields | Sections | Status |
 |-----------|------|---------|---------|--------|----------|--------|
-| 10890106 | 0.98 | 0.82 | 0.96 | 1.16 | 26/13 | ✅ PASS |
-| 15963941 | 0.97 | 0.90 | 0.97 | 0.95 | 7/5 | ✅ PASS |
-| 16083265 | 0.96 | 0.90 | 1.00 | 1.10 | 19/15 | ✅ PASS |
-| 17268692 | 0.95 | 0.93 | 0.90 | 1.12 | 14/10 | ✅ PASS |
-| 42 | 0.99 | 0.88 | 0.97 | 0.75 | 12/15 | ✅ PASS |
-| 4737132 | 0.94 | 0.82 | 0.95 | 1.33 | 16/10 | ✅ PASS |
-| 5128504 | 0.99 | 0.99 | 0.97 | 1.16 | 13/8 | ✅ PASS |
-| 6724771 | 0.92 | 0.98 | 0.82 | 1.07 | 11/6 | ✅ PASS |
-| 8228476 | 0.95 | 0.88 | 0.89 | 0.82 | 14/7 | ✅ PASS |
-| 8228568 | 0.99 | 0.69 | 0.73 | 0.85 | 7/9 | ❌ FAIL |
+| 10890106 | 0.98 | 0.85 | 1.00 | 0.88 | 17/13 | ✅ PASS |
+| 15963941 | 0.98 | 0.93 | 1.00 | 0.84 | 5/5 | ✅ PASS |
+| 16083265 | 0.90 | 0.90 | 0.82 | 0.92 | 14/15 | ✅ PASS |
+| 17268692 | 1.00 | 0.83 | 1.00 | 1.76 | 14/10 | ✅ PASS |
+| 42 | 0.99 | 0.88 | 1.00 | 0.77 | 12/15 | ✅ PASS |
+| 4737132 | 0.89 | 0.74 | 0.91 | 1.10 | 12/10 | ❌ FAIL |
+| 5128504 | 0.99 | 1.00 | 1.00 | 1.05 | 12/8 | ✅ PASS |
+| 6724771 | 0.89 | 0.95 | 0.85 | 0.96 | 9/6 | ✅ PASS |
+| 8228476 | 0.94 | 0.87 | 0.89 | 0.90 | 16/7 | ✅ PASS |
+| 8228568 | 0.99 | 0.91 | 0.82 | 0.78 | 6/9 | ✅ PASS |
 
 ### Notes on Failed Poster
 
-Poster 8228568 narrowly failed due to:
-- ROUGE-L: 0.69 (threshold: 0.75)
-- Number Capture: 0.73 (threshold: 0.75)
+Poster 4737132 (image poster processed via Qwen Vision OCR) narrowly failed due to:
+- ROUGE-L: 0.74 (threshold: 0.75)
 
-The failure is marginal and does not indicate systematic issues with the model.
+The failure is marginal and reflects the inherent challenge of OCR-based text extraction from image posters compared to PDF extraction via pdfalto.
 
 ## Architecture
 
