@@ -1,14 +1,26 @@
 # Development configuration for docker-compose
-# Can be used standalone: docker compose -f docker-compose.dev.yml up
-# Or as override: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+#
+# Usage:
+#   First time (builds image, downloads models):
+#     docker compose -f docker-compose.dev.yml up --build
+#
+#   After editing Python files (fast restart, no rebuild):
+#     docker compose -f docker-compose.dev.yml restart
+#
+#   View logs:
+#     docker compose -f docker-compose.dev.yml logs -f
+#
+#   If you change the model (JSON_MODEL_ID or VISION_MODEL_ID), clear the cache:
+#     docker compose -f docker-compose.dev.yml down -v
+#     docker compose -f docker-compose.dev.yml up --build
 
 services:
   poster-extraction:
     build:
       context: .
       dockerfile: Dockerfile
-    image: poster-extraction:latest
-    container_name: poster-extraction
+    image: poster-extraction:dev
+    container_name: poster-extraction-dev
     environment:
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
       - NVIDIA_VISIBLE_DEVICES=all
@@ -17,15 +29,14 @@ services:
       - HOST=0.0.0.0
     ports:
       - "${API_PORT:-8000}:8000"
-    # Override volumes for development
+    # Mount source code for hot reload - edit locally, restart to apply
     volumes:
-      # Mount source code for live editing
       - ./poster_extraction.py:/app/poster_extraction.py
       - ./api.py:/app/api.py
-    # Override command to allow interactive use
+      # Persist model cache between container rebuilds
+      - model-cache:/root/.cache
     stdin_open: true
     tty: true
-    # Remove restart policy for dev
     restart: "no"
     deploy:
       resources:
@@ -37,3 +48,7 @@ services:
             - driver: nvidia
               count: ${GPU_COUNT:-1}
               capabilities: [gpu]
+
+# Named volume for model cache persistence
+volumes:
+  model-cache:
