@@ -411,24 +411,214 @@ The pipeline is validated against manually annotated reference JSONs using four 
 
 **Production Release**: 9/10 (90%) passing
 
-| Poster ID | Word | ROUGE-L | Numbers | Fields | OCR Method  |
-| --------- | ---- | ------- | ------- | ------ | ----------- |
-| 10890106  | 0.97 | 0.81    | 0.96    | 0.90   | pdfalto     |
-| 15963941  | 0.97 | 0.90    | 0.97    | 0.95   | pdfalto     |
-| 16083265  | 0.98 | 0.89    | 1.00    | 0.96   | pdfalto     |
-| 17268692  | 1.00 | 0.87    | 0.94    | 1.91   | pdfalto     |
-| 42        | 0.99 | 0.89    | 0.97    | 0.76   | pdfalto     |
-| 4737132   | 0.94 | 0.84    | 0.95    | 1.32   | qwen_vision |
-| 5128504   | 0.99 | 0.99    | 0.97    | 1.16   | pdfalto     |
-| 6724771   | 0.91 | 0.95    | 0.82    | 1.05   | pdfalto     |
-| 8228476   | 0.95 | 0.90    | 0.89    | 0.86   | pdfalto     |
-| 8228568   | 0.99 | 0.75    | 0.91    | 0.96   | pdfalto     |
+| Poster ID | Word | ROUGE-L | Numbers | Fields | OCR Method  | Status |
+| --------- | ---- | ------- | ------- | ------ | ----------- | ------ |
+| 10890106  | 0.98 | 0.85    | 1.00    | 0.88   | pdfalto     | ✅ |
+| 15963941  | 0.98 | 0.93    | 1.00    | 0.84   | pdfalto     | ✅ |
+| 16083265  | 0.90 | 0.90    | 0.82    | 0.92   | pdfalto     | ✅ |
+| 17268692  | 1.00 | 0.83    | 1.00    | 1.76   | pdfalto     | ✅ |
+| 42        | 0.99 | 0.88    | 1.00    | 0.77   | pdfalto     | ✅ |
+| 4737132   | 0.89 | 0.74    | 0.91    | 1.10   | qwen_vision | ❌ |
+| 5128504   | 0.99 | 1.00    | 1.00    | 1.05   | pdfalto     | ✅ |
+| 6724771   | 0.89 | 0.95    | 0.85    | 0.96   | pdfalto     | ✅ |
+| 8228476   | 0.94 | 0.87    | 0.89    | 0.90   | pdfalto     | ✅ |
+| 8228568   | 0.99 | 0.91    | 0.82    | 0.78   | pdfalto     | ✅ |
 
-**Aggregate Performance**: w=0.969, r=0.879, n=0.938, f=1.083
+**Aggregate Performance**: w=0.954, r=0.885, n=0.929, f=0.996
 
 ## Project Structure
 
 ### Directory Layout
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/fairdataihub/posters-science-posterextraction-beta.git
+cd posters-science-posterextraction-beta
+```
+
+### 2. Create Python Environment
+
+```bash
+python -m venv venv
+source venv/bin/activate  # Linux/macOS
+# or: venv\Scripts\activate  # Windows
+
+pip install -r requirements.txt
+```
+
+### 3. Install pdfalto (Required for PDF processing)
+
+`pdfalto` is required for PDF text extraction with layout preservation.
+
+**Option A: Build from source**
+```bash
+git clone https://github.com/kermitt2/pdfalto.git
+cd pdfalto
+mkdir build && cd build
+cmake ..
+make
+# Binary will be at: pdfalto/build/pdfalto
+```
+
+**Option B: Download pre-built binary**
+- Check releases at https://github.com/kermitt2/pdfalto/releases
+
+**Configure the path (one of the following):**
+
+```bash
+# Option 1: Set environment variable
+export PDFALTO_PATH="/path/to/pdfalto/build/pdfalto"
+
+# Option 2: Add to system PATH
+sudo cp /path/to/pdfalto/build/pdfalto /usr/local/bin/
+
+# Option 3: Place in auto-discovered location
+cp /path/to/pdfalto/build/pdfalto ~/Downloads/pdfalto
+```
+
+The pipeline automatically searches these locations:
+- `PDFALTO_PATH` environment variable
+- System PATH (`which pdfalto`)
+- `/usr/local/bin/pdfalto`
+- `/usr/bin/pdfalto`
+- `~/Downloads/pdfalto`
+
+## Usage
+
+### Basic Usage
+
+```bash
+python poster_extraction.py \
+    --annotation-dir "./posters" \
+    --output-dir "./output"
+```
+
+### With Environment Variables
+
+```bash
+# Specify GPU device
+CUDA_VISIBLE_DEVICES=0 python poster_extraction.py --annotation-dir ./posters
+
+# Custom pdfalto location
+PDFALTO_PATH=/opt/pdfalto/pdfalto python poster_extraction.py --annotation-dir ./posters
+
+# Full example
+HF_TOKEN="your_token" \
+PDFALTO_PATH="/usr/local/bin/pdfalto" \
+CUDA_VISIBLE_DEVICES=0 \
+python poster_extraction.py \
+    --annotation-dir "./manual_poster_annotation" \
+    --output-dir "./extraction_output"
+```
+
+### Command Line Arguments
+
+| Argument           | Description                             | Default  |
+| ------------------ | --------------------------------------- | -------- |
+| `--annotation-dir` | Directory containing poster PDFs/images | Required |
+| `--output-dir`     | Directory for extracted JSON outputs    | Required |
+
+## Docker Deployment
+
+### Build and Run
+
+```bash
+# Build the image
+docker-compose build
+
+# Run with GPU support
+docker-compose up
+
+# For production deployment
+docker-compose -f docker-compose-prod.yml up -d
+```
+
+### Environment Variables
+
+Create a `.env` file in the project root:
+
+```bash
+HF_TOKEN=your_huggingface_token
+CUDA_VISIBLE_DEVICES=0
+GPU_COUNT=1
+RESTART_POLICY=unless-stopped
+```
+
+See [DOCKER.md](DOCKER.md) for detailed deployment instructions.
+
+## System Requirements
+
+### Hardware
+
+- CUDA-capable GPU with ≥24GB VRAM (both models loaded simultaneously)
+  - Or ≥16GB VRAM if processing PDFs and images separately
+- Sufficient system RAM for model loading (~32GB recommended)
+
+### Software
+
+- Python 3.10+
+- CUDA 11.8+ with compatible drivers
+- Linux, macOS, or Windows with WSL2
+
+### Python Dependencies
+
+```
+transformers>=4.40.0
+torch>=2.0.0
+rouge-score
+qwen-vl-utils
+accelerate
+Pillow
+numpy
+flask>=2.3.0
+flask-cors>=4.0.0
+```
+
+Install all dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+### External Tools
+
+- `pdfalto` - PDF layout analysis tool (compiled binary required)
+  - Installation: https://github.com/kermitt2/pdfalto
+
+## Output Structure
+
+```bash
+output/
+├── {poster_id}_raw.md         # Extracted raw text from OCR
+├── {poster_id}_extracted.json # Structured JSON per schema
+└── results.json               # Evaluation metrics summary
+```
+
+### JSON Schema
+
+Output JSONs conform to the posters-science schema:
+
+```json
+{
+  "creators": [
+    {
+      "name": "LastName, FirstName",
+      "affiliation": [{ "name": "Institution" }]
+    }
+  ],
+  "titles": [{ "title": "Poster Title" }],
+  "posterContent": {
+    "posterTitle": "Poster Title",
+    "sections": [
+      { "sectionTitle": "Abstract", "sectionContent": "..." },
+      { "sectionTitle": "Methods", "sectionContent": "..." }
+    ]
+  },
+  "imageCaption": [{ "caption1": "Figure 1 description" }],
+  "tableCaption": [{ "caption1": "Table 1 description" }]
+}
+```
+
+## Directory Structure
 
 ```bash
 posters-science-posterextraction-beta/
