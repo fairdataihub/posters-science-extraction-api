@@ -72,16 +72,16 @@
   {
     "poster_id": "4737132",
     "metrics": {
-      "word_capture": 0.8850574712643678,
-      "rouge_l": 0.7366946778711485,
-      "number_capture": 0.9090909090909091,
-      "field_proportion": 1.1,
-      "gen_sections": 12,
+      "word_capture": 0.9425287356321839,
+      "rouge_l": 0.7917241379310346,
+      "number_capture": 0.9636363636363636,
+      "field_proportion": 1.2333333333333334,
+      "gen_sections": 14,
       "ref_sections": 10
     },
-    "passes": false,
+    "passes": true,
     "error": false,
-    "source": "qwen_vision_cached"
+    "source": "qwen_vision"
   },
   {
     "poster_id": "5128504",

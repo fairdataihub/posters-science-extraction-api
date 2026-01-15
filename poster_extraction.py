@@ -392,11 +392,16 @@ _json_model = None
 _json_tokenizer = None
 
 
-def load_json_model():
+def load_json_model(force_full_precision: bool = False):
     """
     Load the Llama 3.1 8B model for JSON structuring via HuggingFace transformers.
 
-    Automatically uses 8-bit quantization if GPU memory is limited (<16GB free).
+    Automatically uses 8-bit quantization if GPU memory is limited (<16GB free),
+    unless force_full_precision=True (used for image OCR pipeline where quality matters more).
+    
+    Args:
+        force_full_precision: If True, always use bfloat16 regardless of memory.
+                              Used for image posters where OCR quality is critical.
     
     Returns:
         (model, tokenizer) tuple for use with generate().
@@ -416,7 +421,9 @@ def load_json_model():
         log(f"Loading {JSON_MODEL_ID} for JSON structuring on {device}...")
         _json_tokenizer = AutoTokenizer.from_pretrained(JSON_MODEL_ID)
         
-        if free_gb < 16 and device != "cpu":
+        use_8bit = free_gb < 16 and device != "cpu" and not force_full_precision
+        
+        if use_8bit:
             # Use 8-bit quantization for limited memory
             log(f"   Using 8-bit quantization (only {free_gb:.1f}GB free)")
             _json_model = AutoModelForCausalLM.from_pretrained(
@@ -426,6 +433,8 @@ def load_json_model():
                 low_cpu_mem_usage=True,
             )
         else:
+            if force_full_precision and free_gb < 16:
+                log(f"   Forcing full precision for image OCR quality ({free_gb:.1f}GB free)")
             _json_model = AutoModelForCausalLM.from_pretrained(
                 JSON_MODEL_ID,
                 torch_dtype=torch.bfloat16,
@@ -1536,11 +1545,12 @@ def process_poster_file(poster_path: str) -> dict:
     # IMPORTANT: Unload vision model BEFORE loading JSON model to free GPU memory
     # This ensures only one large model is loaded at a time
     ext = Path(poster_path).suffix.lower()
-    if ext in [".jpg", ".jpeg", ".png"]:
+    is_image_poster = ext in [".jpg", ".jpeg", ".png"]
+    if is_image_poster:
         unload_vision_model()
 
-    # Load JSON model (vision model is now unloaded)
-    model, tokenizer = load_json_model()
+    # Load JSON model (force full precision for image posters - OCR quality is critical)
+    model, tokenizer = load_json_model(force_full_precision=is_image_poster)
 
     # Convert to JSON
     try:
@@ -1627,7 +1637,9 @@ def run(annotation_dir: str, output_dir: str):
     log("PHASE 2: JSON Structuring (Transformers)")
     log("=" * 40)
 
-    model, tokenizer = load_json_model()
+    # Force full precision if we have image posters (OCR quality is critical)
+    has_image_posters = len(image_posters) > 0
+    model, tokenizer = load_json_model(force_full_precision=has_image_posters)
     results = []
 
     for i, (poster_path, ref_json_path, poster_id) in enumerate(pairs, 1):
