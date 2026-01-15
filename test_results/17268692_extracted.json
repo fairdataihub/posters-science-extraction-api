@@ -4,7 +4,13 @@
       "name": "Patel, Bhavesh, Ph.D. 1, Garijo, Daniel, Ph.D. 2",
       "affiliation": [
         {
-          "name": "FAIR4RS Task Force"
+          "name": "FAIR4RS Task Force, Research Software Alliance (ReSA)"
+        },
+        {
+          "name": "FAIR Data Innovations Hub, California Medical Innovations Institute, San Diego, CA, USA"
+        },
+        {
+          "name": "Universidad Politécnica de Madrid, Spain"
         }
       ]
     }
@@ -34,11 +40,15 @@
       },
       {
         "sectionTitle": "Many questions!",
-        "sectionContent": "We identified 6 categories where actionable guidelines are needed C1. Identifier C4. Qualified references C2. Metadata for software publication & discovery C5. Metadata for software reuse C3. Standards for inputs & outputs C6. License Figure 2. Illustration of the outcomes of task 1 of the Task Force, which consisted of understanding the requirements of each of the 17 FAIR4RS principles."
+        "sectionContent": "We identified 6 categories where actionable guidelines are needed C1. Identifier C4. Qualified references C2. Metadata for software publication & discovery C5. Metadata for software reuse C3. Standards for inputs & outputs C6. License"
+      },
+      {
+        "sectionTitle": "2 FAIR4RS principles",
+        "sectionContent": "R1. Software is described with a plurality of accurate and relevant attributes R1.2. Software is associated with detailed provenance. www.researchsoft.org/tf-actionable-fair4rs 2 main questions What provenance and other metadata are necessary for software reuse? How to provide that metadata?"
       },
       {
         "sectionTitle": "Methods",
-        "sectionContent": "Preliminary findings Literature review Personal assessment External feedback Provenance metadata: Authors info Funding details Other metadata Software description Required dependencies How to provide: codemeta.json Figure 3. Progress of the subgroup working on C5 - Metadata for software reuse."
+        "sectionContent": "Preliminary findings Literature review Personal assessment External feedback Provenance metadata: Authors info Funding details Other metadata Software description Required dependencies How to provide: codemeta.json"
       },
       {
         "sectionTitle": "Progress",
@@ -53,33 +63,25 @@
         "sectionContent": "Are you a developer, maintainer, funder, or user of research software? Email bpatel@calmi2.org to join us and help build the foundation for FAIR research software!"
       },
       {
-        "sectionTitle": "References",
-        "sectionContent": "1. Patel, B., Garijo, D. (2022). FAIR4RS principles. 2. Patel, B., Garijo, D. (2023). FAIR-BioRS. 3. FAIR Data Innovations Hub, California Medical Innovations Institute, San Diego, CA, USA. 4. Universidad Politécnica de Madrid, Spain."
-      },
-      {
-        "sectionTitle": "Acknowledgements",
-        "sectionContent": ""
-      },
-      {
-        "sectionTitle": "Contact",
-        "sectionContent": "Email: bpatel@calmi2.org"
-      },
-      {
-        "sectionTitle": "Funding",
-        "sectionContent": ""
+        "sectionTitle": "Find this poster and all related references here",
+        "sectionContent": "bit.ly/a-FAIR4RS"
       }
     ]
   },
   "imageCaption": [
     {
-      "caption1": "Figure 1. Overview of the Task Force."
+      "caption1": "Figure 1. Overview of the Task Force.",
+      "caption2": ""
     },
     {
-      "caption1": "Figure 2. Illustration of the outcomes of task 1 of the Task Force, which consisted of understanding the requirements of each of the 17 FAIR4RS principles."
+      "caption1": "Figure 2. Illustration of the outcomes of task 1 of the Task Force, which consisted of understanding the requirements of each of the 17 FAIR4RS principles.",
+      "caption2": ""
     },
     {
-      "caption1": "Figure 3. Progress of the subgroup working on C5 - Metadata for software reuse."
+      "caption1": "Figure 3. Progress of the subgroup working on C5 - Metadata for software reuse.",
+      "caption2": ""
     }
   ],
-  "tableCaption": []
+  "tableCaption": [],
+  "$schema": "https://posters.science/schema/v0.1/poster_schema.json"
 }
