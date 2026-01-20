@@ -1800,9 +1800,24 @@ def run(annotation_dir: str, output_dir: str):
         json.dump(results, f, indent=2)
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--annotation-dir", required=True)
-    parser.add_argument("--output-dir", default="./llama_v24_output")
+def main():
+    """CLI entry point for poster2json."""
+    parser = argparse.ArgumentParser(
+        description="Convert scientific posters to structured JSON"
+    )
+    parser.add_argument(
+        "--annotation-dir", 
+        required=True,
+        help="Directory containing poster PDFs/images"
+    )
+    parser.add_argument(
+        "--output-dir", 
+        default="./output",
+        help="Directory for extracted JSON outputs"
+    )
     args = parser.parse_args()
     run(args.annotation_dir, args.output_dir)
+
+
+if __name__ == "__main__":
+    main()
