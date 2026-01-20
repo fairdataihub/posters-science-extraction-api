@@ -131,7 +131,7 @@ poster2json/
 | Word Capture | 0.96 | ≥0.75 |
 | ROUGE-L | 0.89 | ≥0.75 |
 | Number Capture | 0.93 | ≥0.75 |
-| Field Proportion | 0.99 | 0.30–2.50 |
+| Field Proportion | 0.99 | 0.50–2.00 |
 
 ## License
 
