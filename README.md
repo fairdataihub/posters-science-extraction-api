@@ -2,6 +2,7 @@
 
 Convert scientific posters (PDF/images) into structured JSON metadata using Large Language Models.
 
+[![DOI](https://zenodo.org/badge/1105067405.svg)](https://doi.org/10.5281/zenodo.18319796)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
