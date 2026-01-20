@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile
     image: poster-extraction:latest
     container_name: poster-extraction
+    networks:
+      - ollama-network
     dns:
       - 8.8.8.8
       - 1.1.1.1
@@ -21,7 +23,7 @@ services:
           memory: 24G
           devices:
             - driver: nvidia
-              count: ${GPU_COUNT:-1}
+              device_ids: ['1']
               capabilities: [gpu]
     ports:
       - "${APP_PORT:-47362}:8000"
@@ -36,3 +38,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 180s
+networks:
+  ollama-network:
+    external: true
+    name: ollama-network
