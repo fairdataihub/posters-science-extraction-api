@@ -5,6 +5,9 @@ services:
       dockerfile: Dockerfile
     image: poster-extraction:latest
     container_name: poster-extraction
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     environment:
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
       - HF_TOKEN=${HF_TOKEN:-}
