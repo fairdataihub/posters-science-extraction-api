@@ -3,6 +3,7 @@ torch>=2.0.0
 rouge-score
 qwen-vl-utils
 accelerate
+bitsandbytes>=0.41.0
 Pillow
 pymupdf
 numpy
