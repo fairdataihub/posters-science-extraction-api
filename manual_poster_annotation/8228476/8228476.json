@@ -315,54 +315,50 @@
     ]
   },
   "domain": "Digital Humanities",
-  "imageCaptions": {
-    "captions": [
-      {
-        "captionParts": [
-          "Figure 1: A medieval Hebrew poem from the Worms Prayerbook",
-          "Image shows an illuminated manuscript page from the Worms Prayerbook, Germany, 13th Century, from The National Library of Israel 'Ktiv' Project. The page features ornate decorative borders with medieval artwork and Hebrew text in the center."
-        ]
-      },
-      {
-        "captionParts": [
-          "Figure 2: Methods - Fine-tuning for metaphor detection",
-          "Flowchart showing Pre-trained/Adapted Language Model processing Hebrew text through Tokenizer to classify as Metaphor or Not a Metaphor. Hebrew text examples shown with tokenization process."
-        ]
-      },
-      {
-        "captionParts": [
-          "Figure 3: Methods - LM adaptation",
-          "Diagram showing Pre-trained Language Model receiving Hebrew text input, processing through Tokenizer, with connection to training on additional prose and poetic medieval texts from Project Ben-Yehuda and Piyyut dataset. Blue oval indicates training corpus."
-        ]
-      },
-      {
-        "captionParts": [
-          "Figure 4: Results - F1 Score on test set",
-          "Bar chart showing F1 scores for three models: AlephBERT (44.404), BEREL (48.3), and AlephBERT - adapted (46.56). BEREL shows the highest performance."
-        ]
-      },
-      {
-        "captionParts": [
-          "Figure 5: Error Analysis example",
-          "Shows Hebrew text 'ילד לניחוח חשקתיו' (A child for a scent - I have desired) with Berel classification. Expert explanation provided: The child is a non-metaphorical epithet for Isaac. 'Scent' is a metonymic term for 'sacrifice'."
-        ]
-      }
-    ]
-  },
-  "tableCaptions": {
-    "captions": [
-      {
-        "captionParts": [
-          "Table 1: Dataset examples with metaphors",
-          "Three-column table showing Hebrew text, English translation, and Meaning. Row 1: Hebrew 'טבענו בגזרות, כשטופי ים', English 'We drowned in decrees, like sea washed', Meaning 'There are too many decrees'. Row 2: Hebrew 'הצית נשמה ויבער נר', English 'Ignite a soul, fire a candle', Meaning 'Create a soul'. Row 3: Hebrew 'עד דור עשירי לא עשו פרי', English 'Until the tenth generation they did not bear fruit', Meaning 'For ten generations, they did no good deeds'."
-        ]
-      },
-      {
-        "captionParts": [
-          "Table 2: Language models (pre-trained & adapted)",
-          "Three-column table showing language model names, data size in words, and data type. BEREL: 220 Million words, Medieval. AlephBERT: 2 Billion words, Modern. AlephBERT Adapted: 2 Billion + 10 Million words, Modern + Medieval. Note indicates trained on additional prose and poetic medieval texts from Project Ben-Yehuda and Piyyut dataset."
-        ]
-      }
-    ]
-  }
+  "imageCaptions": [
+    {
+      "captions": [
+        "Figure 1: A medieval Hebrew poem from the Worms Prayerbook",
+        "Image shows an illuminated manuscript page from the Worms Prayerbook, Germany, 13th Century, from The National Library of Israel 'Ktiv' Project. The page features ornate decorative borders with medieval artwork and Hebrew text in the center."
+      ]
+    },
+    {
+      "captions": [
+        "Figure 2: Methods - Fine-tuning for metaphor detection",
+        "Flowchart showing Pre-trained/Adapted Language Model processing Hebrew text through Tokenizer to classify as Metaphor or Not a Metaphor. Hebrew text examples shown with tokenization process."
+      ]
+    },
+    {
+      "captions": [
+        "Figure 3: Methods - LM adaptation",
+        "Diagram showing Pre-trained Language Model receiving Hebrew text input, processing through Tokenizer, with connection to training on additional prose and poetic medieval texts from Project Ben-Yehuda and Piyyut dataset. Blue oval indicates training corpus."
+      ]
+    },
+    {
+      "captions": [
+        "Figure 4: Results - F1 Score on test set",
+        "Bar chart showing F1 scores for three models: AlephBERT (44.404), BEREL (48.3), and AlephBERT - adapted (46.56). BEREL shows the highest performance."
+      ]
+    },
+    {
+      "captions": [
+        "Figure 5: Error Analysis example",
+        "Shows Hebrew text 'ילד לניחוח חשקתיו' (A child for a scent - I have desired) with Berel classification. Expert explanation provided: The child is a non-metaphorical epithet for Isaac. 'Scent' is a metonymic term for 'sacrifice'."
+      ]
+    }
+  ],
+  "tableCaptions": [
+    {
+      "captions": [
+        "Table 1: Dataset examples with metaphors",
+        "Three-column table showing Hebrew text, English translation, and Meaning. Row 1: Hebrew 'טבענו בגזרות, כשטופי ים', English 'We drowned in decrees, like sea washed', Meaning 'There are too many decrees'. Row 2: Hebrew 'הצית נשמה ויבער נר', English 'Ignite a soul, fire a candle', Meaning 'Create a soul'. Row 3: Hebrew 'עד דור עשירי לא עשו פרי', English 'Until the tenth generation they did not bear fruit', Meaning 'For ten generations, they did no good deeds'."
+      ]
+    },
+    {
+      "captions": [
+        "Table 2: Language models (pre-trained & adapted)",
+        "Three-column table showing language model names, data size in words, and data type. BEREL: 220 Million words, Medieval. AlephBERT: 2 Billion words, Modern. AlephBERT Adapted: 2 Billion + 10 Million words, Modern + Medieval. Note indicates trained on additional prose and poetic medieval texts from Project Ben-Yehuda and Piyyut dataset."
+      ]
+    }
+  ]
 }

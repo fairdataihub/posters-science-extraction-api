@@ -32,26 +32,22 @@
       }
     ]
   },
-  "imageCaptions": {
-    "captions": [
-      {
-        "captionParts": [
-          "Figure 1. Overview of the Task Force"
-        ]
-      },
-      {
-        "captionParts": [
-          "Figure 2. Illustration of the outcomes of task 1 of the Task Force"
-        ]
-      },
-      {
-        "captionParts": [
-          "Figure 3. Progress of the subgroup working on C5 - Metadata for software reuse"
-        ]
-      }
-    ]
-  },
-  "tableCaptions": {
-    "captions": []
-  }
+  "imageCaptions": [
+    {
+      "captions": [
+        "Figure 1. Overview of the Task Force"
+      ]
+    },
+    {
+      "captions": [
+        "Figure 2. Illustration of the outcomes of task 1 of the Task Force"
+      ]
+    },
+    {
+      "captions": [
+        "Figure 3. Progress of the subgroup working on C5 - Metadata for software reuse"
+      ]
+    }
+  ],
+  "tableCaptions": []
 }

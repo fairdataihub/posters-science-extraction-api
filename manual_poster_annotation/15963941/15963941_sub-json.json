@@ -96,10 +96,6 @@
       }
     ]
   },
-  "imageCaptions": {
-    "captions": []
-  },
-  "tableCaptions": {
-    "captions": []
-  }
+  "imageCaptions": [],
+  "tableCaptions": []
 }

@@ -266,29 +266,25 @@
     ]
   },
   "domain": "Computer Science",
-  "imageCaptions": {
-    "captions": [
-      {
-        "captionParts": [
-          "Figure 1. Overview of the Task Force",
-          "Shows approximately 12 active members from various locations (Germany, Spain, UK, USA, etc.) and research domains (Biomedical, Data Science, Knowledge Representation, etc.). Home of the Task Force under the Research Software Alliance (ReSA)."
-        ]
-      },
-      {
-        "captionParts": [
-          "Figure 2. Illustration of the outcomes of task 1 of the Task Force",
-          "Understanding the requirements of each of the 17 FAIR4RS principles. We identified 6 categories where actionable guidelines are needed: C1 (Identifier), C2 (Metadata for software publication & discovery), C3 (Standards for inputs & outputs), C4 (Qualified references), C5 (Metadata for software reuse), C6 (License)."
-        ]
-      },
-      {
-        "captionParts": [
-          "Figure 3. Progress of the subgroup working on C5 - Metadata for software reuse",
-          "Shows the flow from 2 FAIR4RS principles (R1: Software is described with a plurality of accurate and relevant attributes; R1.2: Software is associated with detailed provenance) to 2 main questions about provenance and metadata, through methods (literature review, personal assessment, external feedback) to preliminary findings including provenance metadata (authors info, funding details), other metadata (software description, required dependencies), and how to provide it via codemeta.json."
-        ]
-      }
-    ]
-  },
-  "tableCaptions": {
-    "captions": []
-  }
+  "imageCaptions": [
+    {
+      "captions": [
+        "Figure 1. Overview of the Task Force",
+        "Shows approximately 12 active members from various locations (Germany, Spain, UK, USA, etc.) and research domains (Biomedical, Data Science, Knowledge Representation, etc.). Home of the Task Force under the Research Software Alliance (ReSA)."
+      ]
+    },
+    {
+      "captions": [
+        "Figure 2. Illustration of the outcomes of task 1 of the Task Force",
+        "Understanding the requirements of each of the 17 FAIR4RS principles. We identified 6 categories where actionable guidelines are needed: C1 (Identifier), C2 (Metadata for software publication & discovery), C3 (Standards for inputs & outputs), C4 (Qualified references), C5 (Metadata for software reuse), C6 (License)."
+      ]
+    },
+    {
+      "captions": [
+        "Figure 3. Progress of the subgroup working on C5 - Metadata for software reuse",
+        "Shows the flow from 2 FAIR4RS principles (R1: Software is described with a plurality of accurate and relevant attributes; R1.2: Software is associated with detailed provenance) to 2 main questions about provenance and metadata, through methods (literature review, personal assessment, external feedback) to preliminary findings including provenance metadata (authors info, funding details), other metadata (software description, required dependencies), and how to provide it via codemeta.json."
+      ]
+    }
+  ],
+  "tableCaptions": []
 }

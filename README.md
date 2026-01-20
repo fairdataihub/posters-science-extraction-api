@@ -74,8 +74,8 @@ Output conforms to the [poster-json-schema](https://github.com/fairdataihub/post
       {"sectionTitle": "Methods", "sectionContent": "..."}
     ]
   },
-  "imageCaptions": {"captions": [{"captionParts": ["Figure 1.", "Description"]}]},
-  "tableCaptions": {"captions": [{"captionParts": ["Table 1.", "Description"]}]}
+  "imageCaptions": [{"captions": ["Figure 1.", "Description"]}],
+  "tableCaptions": [{"captions": ["Table 1.", "Description"]}]
 }
 ```
 
