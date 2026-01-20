@@ -193,12 +193,17 @@
       }
     ]
   },
-  "imageCaption": [
-    {
-      "caption1": "Figure: most observed organisation of (A) poxtA (n=35/37), (B) cfr (n=7/10) and (C) optrA (n=24/124)",
-      "caption2": ""
-    }
-  ],
-  "tableCaption": [],
-  "$schema": "https://posters.science/schema/v0.1/poster_schema.json"
+  "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
+  "imageCaptions": {
+    "captions": [
+      {
+        "captionParts": [
+          "Figure: most observed organisation of (A) poxtA (n=35/37), (B) cfr (n=7/10) and (C) optrA (n=24/124)"
+        ]
+      }
+    ]
+  },
+  "tableCaptions": {
+    "captions": []
+  }
 }

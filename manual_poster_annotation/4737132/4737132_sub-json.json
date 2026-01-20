@@ -61,6 +61,10 @@
       }
     ]
   },
-  "imageCaption": [],
-  "tableCaption": []
+  "imageCaptions": {
+    "captions": []
+  },
+  "tableCaptions": {
+    "captions": []
+  }
 }

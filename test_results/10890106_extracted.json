@@ -118,33 +118,43 @@
       }
     ]
   },
-  "imageCaption": [
-    {
-      "caption1": "Figure 1. A) Differentiation protocol hiPSC-derived IECs B) Immunohistochemistry showing the presence of multiple IEC types. Immune responsiveness of IECs after stimulation with a proinflammatory cocktail of INFy, IL1β and TNFα shown as C) expression of genes in the “cytokine storm pathway”, as D) barrier integrity (TEER and permeability of lucifer yellow), and as E) IL-8 excretion (ELISA) in comparison with Caco-2 cells.",
-      "caption2": ""
-    },
-    {
-      "caption1": "Figure 2. A) Differentiation protocol of MUTZ-3-derived DCs B) Gene expression of markers for progenitors cells and mature DCs (mDCs) measured at D0, D7 and D9. Expression is relative to the progenitor cells which were set at 1. Expression of progenitor markers decreased whereas expression of mDCs increased in time.",
-      "caption2": ""
-    },
-    {
-      "caption1": "Figure 3. A) hiPSCs and MUTZ-3 cells were differentiated into IECs and mDCs separately and co- cultured when fully differentiated. After 24h of co-culture the differentiation status of the IECs and DCs and the expression of cytokines was evaluated and compared to their respective monocultures before co-culture. B) Barrier integrity of the IEC layer. C) Gene expression of various markers for differentiation and cellular composition and cytokine expression in the IEC layer. D) Gene expression of maturation markers and cytokines in mDCs. In general, co-culturing has little effect on cellular composition, but increases cytokine expression.",
-      "caption2": ""
-    },
-    {
-      "caption1": "Figure 4. Gene expression in iDCs after 48h exposure to micro/nano plastics at three different concentrations. A) Effects of the micro/nanoplastics on gene expression of markers for maturation of iDCs into mDCs and B) on cytokine expression. No significant effects were observed after 24h exposure to the micro/nanoplastics and no cytotoxicity was observed (data not shown). After 48h exposure to the PS394Eu plastics mild effects on cytokine expression were observed.",
-      "caption2": ""
-    },
-    {
-      "caption1": "Table 1. Physicochemical data of the micro/nanoplastics for the cell exposure experiment. Abbreviation Main polymer composition Additives Particle size distribution Particle shape HDPE269 High density polyethylene No X 10;3 1.8 µm / X 50;3 4.9 µm / X 90;3 8.7 µm Round PET_c000 Polyethylene terephthalate No X 10;3 57 nm / X 50;3 90 nm / X 90;3 144 nm Round PS394Eu Europium doped polystyrene No 300 nm Round",
-      "caption2": ""
-    }
-  ],
-  "tableCaption": [
-    {
-      "caption1": "Table 1. Physicochemical data of the micro/nanoplastics for the cell exposure experiment. Abbreviation Main polymer composition Additives Particle size distribution Particle shape HDPE269 High density polyethylene No X 10;3 1.8 µm / X 50;3 4.9 µm / X 90;3 8.7 µm Round PET_c000 Polyethylene terephthalate No X 10;3 57 nm / X 50;3 90 nm / X 90;3 144 nm Round PS394Eu Europium doped polystyrene No 300 nm Round",
-      "caption2": ""
-    }
-  ],
-  "$schema": "https://posters.science/schema/v0.1/poster_schema.json"
+  "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
+  "imageCaptions": {
+    "captions": [
+      {
+        "captionParts": [
+          "Figure 1. A) Differentiation protocol hiPSC-derived IECs B) Immunohistochemistry showing the presence of multiple IEC types. Immune responsiveness of IECs after stimulation with a proinflammatory cocktail of INFy, IL1β and TNFα shown as C) expression of genes in the “cytokine storm pathway”, as D) barrier integrity (TEER and permeability of lucifer yellow), and as E) IL-8 excretion (ELISA) in comparison with Caco-2 cells."
+        ]
+      },
+      {
+        "captionParts": [
+          "Figure 2. A) Differentiation protocol of MUTZ-3-derived DCs B) Gene expression of markers for progenitors cells and mature DCs (mDCs) measured at D0, D7 and D9. Expression is relative to the progenitor cells which were set at 1. Expression of progenitor markers decreased whereas expression of mDCs increased in time."
+        ]
+      },
+      {
+        "captionParts": [
+          "Figure 3. A) hiPSCs and MUTZ-3 cells were differentiated into IECs and mDCs separately and co- cultured when fully differentiated. After 24h of co-culture the differentiation status of the IECs and DCs and the expression of cytokines was evaluated and compared to their respective monocultures before co-culture. B) Barrier integrity of the IEC layer. C) Gene expression of various markers for differentiation and cellular composition and cytokine expression in the IEC layer. D) Gene expression of maturation markers and cytokines in mDCs. In general, co-culturing has little effect on cellular composition, but increases cytokine expression."
+        ]
+      },
+      {
+        "captionParts": [
+          "Figure 4. Gene expression in iDCs after 48h exposure to micro/nano plastics at three different concentrations. A) Effects of the micro/nanoplastics on gene expression of markers for maturation of iDCs into mDCs and B) on cytokine expression. No significant effects were observed after 24h exposure to the micro/nanoplastics and no cytotoxicity was observed (data not shown). After 48h exposure to the PS394Eu plastics mild effects on cytokine expression were observed."
+        ]
+      },
+      {
+        "captionParts": [
+          "Table 1. Physicochemical data of the micro/nanoplastics for the cell exposure experiment. Abbreviation Main polymer composition Additives Particle size distribution Particle shape HDPE269 High density polyethylene No X 10;3 1.8 µm / X 50;3 4.9 µm / X 90;3 8.7 µm Round PET_c000 Polyethylene terephthalate No X 10;3 57 nm / X 50;3 90 nm / X 90;3 144 nm Round PS394Eu Europium doped polystyrene No 300 nm Round"
+        ]
+      }
+    ]
+  },
+  "tableCaptions": {
+    "captions": [
+      {
+        "captionParts": [
+          "Table 1. Physicochemical data of the micro/nanoplastics for the cell exposure experiment. Abbreviation Main polymer composition Additives Particle size distribution Particle shape HDPE269 High density polyethylene No X 10;3 1.8 µm / X 50;3 4.9 µm / X 90;3 8.7 µm Round PET_c000 Polyethylene terephthalate No X 10;3 57 nm / X 50;3 90 nm / X 90;3 144 nm Round PS394Eu Europium doped polystyrene No 300 nm Round"
+        ]
+      }
+    ]
+  }
 }

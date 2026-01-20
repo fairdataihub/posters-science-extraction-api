@@ -343,19 +343,30 @@
       }
     ]
   },
-  "imageCaption": [
-    {
-      "caption1": "Figure A: Most observed organisation of poxtA (n=35/37)",
-      "caption2": "Genetic diagram showing: IS1216 → poxtA → IS1216 → fexB → IS1216"
-    },
-    {
-      "caption1": "Figure B: Most observed organisation of cfr (n=7/10)",
-      "caption2": "Genetic diagram showing: IS → tnpA (transposase) → orfC → erm(unknown) → cfr → tnpB → tnpA"
-    },
-    {
-      "caption1": "Figure C: Most observed organisation of optrA (n=24/124)",
-      "caption2": "Genetic diagram showing: repC → tnpB → repL → optrA → fexA → tnpB → tnp"
-    }
-  ],
-  "domain": "Microbiology"
+  "domain": "Microbiology",
+  "imageCaptions": {
+    "captions": [
+      {
+        "captionParts": [
+          "Figure A: Most observed organisation of poxtA (n=35/37)",
+          "Genetic diagram showing: IS1216 → poxtA → IS1216 → fexB → IS1216"
+        ]
+      },
+      {
+        "captionParts": [
+          "Figure B: Most observed organisation of cfr (n=7/10)",
+          "Genetic diagram showing: IS → tnpA (transposase) → orfC → erm(unknown) → cfr → tnpB → tnpA"
+        ]
+      },
+      {
+        "captionParts": [
+          "Figure C: Most observed organisation of optrA (n=24/124)",
+          "Genetic diagram showing: repC → tnpB → repL → optrA → fexA → tnpB → tnp"
+        ]
+      }
+    ]
+  },
+  "tableCaptions": {
+    "captions": []
+  }
 }
