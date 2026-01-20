@@ -126,11 +126,16 @@
       }
     ]
   },
-  "imageCaption": [
-    {
-      "caption1": "A medieval Hebrew poem from the Worms Prayerbook, Germany, 13th Century, The National Library of Israel, \"Ktiv\" Project",
-      "caption2": ""
-    }
-  ],
-  "tableCaption": []
+  "imageCaptions": {
+    "captions": [
+      {
+        "captionParts": [
+          "A medieval Hebrew poem from the Worms Prayerbook, Germany, 13th Century, The National Library of Israel, \"Ktiv\" Project"
+        ]
+      }
+    ]
+  },
+  "tableCaptions": {
+    "captions": []
+  }
 }

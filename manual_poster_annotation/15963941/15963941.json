@@ -291,31 +291,48 @@
       }
     ]
   },
-  "imageCaption": [
-    {
-      "caption1": "Figure 1. Size-exclusion chromatography (SEC) results",
-      "caption2": "Shows purification of nsp14 and nsp10 proteins with corresponding SDS-PAGE gels confirming protein purity and size."
-    },
-    {
-      "caption1": "Figure 2. pH dose-dependent optimization",
-      "caption2": "Graph showing relative fluorescence units (RFU) across pH range 6-10, with optimal activity at pH 7.5."
-    },
-    {
-      "caption1": "Figure 3. MgCl2 dose-dependent optimization",
-      "caption2": "Graph showing RFU across MgCl2 concentrations 0-10 mM, with optimal activity at 4 mM MgCl2."
-    },
-    {
-      "caption1": "Figure 4. Enzymatic activity curve",
-      "caption2": "Time course showing RFU over 80 minutes at various nsp14 concentrations (2000, 1000, 500, 250, 125, 62.5, 31.2, 15.6 nM) with nsp14 250 nM + nsp10 750 nM."
-    },
-    {
-      "caption1": "Figure 5. Substrate concentration curve",
-      "caption2": "Graph showing activity with substrate concentrations from 2000 nM to 15.6 nM, with optimal response at 1 μM substrate concentration."
-    },
-    {
-      "caption1": "Figure 6. Inhibition Dynasore NO-Cat curve",
-      "caption2": "Dose-response inhibition curve showing percentage of residual enzymatic activity versus inhibitor concentration (0.01 to 100 μM), yielding IC50 = 3.3 μM ± 0.4."
-    }
-  ],
-  "domain": "Virology"
+  "domain": "Virology",
+  "imageCaptions": {
+    "captions": [
+      {
+        "captionParts": [
+          "Figure 1. Size-exclusion chromatography (SEC) results",
+          "Shows purification of nsp14 and nsp10 proteins with corresponding SDS-PAGE gels confirming protein purity and size."
+        ]
+      },
+      {
+        "captionParts": [
+          "Figure 2. pH dose-dependent optimization",
+          "Graph showing relative fluorescence units (RFU) across pH range 6-10, with optimal activity at pH 7.5."
+        ]
+      },
+      {
+        "captionParts": [
+          "Figure 3. MgCl2 dose-dependent optimization",
+          "Graph showing RFU across MgCl2 concentrations 0-10 mM, with optimal activity at 4 mM MgCl2."
+        ]
+      },
+      {
+        "captionParts": [
+          "Figure 4. Enzymatic activity curve",
+          "Time course showing RFU over 80 minutes at various nsp14 concentrations (2000, 1000, 500, 250, 125, 62.5, 31.2, 15.6 nM) with nsp14 250 nM + nsp10 750 nM."
+        ]
+      },
+      {
+        "captionParts": [
+          "Figure 5. Substrate concentration curve",
+          "Graph showing activity with substrate concentrations from 2000 nM to 15.6 nM, with optimal response at 1 μM substrate concentration."
+        ]
+      },
+      {
+        "captionParts": [
+          "Figure 6. Inhibition Dynasore NO-Cat curve",
+          "Dose-response inhibition curve showing percentage of residual enzymatic activity versus inhibitor concentration (0.01 to 100 μM), yielding IC50 = 3.3 μM ± 0.4."
+        ]
+      }
+    ]
+  },
+  "tableCaptions": {
+    "captions": []
+  }
 }
