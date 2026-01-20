@@ -81,11 +81,9 @@ curl -X POST http://localhost:8000/extract \
       {"sectionTitle": "Methods", "sectionContent": "..."}
     ]
   },
-  "imageCaptions": {
-    "captions": [
-      {"captionParts": ["Figure 1.", "Description of figure"]}
-    ]
-  },
+  "imageCaptions": [
+    {"captions": ["Figure 1.", "Description of figure"]}
+  ],
   "tableCaptions": {
     "captions": []
   }

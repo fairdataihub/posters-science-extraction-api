@@ -223,23 +223,19 @@
     ]
   },
   "domain": "Information Science",
-  "tableCaptions": {
-    "captions": [
-      {
-        "captionParts": [
-          "Table 1. Why do researchers self-identify as digital humanists?",
-          "Shows reasons from 8 participants including competence in digital methods (programming and coding) with examples from P2, P6, P7, P9, P11, and active working, teaching, or supervising students in DH with examples from P4, P10, P14."
-        ]
-      },
-      {
-        "captionParts": [
-          "Table 2. Why do researchers NOT self-identify as digital humanists?",
-          "Shows reasons from 6 participants including not being a humanist (P12, P13), concerns with technical skills particularly programming (P8), belief that DH does not raise new research questions (P3), and view that digital methods are not necessary (P1, P5)."
-        ]
-      }
-    ]
-  },
-  "imageCaptions": {
-    "captions": []
-  }
+  "tableCaptions": [
+    {
+      "captions": [
+        "Table 1. Why do researchers self-identify as digital humanists?",
+        "Shows reasons from 8 participants including competence in digital methods (programming and coding) with examples from P2, P6, P7, P9, P11, and active working, teaching, or supervising students in DH with examples from P4, P10, P14."
+      ]
+    },
+    {
+      "captions": [
+        "Table 2. Why do researchers NOT self-identify as digital humanists?",
+        "Shows reasons from 6 participants including not being a humanist (P12, P13), concerns with technical skills particularly programming (P8), belief that DH does not raise new research questions (P3), and view that digital methods are not necessary (P1, P5)."
+      ]
+    }
+  ],
+  "imageCaptions": []
 }

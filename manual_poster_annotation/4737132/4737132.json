@@ -266,77 +266,73 @@
     ]
   },
   "domain": "Digital Humanities",
-  "imageCaptions": {
-    "captions": [
-      {
-        "captionParts": [
-          "Erkennung wörtlicher Zitate",
-          "Diagramm zeigt Text 1 (literarisches Werk) mit Wortpositionen und Zeilennummern (0, 7, 14, 21, 28, 35) und Text 2 (Interpretationstext) mit entsprechenden Zeilennummern (50, 60, 75, 90, 120, 134), illustriert die Positionsmapping zwischen beiden Texten zur Zitaterkennung"
-        ]
-      },
-      {
-        "captionParts": [
-          "Korpus",
-          "Box zeigt das im ArguLit-Projekt erstellte Korpus: 45 Interpretationstexte der Judenbuche, 52 Interpretationstexte Michael Kohlhaas. Quelle: https://www.uni-goettingen.de/de/587821.html (Stand: 12.03.2021)"
-        ]
-      },
-      {
-        "captionParts": [
-          "Algorithmus Schritt 1: Positionen in Text 1 erfassen",
-          "Tabelle zeigt Wortfolgen (w1 w2 w3, w3 w3 w4, w9 w9 w10, w9 w10 w11, w10 w11 w12, w33 w34 w35) und ihre Startpositionen ([0], [1], [7], [8], [9, 35], [32])"
-        ]
-      },
-      {
-        "captionParts": [
-          "Algorithmus Schritt 2: Forward references erstellen",
-          "Tabelle zeigt Mapping von Text 1 Startpositionen (0, 1, 7, 8, 9, 35, 32) zu Text 2 Startpositionen ([1], [1], [75, 120], [121], [77, 122], [77, 122], [145])"
-        ]
-      },
-      {
-        "captionParts": [
-          "Algorithmus Schritt 3: Gefundene Matches erweitern",
-          "Beschreibung: Ellipsen 'überspringen', Token zusammenfassen / auslassen"
-        ]
-      },
-      {
-        "captionParts": [
-          "Weitere Schritte",
-          "Auflistung: Tokenisierung, ä ö ü etc. vereinheitlichen, Satzzeichen markieren oder entfernen, Fuzzy matching, Matches zusammenfassen, Zu kurze Matches verwerfen, Satzgrenzen berücksichtigen"
-        ]
-      },
-      {
-        "captionParts": [
-          "Segmentierung",
-          "Diagramm zeigt Stellen aus Interpretationstexten mit Balkendiagramm der Zitierhäufigkeit. Literatur segmentiert als: w1 | w2 | w3 | w4 | w5 w6 w7 | w8 w9 | w10 mit Zitierhäufigkeit 2 | 3 | 4 | 3 | 2 | 3 | 2"
-        ]
-      },
-      {
-        "captionParts": [
-          "Visualisierungswebseite",
-          "Screenshot zeigt Webinterface mit Heatmap für Annette von Droste-Hülshoff: Die Judenbuche, Bereiche für ausgewählten Interpretationstext, ausgewählte Textstelle und Literatur mit häufig zitierten Stellen. Roter Text sichtbar in den angezeigten Textpassagen."
-        ]
-      },
-      {
-        "captionParts": [
-          "Auswertung",
-          "Box zeigt Evaluierungsergebnisse: 45 Interpretationstexte der Judenbuche, Precision: 0.80, Recall: 0.91, F-Score: 0.85"
-        ]
-      },
-      {
-        "captionParts": [
-          "Quellen",
-          "'sim_text' von Dick Grune, Similarity texter: A text-comparison web tool based on the 'sim_text' algorithm von Sofia Kalaidopoulou (2016), GitHub-Links sichtbar, Programmiersprache: Python"
-        ]
-      },
-      {
-        "captionParts": [
-          "Comic",
-          "XKCD-Stil Comic mit Strichfiguren, zeigt Diskussion über Schlüsselstellen. Untertitel: 'Häufig zitierte Stellen → Interpretationstexte, die diese Textstelle zitieren'"
-        ]
-      }
-    ]
-  },
-  "tableCaptions": {
-    "captions": []
-  }
+  "imageCaptions": [
+    {
+      "captions": [
+        "Erkennung wörtlicher Zitate",
+        "Diagramm zeigt Text 1 (literarisches Werk) mit Wortpositionen und Zeilennummern (0, 7, 14, 21, 28, 35) und Text 2 (Interpretationstext) mit entsprechenden Zeilennummern (50, 60, 75, 90, 120, 134), illustriert die Positionsmapping zwischen beiden Texten zur Zitaterkennung"
+      ]
+    },
+    {
+      "captions": [
+        "Korpus",
+        "Box zeigt das im ArguLit-Projekt erstellte Korpus: 45 Interpretationstexte der Judenbuche, 52 Interpretationstexte Michael Kohlhaas. Quelle: https://www.uni-goettingen.de/de/587821.html (Stand: 12.03.2021)"
+      ]
+    },
+    {
+      "captions": [
+        "Algorithmus Schritt 1: Positionen in Text 1 erfassen",
+        "Tabelle zeigt Wortfolgen (w1 w2 w3, w3 w3 w4, w9 w9 w10, w9 w10 w11, w10 w11 w12, w33 w34 w35) und ihre Startpositionen ([0], [1], [7], [8], [9, 35], [32])"
+      ]
+    },
+    {
+      "captions": [
+        "Algorithmus Schritt 2: Forward references erstellen",
+        "Tabelle zeigt Mapping von Text 1 Startpositionen (0, 1, 7, 8, 9, 35, 32) zu Text 2 Startpositionen ([1], [1], [75, 120], [121], [77, 122], [77, 122], [145])"
+      ]
+    },
+    {
+      "captions": [
+        "Algorithmus Schritt 3: Gefundene Matches erweitern",
+        "Beschreibung: Ellipsen 'überspringen', Token zusammenfassen / auslassen"
+      ]
+    },
+    {
+      "captions": [
+        "Weitere Schritte",
+        "Auflistung: Tokenisierung, ä ö ü etc. vereinheitlichen, Satzzeichen markieren oder entfernen, Fuzzy matching, Matches zusammenfassen, Zu kurze Matches verwerfen, Satzgrenzen berücksichtigen"
+      ]
+    },
+    {
+      "captions": [
+        "Segmentierung",
+        "Diagramm zeigt Stellen aus Interpretationstexten mit Balkendiagramm der Zitierhäufigkeit. Literatur segmentiert als: w1 | w2 | w3 | w4 | w5 w6 w7 | w8 w9 | w10 mit Zitierhäufigkeit 2 | 3 | 4 | 3 | 2 | 3 | 2"
+      ]
+    },
+    {
+      "captions": [
+        "Visualisierungswebseite",
+        "Screenshot zeigt Webinterface mit Heatmap für Annette von Droste-Hülshoff: Die Judenbuche, Bereiche für ausgewählten Interpretationstext, ausgewählte Textstelle und Literatur mit häufig zitierten Stellen. Roter Text sichtbar in den angezeigten Textpassagen."
+      ]
+    },
+    {
+      "captions": [
+        "Auswertung",
+        "Box zeigt Evaluierungsergebnisse: 45 Interpretationstexte der Judenbuche, Precision: 0.80, Recall: 0.91, F-Score: 0.85"
+      ]
+    },
+    {
+      "captions": [
+        "Quellen",
+        "'sim_text' von Dick Grune, Similarity texter: A text-comparison web tool based on the 'sim_text' algorithm von Sofia Kalaidopoulou (2016), GitHub-Links sichtbar, Programmiersprache: Python"
+      ]
+    },
+    {
+      "captions": [
+        "Comic",
+        "XKCD-Stil Comic mit Strichfiguren, zeigt Diskussion über Schlüsselstellen. Untertitel: 'Häufig zitierte Stellen → Interpretationstexte, die diese Textstelle zitieren'"
+      ]
+    }
+  ],
+  "tableCaptions": []
 }

@@ -66,37 +66,33 @@
     ]
   },
   "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
-  "imageCaptions": {
-    "captions": [
-      {
-        "captionParts": [
-          "Figure 1. Probabilistic Carcinogen Denomination of Disputed Potential Carcinogens Over Time. • PCarD module applies Bayesian Negative Binomial Regression to analyze temporal evidence shifts, evaluating potential carcinogens based on changing evidence discourse with respect to time. B1 is Evidence Count, B2 is Evidence of a Dispute with time, B3 and B3’ are likelihood of Carcinogen or Non-Carcinogenicity."
-        ]
-      },
-      {
-        "captionParts": [
-          "Figure 2. CarD-T Finds New Carcinogens ~20% higher likelihood than GPT-4. • CarD-T achieves higher recall (0.85 vs. 0.76) at comparable precision (0.89 vs. 0.90).\n\nFigure 3. Evidence Count Classification for Examples of Disputed Potential Carcinogens. • Bayesian Negative Binomial Regression Model distinguishes between established and emerging carcinogens in probability scoring of likelihood accommodating temporal shifts in evidence"
-        ]
-      },
-      {
-        "captionParts": [
-          "Figure 3. Evidence Count Classification for Examples of Disputed Potential Carcinogens. • Bayesian Negative Binomial Regression Model distinguishes between established and emerging carcinogens in probability scoring of likelihood accommodating temporal shifts in evidence"
-        ]
-      },
-      {
-        "captionParts": [
-          "Figure 4. The Shifting Landscape: Carcinogen Research (2000-2024) • Chemical compounds ↓45% to 35%; Biological agents ↑20% to 28%; Environmental factors ↑12% to 18%"
-        ]
-      }
-    ]
-  },
-  "tableCaptions": {
-    "captions": [
-      {
-        "captionParts": [
-          "Evidence Count Classification for Examples of Disputed Potential Carcinogens"
-        ]
-      }
-    ]
-  }
+  "imageCaptions": [
+    {
+      "captions": [
+        "Figure 1. Probabilistic Carcinogen Denomination of Disputed Potential Carcinogens Over Time. • PCarD module applies Bayesian Negative Binomial Regression to analyze temporal evidence shifts, evaluating potential carcinogens based on changing evidence discourse with respect to time. B1 is Evidence Count, B2 is Evidence of a Dispute with time, B3 and B3’ are likelihood of Carcinogen or Non-Carcinogenicity."
+      ]
+    },
+    {
+      "captions": [
+        "Figure 2. CarD-T Finds New Carcinogens ~20% higher likelihood than GPT-4. • CarD-T achieves higher recall (0.85 vs. 0.76) at comparable precision (0.89 vs. 0.90).\n\nFigure 3. Evidence Count Classification for Examples of Disputed Potential Carcinogens. • Bayesian Negative Binomial Regression Model distinguishes between established and emerging carcinogens in probability scoring of likelihood accommodating temporal shifts in evidence"
+      ]
+    },
+    {
+      "captions": [
+        "Figure 3. Evidence Count Classification for Examples of Disputed Potential Carcinogens. • Bayesian Negative Binomial Regression Model distinguishes between established and emerging carcinogens in probability scoring of likelihood accommodating temporal shifts in evidence"
+      ]
+    },
+    {
+      "captions": [
+        "Figure 4. The Shifting Landscape: Carcinogen Research (2000-2024) • Chemical compounds ↓45% to 35%; Biological agents ↑20% to 28%; Environmental factors ↑12% to 18%"
+      ]
+    }
+  ],
+  "tableCaptions": [
+    {
+      "captions": [
+        "Evidence Count Classification for Examples of Disputed Potential Carcinogens"
+      ]
+    }
+  ]
 }

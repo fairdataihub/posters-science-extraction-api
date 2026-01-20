@@ -524,8 +524,8 @@ JSON SCHEMA:
       ...continue for ALL sections found in the poster...
     ]
   }},
-  "imageCaptions": {{"captions": [{{"captionParts": ["Figure 1 title", "Description text"]}}]}},
-  "tableCaptions": {{"captions": [{{"captionParts": ["Table 1 title", "Description text"]}}]}}
+  "imageCaptions": [{{"captions": ["Figure 1 title", "Description text"]}}],
+  "tableCaptions": [{{"captions": ["Table 1 title", "Description text"]}}]
 }}
 
 EXAMPLE - A poster with 8 sections (Abstract, Intro, Methods, Results, Key Findings, Discussion, References, Contact) should produce 8 section objects, not fewer.
@@ -547,8 +547,8 @@ FALLBACK_PROMPT = """Convert poster text to JSON. RULES:
   "posterContent": {{
     "sections": [{{"sectionTitle": "Header", "sectionContent": "verbatim text"}}]
   }},
-  "imageCaptions": {{"captions": [{{"captionParts": ["Figure caption"]}}]}},
-  "tableCaptions": {{"captions": [{{"captionParts": ["Table caption"]}}]}}
+  "imageCaptions": [{{"captions": ["Figure caption"]}}],
+  "tableCaptions": [{{"captions": ["Table caption"]}}]
 }}
 
 TEXT:
@@ -847,57 +847,71 @@ def clean_table_data_from_content(content: str, title: str) -> str:
     return content
 
 
-def normalize_captions(captions_obj: dict) -> dict:
+def normalize_captions(captions_input) -> list:
     """
     Normalize captions to new schema format and deduplicate.
     
-    New format: {"captions": [{"captionParts": ["text1", "text2"]}], "unstructuredCaptions": "optional"}
-    Also handles old format: [{"caption1": "...", "caption2": "..."}] and converts it.
+    New format: [{"captions": ["text1", "text2"]}]
+    Also handles old formats and converts them.
     """
-    # Handle old format (list of caption objects)
-    if isinstance(captions_obj, list):
-        return convert_old_captions_to_new(captions_obj)
+    # Handle old wrapped format: {"captions": [{"captionParts": [...]}]}
+    if isinstance(captions_input, dict):
+        captions_list = captions_input.get("captions", [])
+        # Convert old captionParts format to new captions format
+        normalized = []
+        seen_texts = set()
+        for caption in captions_list:
+            if not isinstance(caption, dict):
+                continue
+            # Handle old captionParts format
+            parts = caption.get("captionParts", caption.get("captions", []))
+            if not parts or not isinstance(parts, list):
+                continue
+            clean_parts = [p.strip() for p in parts if isinstance(p, str) and p.strip()]
+            if not clean_parts:
+                continue
+            key = clean_parts[0].lower()[:100]
+            if key in seen_texts:
+                continue
+            seen_texts.add(key)
+            normalized.append({"captions": clean_parts})
+        return normalized
     
-    # Handle new format
-    if not isinstance(captions_obj, dict):
-        return {"captions": []}
+    # Handle new format (direct array)
+    if isinstance(captions_input, list):
+        normalized = []
+        seen_texts = set()
+        for caption in captions_input:
+            if not isinstance(caption, dict):
+                continue
+            # New format uses "captions" key
+            parts = caption.get("captions", caption.get("captionParts", []))
+            if not parts or not isinstance(parts, list):
+                continue
+            clean_parts = [p.strip() for p in parts if isinstance(p, str) and p.strip()]
+            if not clean_parts:
+                continue
+            key = clean_parts[0].lower()[:100]
+            if key in seen_texts:
+                continue
+            seen_texts.add(key)
+            normalized.append({"captions": clean_parts})
+        return normalized
     
-    captions_list = captions_obj.get("captions", [])
-    normalized = []
-    seen_texts = set()
-    
-    for caption in captions_list:
-        if not isinstance(caption, dict):
-            continue
-        
-        parts = caption.get("captionParts", [])
-        if not parts or not isinstance(parts, list):
-            continue
-        
-        # Clean parts
-        clean_parts = [p.strip() for p in parts if isinstance(p, str) and p.strip()]
-        if not clean_parts:
-            continue
-        
-        # Check for duplicates using first part as key
-        key = clean_parts[0].lower()[:100]
-        if key in seen_texts:
-            continue
-        seen_texts.add(key)
-        
-        normalized.append({"captionParts": clean_parts})
-    
-    result = {"captions": normalized}
-    if "unstructuredCaptions" in captions_obj:
-        result["unstructuredCaptions"] = captions_obj["unstructuredCaptions"]
-    
-    return result
+    return []
 
 
-def convert_old_captions_to_new(old_captions: list) -> dict:
-    """Convert old caption format to new format."""
+def convert_old_captions_to_new(old_captions) -> list:
+    """Convert old caption formats to new format: [{"captions": [...]}]"""
     if not old_captions:
-        return {"captions": []}
+        return []
+    
+    # Handle wrapped format {"captions": [...]}
+    if isinstance(old_captions, dict):
+        old_captions = old_captions.get("captions", [])
+    
+    if not isinstance(old_captions, list):
+        return []
     
     new_captions = []
     seen_texts = set()
@@ -906,26 +920,39 @@ def convert_old_captions_to_new(old_captions: list) -> dict:
         if not isinstance(caption, dict):
             continue
         
-        # Extract all caption parts from numbered keys
+        # Extract parts - handle multiple old formats
         parts = []
-        for key in sorted(caption.keys()):
-            if key.startswith("caption"):
-                val = caption.get(key, "")
-                if val and isinstance(val, str) and val.strip():
-                    parts.append(val.strip())
         
-        if not parts:
+        # New format: {"captions": [...]}
+        if "captions" in caption and isinstance(caption["captions"], list):
+            parts = caption["captions"]
+        # Transitional format: {"captionParts": [...]}
+        elif "captionParts" in caption:
+            parts = caption["captionParts"]
+        # Legacy format: {"caption1": "...", "caption2": "..."}
+        else:
+            for key in sorted(caption.keys()):
+                if key.startswith("caption"):
+                    val = caption.get(key, "")
+                    if val and isinstance(val, str) and val.strip():
+                        parts.append(val.strip())
+        
+        if not parts or not isinstance(parts, list):
+            continue
+        
+        clean_parts = [p.strip() for p in parts if isinstance(p, str) and p.strip()]
+        if not clean_parts:
             continue
         
         # Check for duplicates
-        key = parts[0].lower()[:100]
+        key = clean_parts[0].lower()[:100]
         if key in seen_texts:
             continue
         seen_texts.add(key)
         
-        new_captions.append({"captionParts": parts})
+        new_captions.append({"captions": clean_parts})
     
-    return {"captions": new_captions}
+    return new_captions
 
 
 def remove_duplicate_sections(sections: list) -> list:
@@ -954,18 +981,24 @@ def remove_duplicate_sections(sections: list) -> list:
     return unique
 
 
-def remove_caption_text_from_sections(sections: list, captions_obj: dict, caption_type: str) -> list:
+def remove_caption_text_from_sections(sections: list, captions_input, caption_type: str) -> list:
     """Remove figure/table caption text that's embedded in section content."""
-    if not captions_obj:
+    if not captions_input:
         return sections
     
-    # Handle new format
-    captions_list = captions_obj.get("captions", []) if isinstance(captions_obj, dict) else []
+    # Handle new format (direct array) and old format (wrapped dict)
+    if isinstance(captions_input, dict):
+        captions_list = captions_input.get("captions", [])
+    elif isinstance(captions_input, list):
+        captions_list = captions_input
+    else:
+        captions_list = []
     
     caption_texts = []
     for cap in captions_list:
         if isinstance(cap, dict):
-            parts = cap.get("captionParts", [])
+            # New format uses "captions", old uses "captionParts"
+            parts = cap.get("captions", cap.get("captionParts", []))
             for part in parts:
                 if part and isinstance(part, str):
                     caption_texts.append(part.strip())
@@ -1047,17 +1080,23 @@ def postprocess_json(data: dict) -> dict:
     if "$schema" not in result:
         result["$schema"] = SCHEMA_URL
     
-    # Ensure required fields exist with new schema format
+    # Ensure required fields exist with new schema format (direct array)
     if "imageCaptions" not in result:
-        result["imageCaptions"] = {"captions": []}
+        result["imageCaptions"] = []
+    elif isinstance(result["imageCaptions"], dict):
+        # Convert old wrapped format to new direct array
+        result["imageCaptions"] = convert_old_captions_to_new(result["imageCaptions"])
     elif isinstance(result["imageCaptions"], list):
-        # Convert old format to new
+        # Normalize existing list format
         result["imageCaptions"] = convert_old_captions_to_new(result["imageCaptions"])
     
     if "tableCaptions" not in result:
-        result["tableCaptions"] = {"captions": []}
+        result["tableCaptions"] = []
+    elif isinstance(result["tableCaptions"], dict):
+        # Convert old wrapped format to new direct array
+        result["tableCaptions"] = convert_old_captions_to_new(result["tableCaptions"])
     elif isinstance(result["tableCaptions"], list):
-        # Convert old format to new
+        # Normalize existing list format
         result["tableCaptions"] = convert_old_captions_to_new(result["tableCaptions"])
     
     # Handle legacy field names (imageCaption/tableCaption)
@@ -1065,13 +1104,13 @@ def postprocess_json(data: dict) -> dict:
         old_captions = result.pop("imageCaption")
         if old_captions:
             converted = convert_old_captions_to_new(old_captions)
-            result["imageCaptions"]["captions"].extend(converted.get("captions", []))
+            result["imageCaptions"].extend(converted)
     
     if "tableCaption" in result:
         old_captions = result.pop("tableCaption")
         if old_captions:
             converted = convert_old_captions_to_new(old_captions)
-            result["tableCaptions"]["captions"].extend(converted.get("captions", []))
+            result["tableCaptions"].extend(converted)
     
     # Clean Unicode from top-level string fields
     for key in ["posterTitle", "domain"]:
@@ -1117,14 +1156,14 @@ def postprocess_json(data: dict) -> dict:
                 # Extract figure sections to imageCaptions
                 if is_figure_section({"sectionTitle": title, "sectionContent": content}):
                     caption_parts = [title, content] if not content.startswith("Figure") else [content]
-                    extracted_figures.append({"captionParts": caption_parts})
+                    extracted_figures.append({"captions": caption_parts})
                     log(f"   Moving figure section to imageCaptions: '{title}'")
                     continue
                 
                 # Extract table sections to tableCaptions  
                 if is_table_section({"sectionTitle": title, "sectionContent": content}):
                     caption_parts = [title, content] if not content.startswith("Table") else [content]
-                    extracted_tables.append({"captionParts": caption_parts})
+                    extracted_tables.append({"captions": caption_parts})
                     log(f"   Moving table section to tableCaptions: '{title}'")
                     continue
                 
@@ -1151,23 +1190,28 @@ def postprocess_json(data: dict) -> dict:
             # Remove duplicates
             cleaned_sections = remove_duplicate_sections(cleaned_sections)
             
-            # Merge extracted captions with existing (using new format)
-            existing_figures = result.get("imageCaptions", {}).get("captions", [])
-            existing_tables = result.get("tableCaptions", {}).get("captions", [])
+            # Merge extracted captions with existing (using new format - direct array)
+            existing_figures = result.get("imageCaptions", [])
+            existing_tables = result.get("tableCaptions", [])
+            
+            if not isinstance(existing_figures, list):
+                existing_figures = []
+            if not isinstance(existing_tables, list):
+                existing_tables = []
             
             all_figures = existing_figures + extracted_figures
             all_tables = existing_tables + extracted_tables
             
             # Normalize and deduplicate captions
-            result["imageCaptions"] = normalize_captions({"captions": all_figures})
-            result["tableCaptions"] = normalize_captions({"captions": all_tables})
+            result["imageCaptions"] = normalize_captions(all_figures)
+            result["tableCaptions"] = normalize_captions(all_tables)
             
             # Clean Unicode from captions
-            for cap_obj in [result["imageCaptions"], result["tableCaptions"]]:
-                for cap in cap_obj.get("captions", []):
+            for cap_list in [result["imageCaptions"], result["tableCaptions"]]:
+                for cap in cap_list:
                     if isinstance(cap, dict):
-                        parts = cap.get("captionParts", [])
-                        cap["captionParts"] = [clean_unicode_artifacts(p) if isinstance(p, str) else p for p in parts]
+                        parts = cap.get("captions", [])
+                        cap["captions"] = [clean_unicode_artifacts(p) if isinstance(p, str) else p for p in parts]
             
             # Remove caption text from section content where it duplicates the caption arrays
             cleaned_sections = remove_caption_text_from_sections(
@@ -1397,15 +1441,28 @@ def get_section_texts(d) -> list:
                     content = section.get("sectionContent", "")
                     if content:
                         sections.append(content)
-        # Handle new caption format
+        # Handle new caption format (direct array)
         for key in ["imageCaptions", "tableCaptions"]:
-            if key in d and isinstance(d[key], dict):
-                for caption in d[key].get("captions", []):
-                    if isinstance(caption, dict):
-                        for part in caption.get("captionParts", []):
-                            if part:
-                                sections.append(str(part))
-        # Also handle old format for backwards compatibility
+            if key in d:
+                captions = d[key]
+                # New format: direct array [{"captions": [...]}]
+                if isinstance(captions, list):
+                    for caption in captions:
+                        if isinstance(caption, dict):
+                            # New format uses "captions", transitional uses "captionParts"
+                            parts = caption.get("captions", caption.get("captionParts", []))
+                            for part in parts:
+                                if part:
+                                    sections.append(str(part))
+                # Old wrapped format: {"captions": [{"captionParts": [...]}]}
+                elif isinstance(captions, dict):
+                    for caption in captions.get("captions", []):
+                        if isinstance(caption, dict):
+                            parts = caption.get("captionParts", caption.get("captions", []))
+                            for part in parts:
+                                if part:
+                                    sections.append(str(part))
+        # Also handle legacy format for backwards compatibility
         for key in ["imageCaption", "tableCaption"]:
             if key in d and isinstance(d[key], list):
                 for caption in d[key]:

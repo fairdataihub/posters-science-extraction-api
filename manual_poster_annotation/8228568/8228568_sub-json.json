@@ -49,21 +49,17 @@
       }
     ]
   },
-  "imageCaptions": {
-    "captions": []
-  },
-  "tableCaptions": {
-    "captions": [
-      {
-        "captionParts": [
-          "Table 1. Why do researchers self-identify as digital humanists?"
-        ]
-      },
-      {
-        "captionParts": [
-          "Table 2. Why do researchers NOT self-identify as digital humanists?"
-        ]
-      }
-    ]
-  }
+  "imageCaptions": [],
+  "tableCaptions": [
+    {
+      "captions": [
+        "Table 1. Why do researchers self-identify as digital humanists?"
+      ]
+    },
+    {
+      "captions": [
+        "Table 2. Why do researchers NOT self-identify as digital humanists?"
+      ]
+    }
+  ]
 }

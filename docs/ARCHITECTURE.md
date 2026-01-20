@@ -102,7 +102,7 @@ Post-processing handles common LLM output issues:
 After JSON extraction, the pipeline applies:
 
 1. **Schema validation**: Ensures output matches poster-json-schema
-2. **Caption normalization**: Converts to `captionParts` format
+2. **Caption normalization**: Converts to `captions` array format
 3. **Section deduplication**: Removes duplicate content
 4. **Unicode cleaning**: Removes bidirectional characters
 5. **Table/chart data cleaning**: Removes axis labels from section content
@@ -138,16 +138,12 @@ Outputs conform to [poster-json-schema](https://github.com/fairdataihub/poster-j
       {"sectionTitle": "...", "sectionContent": "..."}
     ]
   },
-  "imageCaptions": {
-    "captions": [
-      {"captionParts": ["Figure 1.", "Description"]}
-    ]
-  },
-  "tableCaptions": {
-    "captions": [
-      {"captionParts": ["Table 1.", "Description"]}
-    ]
-  }
+  "imageCaptions": [
+    {"captions": ["Figure 1.", "Description"]}
+  ],
+  "tableCaptions": [
+    {"captions": ["Table 1.", "Description"]}
+  ]
 }
 ```
 
