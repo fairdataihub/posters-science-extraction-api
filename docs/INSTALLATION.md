@@ -28,19 +28,32 @@ Complete installation instructions for poster2json.
 
 ## Standard Installation (Linux/macOS)
 
-### 1. Clone the Repository
+### Option A: pip install from GitHub (Recommended)
+
+```bash
+pip install git+https://github.com/fairdataihub/poster2json.git
+```
+
+This installs poster2json and all dependencies. You can then run:
+```bash
+poster2json --annotation-dir ./posters --output-dir ./output
+```
+
+### Option B: Clone and Install (Development)
 
 ```bash
 git clone https://github.com/fairdataihub/poster2json.git
 cd poster2json
+pip install -e .  # Editable install
 ```
 
-### 2. Create Python Environment
+### Option C: Requirements Only
 
 ```bash
+git clone https://github.com/fairdataihub/poster2json.git
+cd poster2json
 python -m venv venv
 source venv/bin/activate
-pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
