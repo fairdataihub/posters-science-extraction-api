@@ -1,0 +1,39 @@
+title: poster2json
+authors:
+  - given-names: Sanjay
+    family-names: Soundarajan
+    email: ssoundarajan@calmi2.org
+    affiliation: FAIR Data Innovations Hub (@fairdataihub)
+  - given-names: James
+    family-names: ONeill
+    email: joneill@calmi2.org
+    affiliation: FAIR Data Innovations Hub (@fairdataihub)
+  - given-names: Dorian
+    family-names: Portillo
+    email: wheresdorian@gmail.com
+    affiliation: FAIR Data Innovations Hub (@fairdataihub)
+  - given-names: Bhavesh
+    family-names: Patel
+    email: bpatel@calmi2.org
+    affiliation: FAIR Data Innovations Hub (@fairdataihub)
+cff-version: 1.2.0
+message: If you use this software, please cite it using the metadata from this file.
+type: software
+doi: 10.5281/zenodo.18319797
+abstract: A tool for extracting structured metadata from scientific posters,
+  converting visual poster content into machine-actionable JSON format
+  conforming to the poster-json-schema. Uses Qwen2-VL for image OCR and a
+  fine-tuned Llama 3.1 8B for JSON structuring. Part of the posters.science
+  platform.
+keywords:
+  - posters
+  - machine actionable
+  - AI Ready
+  - DataCite
+  - metadata
+  - scientific poster
+  - conference
+license: MIT
+repository-code: https://github.com/fairdataihub/poster2json
+date-released: 2026-01-10
+version: v1.0.0
