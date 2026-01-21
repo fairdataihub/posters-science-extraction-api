@@ -13,6 +13,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 from poster_extraction import process_poster_file, log, load_json_model
+from validation import validate_and_fix_extraction
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -141,6 +142,11 @@ def extract_poster():
         # Check for errors in result
         if "error" in result:
             return jsonify(result), 500
+
+        # Validate and auto-fix the extraction result
+        result, validation_warnings = validate_and_fix_extraction(result)
+        if validation_warnings:
+            result["validation_warnings"] = validation_warnings
 
         return jsonify(result)
 
