@@ -306,29 +306,39 @@
       }
     ]
   },
-  "imageCaption": [
+  "domain": "Biomedical Informatics",
+  "imageCaptions": [
     {
-      "caption1": "Figure 1. Probabilistic Carcinogen Denomination of Disputed Potential Carcinogens Over Time",
-      "caption2": "PCarD module applies Bayesian Negative Binomial Regression to analyze temporal evidence shifts, evaluating potential carcinogens based on changing evidence discourse with respect to time. B1 is Evidence Count, B2 is Evidence of a Dispute with time, B3 and B3' are likelihood of Carcinogen or Non-Carcinogenicity."
+      "captions": [
+        "Figure 1. Probabilistic Carcinogen Denomination of Disputed Potential Carcinogens Over Time",
+        "PCarD module applies Bayesian Negative Binomial Regression to analyze temporal evidence shifts, evaluating potential carcinogens based on changing evidence discourse with respect to time. B1 is Evidence Count, B2 is Evidence of a Dispute with time, B3 and B3' are likelihood of Carcinogen or Non-Carcinogenicity."
+      ]
     },
     {
-      "caption1": "Figure 2. CarD-T Finds New Carcinogens ~20% higher likelihood than GPT-4",
-      "caption2": "CarD-T achieves higher recall (0.85 vs. 0.76) at comparable precision (0.89 vs. 0.90) compared to GPT-4 for carcinogen identification."
+      "captions": [
+        "Figure 2. CarD-T Finds New Carcinogens ~20% higher likelihood than GPT-4",
+        "CarD-T achieves higher recall (0.85 vs. 0.76) at comparable precision (0.89 vs. 0.90) compared to GPT-4 for carcinogen identification."
+      ]
     },
     {
-      "caption1": "Figure 3. Evidence Count Classification for Examples of Disputed Potential Carcinogens",
-      "caption2": "Bayesian Negative Binomial Regression Model distinguishes between established and emerging carcinogens in probability scoring of likelihood accommodating temporal shifts in evidence. Examples include Single Oxygen, Schizophrenia, Curcumin, Hemolysis, and nM-1395 with B1-Evidence, B2-Dispute, B3-Carc, and B3'-No Carc classifications."
+      "captions": [
+        "Figure 3. Evidence Count Classification for Examples of Disputed Potential Carcinogens",
+        "Bayesian Negative Binomial Regression Model distinguishes between established and emerging carcinogens in probability scoring of likelihood accommodating temporal shifts in evidence. Examples include Single Oxygen, Schizophrenia, Curcumin, Hemolysis, and nM-1395 with B1-Evidence, B2-Dispute, B3-Carc, and B3'-No Carc classifications."
+      ]
     },
     {
-      "caption1": "Figure 4. The Shifting Landscape: Carcinogen Research (2000-2024)",
-      "caption2": "Chemical compounds decreased 45% to 35%; Biological agents increased 20% to 28%; Environmental factors increased 12% to 18%. Shows fundamental research paradigm shift from chemical to biological and environmental carcinogenesis over 25 years."
+      "captions": [
+        "Figure 4. The Shifting Landscape: Carcinogen Research (2000-2024)",
+        "Chemical compounds decreased 45% to 35%; Biological agents increased 20% to 28%; Environmental factors increased 12% to 18%. Shows fundamental research paradigm shift from chemical to biological and environmental carcinogenesis over 25 years."
+      ]
     }
   ],
-  "tableCaption": [
+  "tableCaptions": [
     {
-      "caption1": "Table: Performance Comparison - CarD-T vs GPT-4",
-      "caption2": "CarD-T: Precision 0.89, Recall 0.85, F1 0.87. GPT-4: Precision 0.90, Recall 0.76, F1 0.82. CarD-T achieves superior recall while maintaining comparable precision."
+      "captions": [
+        "Table: Performance Comparison - CarD-T vs GPT-4",
+        "CarD-T: Precision 0.89, Recall 0.85, F1 0.87. GPT-4: Precision 0.90, Recall 0.76, F1 0.82. CarD-T achieves superior recall while maintaining comparable precision."
+      ]
     }
-  ],
-  "domain": "Biomedical Informatics"
+  ]
 }
