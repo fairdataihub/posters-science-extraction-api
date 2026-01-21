@@ -1,6 +1,8 @@
 # Production dependencies only
 transformers>=4.40.0
 torch>=2.0.0
+torchvision>=0.15.0
+bitsandbytes>=0.42.0
 rouge-score
 qwen-vl-utils
 accelerate
@@ -12,3 +14,4 @@ numpy
 flask>=2.3.0
 flask-cors>=4.0.0
 requests>=2.31.0
+jsonschema>=4.20.0

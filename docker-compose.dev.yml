@@ -33,6 +33,9 @@ services:
     volumes:
       - ./poster_extraction.py:/app/poster_extraction.py
       - ./api.py:/app/api.py
+      - ./validation.py:/app/validation.py
+      - ./poster_extraction_schema.json:/app/poster_extraction_schema.json
+      - ./poster_schema.json:/app/poster_schema.json
       # Persist model cache between container rebuilds
       - model-cache:/root/.cache
     stdin_open: true

@@ -1,0 +1,168 @@
+{
+  "$id": "https://posters.science/schema/v0.1/poster_extraction_schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Poster Extraction Output Schema",
+  "description": "Schema for validating LLM extracted poster metadata. This is a subset of the full poster_schema.json, requiring only fields that can be extracted from poster images.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "creators": {
+      "type": "array",
+      "description": "The authors of the poster, in priority order. Format: family, given.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The full name of the creator. Personal name format should be: family, given.",
+            "minLength": 1
+          },
+          "nameType": {
+            "type": "string",
+            "description": "The type of name of the creator.",
+            "enum": ["Personal", "Organizational"]
+          },
+          "nameIdentifiers": {
+            "type": "array",
+            "description": "The name identifiers of the creator (e.g., ORCID).",
+            "items": {
+              "type": "object",
+              "properties": {
+                "nameIdentifier": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "nameIdentifierScheme": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "schemeURI": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": ["nameIdentifier"]
+            }
+          },
+          "affiliation": {
+            "type": "array",
+            "description": "The affiliation of the creator.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "The name of the affiliated institution.",
+                  "minLength": 1
+                },
+                "affiliationIdentifier": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "affiliationIdentifierScheme": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "schemeURI": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": ["name"]
+            }
+          }
+        },
+        "required": ["name"]
+      },
+      "minItems": 1
+    },
+    "titles": {
+      "type": "array",
+      "description": "The titles of the poster.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "The title of the poster.",
+            "minLength": 1
+          },
+          "titleType": {
+            "type": "string",
+            "description": "The type of title.",
+            "enum": ["AlternativeTitle", "Subtitle", "TranslatedTitle", "Other"]
+          }
+        },
+        "required": ["title"]
+      },
+      "minItems": 1
+    },
+    "posterContent": {
+      "type": "object",
+      "description": "Text content extracted from the poster organized into sections.",
+      "properties": {
+        "sections": {
+          "type": "array",
+          "description": "Array of content sections extracted from the poster.",
+          "items": {
+            "type": "object",
+            "description": "A single section of the poster with its title and content.",
+            "properties": {
+              "sectionTitle": {
+                "type": "string",
+                "description": "The title or heading of this section."
+              },
+              "sectionContent": {
+                "type": "string",
+                "description": "The text content of this section."
+              }
+            }
+          }
+        },
+        "unstructuredContent": {
+          "type": "string",
+          "description": "Optional field for poster content that cannot be organized into clear sections."
+        }
+      }
+    },
+    "imageCaption": {
+      "type": "array",
+      "description": "List of captions for images in the poster.",
+      "items": {
+        "type": "object",
+        "description": "Captions for a single image in the poster.",
+        "properties": {
+          "caption1": {
+            "type": "string",
+            "minLength": 1
+          },
+          "caption2": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "tableCaption": {
+      "type": "array",
+      "description": "List of captions for tables in the poster.",
+      "items": {
+        "type": "object",
+        "description": "Captions for a single table in the poster.",
+        "properties": {
+          "caption1": {
+            "type": "string",
+            "minLength": 1
+          },
+          "caption2": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "required": ["creators", "titles", "posterContent"]
+}
