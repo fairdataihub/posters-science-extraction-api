@@ -319,29 +319,39 @@
       }
     ]
   },
-  "tableCaption": [
+  "domain": "Toxicology",
+  "imageCaptions": [
     {
-      "caption1": "Table 1. Physicochemical data of the micro/nanoplastics for the cell exposure experiment",
-      "caption2": "Shows abbreviation, main polymer composition, additives, particle size distribution, and particle shape for HDPE269 (high density polyethylene, 1.8-8.7 μm, round), PET_c000 (polyethylene terephthalate, 57-144 nm, round), and PS394Eu (Europium doped polystyrene, 300 nm, round)"
+      "captions": [
+        "Figure 1. A) Differentiation protocol hiPSC-derived IECs",
+        "B) Immunohistochemistry showing the presence of multiple IEC types (LGR5: intestinal stem cells, GLP-1: enteroendocrine cells, UEA-1: Paneth cells and goblet cells including secreted mucins, TFF3: glycosylated mucus proteins present in mature goblet cells). C) Expression of genes in the cytokine storm pathway after stimulation with a proinflammatory cocktail. D) Barrier integrity (TEER and permeability of lucifer yellow). E) IL-8 excretion (ELISA) in comparison with Caco-2 cells."
+      ]
+    },
+    {
+      "captions": [
+        "Figure 2. A) Differentiation protocol of MUTZ-3-derived DCs",
+        "B) Gene expression of markers for progenitor cells and mature DCs (mDCs) measured at D0, D7 and D9. Expression is relative to the progenitor cells which were set at 1. Expression of progenitor markers (CD14, CD34) decreased whereas expression of mDCs markers (CD80, CD11c, DC-LAMP, OX40L, CCR7) increased in time."
+      ]
+    },
+    {
+      "captions": [
+        "Figure 3. Co-culture characterization",
+        "A) hiPSCs and MUTZ-3 cells were differentiated into IECs and mDCs separately and co-cultured when fully differentiated. After 24h of co-culture the differentiation status and cytokine expression was evaluated. B) Barrier integrity of the IEC layer. C) Gene expression in IEC layer. D) Gene expression in mDCs. In general, co-culturing has little effect on cellular composition, but increases cytokine expression."
+      ]
+    },
+    {
+      "captions": [
+        "Figure 4. Gene expression in iDCs after 48h exposure to micro/nano plastics",
+        "A) Effects of the micro/nanoplastics on gene expression of markers for maturation of iDCs into mDCs (CD14, CD34, CD80, CD83, OX40L, CCR7, DC-LAMP). B) Effects on cytokine expression (IL-6, IL-8, IL-12β, IL-15, IL-18, IL-23, TNFα). No significant effects were observed after 24h exposure to the micro/nanoplastics and no cytotoxicity was observed. After 48h exposure to the PS394Eu plastics mild effects on cytokine expression were observed."
+      ]
     }
   ],
-  "imageCaption": [
+  "tableCaptions": [
     {
-      "caption1": "Figure 1. A) Differentiation protocol hiPSC-derived IECs",
-      "caption2": "B) Immunohistochemistry showing the presence of multiple IEC types (LGR5: intestinal stem cells, GLP-1: enteroendocrine cells, UEA-1: Paneth cells and goblet cells including secreted mucins, TFF3: glycosylated mucus proteins present in mature goblet cells). C) Expression of genes in the cytokine storm pathway after stimulation with a proinflammatory cocktail. D) Barrier integrity (TEER and permeability of lucifer yellow). E) IL-8 excretion (ELISA) in comparison with Caco-2 cells."
-    },
-    {
-      "caption1": "Figure 2. A) Differentiation protocol of MUTZ-3-derived DCs",
-      "caption2": "B) Gene expression of markers for progenitor cells and mature DCs (mDCs) measured at D0, D7 and D9. Expression is relative to the progenitor cells which were set at 1. Expression of progenitor markers (CD14, CD34) decreased whereas expression of mDCs markers (CD80, CD11c, DC-LAMP, OX40L, CCR7) increased in time."
-    },
-    {
-      "caption1": "Figure 3. Co-culture characterization",
-      "caption2": "A) hiPSCs and MUTZ-3 cells were differentiated into IECs and mDCs separately and co-cultured when fully differentiated. After 24h of co-culture the differentiation status and cytokine expression was evaluated. B) Barrier integrity of the IEC layer. C) Gene expression in IEC layer. D) Gene expression in mDCs. In general, co-culturing has little effect on cellular composition, but increases cytokine expression."
-    },
-    {
-      "caption1": "Figure 4. Gene expression in iDCs after 48h exposure to micro/nano plastics",
-      "caption2": "A) Effects of the micro/nanoplastics on gene expression of markers for maturation of iDCs into mDCs (CD14, CD34, CD80, CD83, OX40L, CCR7, DC-LAMP). B) Effects on cytokine expression (IL-6, IL-8, IL-12β, IL-15, IL-18, IL-23, TNFα). No significant effects were observed after 24h exposure to the micro/nanoplastics and no cytotoxicity was observed. After 48h exposure to the PS394Eu plastics mild effects on cytokine expression were observed."
+      "captions": [
+        "Table 1. Physicochemical data of the micro/nanoplastics for the cell exposure experiment",
+        "Shows abbreviation, main polymer composition, additives, particle size distribution, and particle shape for HDPE269 (high density polyethylene, 1.8-8.7 μm, round), PET_c000 (polyethylene terephthalate, 57-144 nm, round), and PS394Eu (Europium doped polystyrene, 300 nm, round)"
+      ]
     }
-  ],
-  "domain": "Toxicology"
+  ]
 }

@@ -87,44 +87,53 @@
       }
     ]
   },
-  "imageCaption": [
+  "imageCaptions": [
     {
-      "caption1": "Figure 1: Representative scheme of a) outer and b) inner side of microfluidic chip (3).",
-      "caption2": ""
+      "captions": [
+        "Figure 1: Representative scheme of a) outer and b) inner side of microfluidic chip (3)."
+      ]
     },
     {
-      "caption1": "Figure 2: Physical features of PLGA NPs and PLA/PEG micelles.",
-      "caption2": ""
+      "captions": [
+        "Figure 2: Physical features of PLGA NPs and PLA/PEG micelles."
+      ]
     },
     {
-      "caption1": "Figure 3: TEM images of a) PLGA NPs, b) CURC loaded PLGA NPs, c) PLA-PEG micelles, and d) CURC loaded PLA-PEG micelles.",
-      "caption2": ""
+      "captions": [
+        "Figure 3: TEM images of a) PLGA NPs, b) CURC loaded PLGA NPs, c) PLA-PEG micelles, and d) CURC loaded PLA-PEG micelles."
+      ]
     },
     {
-      "caption1": "Figure 4: Release profiles of CURC from PLGA NPs and PLA/PEG micelles.",
-      "caption2": ""
+      "captions": [
+        "Figure 4: Release profiles of CURC from PLGA NPs and PLA/PEG micelles."
+      ]
     },
     {
-      "caption1": "Figure 5: Cell viability (%) after 24 h treatment on NHDFs at a cell density of 3 × 10⁸ cells/mL.",
-      "caption2": ""
+      "captions": [
+        "Figure 5: Cell viability (%) after 24 h treatment on NHDFs at a cell density of 3 × 10⁸ cells/mL."
+      ]
     },
     {
-      "caption1": "Figure 6: Bacterial reduction of S.epidermidis after 72h of treatment with CURC loaded PLGA NPs with a MIC of 0.1 mg/mL.",
-      "caption2": ""
+      "captions": [
+        "Figure 6: Bacterial reduction of S.epidermidis after 72h of treatment with CURC loaded PLGA NPs with a MIC of 0.1 mg/mL."
+      ]
     },
     {
-      "caption1": "Figure 7: Fluorescence microscope images of placebo and CURC loaded PLGA NPs on NHDFs after 2, 4 and 24 h indicating cellular uptake.",
-      "caption2": ""
+      "captions": [
+        "Figure 7: Fluorescence microscope images of placebo and CURC loaded PLGA NPs on NHDFs after 2, 4 and 24 h indicating cellular uptake."
+      ]
     }
   ],
-  "tableCaption": [
+  "tableCaptions": [
     {
-      "caption1": "Table 1: Drug loading into NPs and micelles.",
-      "caption2": ""
+      "captions": [
+        "Table 1: Drug loading into NPs and micelles."
+      ]
     },
     {
-      "caption1": "Table 2: Drug loading into NPs and micelles.",
-      "caption2": ""
+      "captions": [
+        "Table 2: Drug loading into NPs and micelles."
+      ]
     }
   ]
 }

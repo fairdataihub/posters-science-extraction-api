@@ -1,7 +1,7 @@
 # Development configuration for docker-compose
 #
 # Usage:
-#   First time (builds image, downloads models):
+#   First time (builds image, downloads models ~16GB each):
 #     docker compose -f docker-compose.dev.yml up --build
 #
 #   After editing Python files (fast restart, no rebuild):

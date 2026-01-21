@@ -1,13 +1,19 @@
+# Core dependencies
 transformers>=4.40.0
 torch>=2.0.0
 torchvision>=0.15.0
+accelerate>=0.20.0
+bitsandbytes>=0.41.0
+safetensors
+sentencepiece
+
+# Text processing
 rouge-score
-qwen-vl-utils
-accelerate
+numpy
+
+# Image/PDF processing
 Pillow
 pymupdf
-numpy
-ollama>=0.2.0
 
 # API
 flask>=2.3.0
@@ -15,16 +21,9 @@ flask-cors>=4.0.0
 requests>=2.31.0
 jsonschema>=4.20.0
 
-# Formatters
-black
-isort
-
-# Linters
-flake8
-mypy
-pylint
-pydocstyle
-
-# jupyter
-jupyter
-ipython
+# Development (optional)
+# black
+# isort
+# flake8
+# mypy
+# pylint
