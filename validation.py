@@ -23,6 +23,10 @@ FULL_SCHEMA_PATH = SCHEMA_DIR / "poster_schema.json"
 # Schema version for tracking
 SCHEMA_VERSION = "extraction-v0.1"
 
+# Cache the schema in memory after first load to avoid re-reading from disk
+# on every validation call. Set to None initially, populated on first use.
+_SCHEMA_CACHE: Optional[dict] = None
+
 
 @dataclass
 class ValidationWarning:
@@ -38,9 +42,12 @@ class ValidationWarning:
 
 
 def load_extraction_schema() -> dict:
-    """Load the extraction schema from disk."""
-    with open(EXTRACTION_SCHEMA_PATH) as f:
-        return json.load(f)
+    """Load the extraction schema, using cached version if available."""
+    global _SCHEMA_CACHE
+    if _SCHEMA_CACHE is None:
+        with open(EXTRACTION_SCHEMA_PATH) as f:
+            _SCHEMA_CACHE = json.load(f)
+    return _SCHEMA_CACHE
 
 
 def get_empty_field_defaults() -> dict:
@@ -84,7 +91,7 @@ def populate_missing_fields(data: dict) -> Tuple[dict, List[str]]:
     Fill in missing fields with empty/default values.
 
     This ensures the API response always contains all fields expected
-    by the frontend's formSchema, even if the model didn't extract them.
+    by the poster json schema
 
     Args:
         data: The extraction result after validation
@@ -126,24 +133,24 @@ def validate_and_fix_extraction(
     if "error" in result:
         return result, []
 
-    # Phase 1: Structural auto-fixes (before schema validation)
+    # 1: Structural fixes (before schema validation)
     if not strict:
         result, pre_warnings = _apply_structural_fixes(result)
         warnings.extend(pre_warnings)
 
-    # Phase 2: Schema validation
+    # 2: Schema validation
     schema = load_extraction_schema()
     validator = Draft202012Validator(schema)
 
     schema_errors = list(validator.iter_errors(result))
 
-    # Phase 3: Report remaining schema errors as warnings
+    # 3: Report remaining schema errors as warnings
     for error in schema_errors:
         warning = _create_warning_from_error(error)
         if warning:
             warnings.append(warning)
 
-    # Phase 4: Re-validate to get final count
+    # 4: Revalidate to get final count
     remaining_errors = list(validator.iter_errors(result))
 
     # Add validation metadata
@@ -154,7 +161,7 @@ def validate_and_fix_extraction(
         "errors_count": len(remaining_errors),
     }
 
-    # Phase 5: Populate missing fields for complete response
+    # 5: Populate missing fields for complete response
     result, filled_fields = populate_missing_fields(result)
     result["_validation"]["filled_fields"] = filled_fields
 
@@ -290,7 +297,7 @@ def _apply_structural_fixes(data: dict) -> Tuple[dict, List[ValidationWarning]]:
                     )
 
     # Fix 5: Clean up creators - fix affiliations and add missing required fields
-    # Process creators in-place, converting invalid items to placeholders
+    # Process creators in place, converting invalid items to placeholders
     for i in range(len(data.get("creators", []))):
         creator = data["creators"][i]
 
@@ -307,7 +314,7 @@ def _apply_structural_fixes(data: dict) -> Tuple[dict, List[ValidationWarning]]:
             )
             continue
 
-        # Add empty name if missing (preserve and fill strategy)
+        # Add empty name if missing
         if "name" not in creator:
             creator["name"] = ""
             warnings.append(
@@ -355,7 +362,6 @@ def _apply_structural_fixes(data: dict) -> Tuple[dict, List[ValidationWarning]]:
                             )
                         )
                     elif isinstance(aff, dict):
-                        # Add missing 'name' field to affiliation objects
                         if "name" not in aff:
                             aff["name"] = ""
                             warnings.append(
@@ -367,7 +373,7 @@ def _apply_structural_fixes(data: dict) -> Tuple[dict, List[ValidationWarning]]:
                                 )
                             )
 
-        # Fix nameIdentifiers - add missing 'nameIdentifier' field
+        # add missing 'nameIdentifier' field
         if "nameIdentifiers" in creator and isinstance(creator["nameIdentifiers"], list):
             for j, nid in enumerate(creator["nameIdentifiers"]):
                 if isinstance(nid, dict) and "nameIdentifier" not in nid:
@@ -394,8 +400,7 @@ def _apply_structural_fixes(data: dict) -> Tuple[dict, List[ValidationWarning]]:
                     )
                 )
 
-    # Fix 6: Clean up titles - add missing required fields
-    # Process titles, converting invalid items to placeholders
+    # Fix 6: Process titles, converting invalid items to placeholders
     for i in range(len(data.get("titles", []))):
         title_obj = data["titles"][i]
 
@@ -412,7 +417,7 @@ def _apply_structural_fixes(data: dict) -> Tuple[dict, List[ValidationWarning]]:
             )
             continue
 
-        # Add empty title if missing (preserve and fill strategy)
+        # Add empty title if missing
         if "title" not in title_obj:
             title_obj["title"] = ""
             warnings.append(
