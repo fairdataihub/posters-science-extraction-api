@@ -95,7 +95,9 @@ class ProgressStreamer(TextStreamer):
     """
 
     def __init__(self, tokenizer, log_every: int = 100, **kwargs):
-        super().__init__(tokenizer, skip_prompt=True, skip_special_tokens=True)
+        # Merge defaults with caller-supplied kwargs (caller can override)
+        defaults = {"skip_prompt": True, "skip_special_tokens": True}
+        super().__init__(tokenizer, **{**defaults, **kwargs})
         self.log_every = log_every
         self.token_count = 0
         self.start_time = None
@@ -104,9 +106,12 @@ class ProgressStreamer(TextStreamer):
         if self.start_time is None:
             self.start_time = time.time()
 
+        # Rough approximation of token count based on whitespace; for more accurate
+        # counting, this should be driven by token-level callbacks in the streamer.
         self.token_count += len(text.split()) if text.strip() else 1
 
-        if self.token_count % self.log_every < 10 or stream_end:
+        # Log exactly once per `log_every` tokens, and always on stream end.
+        if (self.token_count % self.log_every == 0) or stream_end:
             elapsed = time.time() - self.start_time
             tokens_per_sec = self.token_count / elapsed if elapsed > 0 else 0
             log(f"   Generation progress: ~{self.token_count} tokens ({tokens_per_sec:.1f} tok/s)")
