@@ -94,20 +94,23 @@
       }
     ]
   },
-  "imageCaption": [
+  "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
+  "imageCaptions": [
     {
-      "caption1": "Figure 1: An HST color image of NGC 1667 with a distance-based [N II] BPT overlaid on the nucleus. Displays primary regional ionization mechanisms: star formation (blue), AGN ionization (red) and composite (green). (Left): [N II] BPT diagrams for the high flux (large squares) and low flux (small squares) components as a function of distance from the nucleus along the APO DIS long-slit at PA = 55◦ (top), 108◦ (middle) and 160◦ (bottom). Photo courtesy of the Carnegie-Irvine Galaxy Survey.",
-      "caption2": ""
+      "captions": [
+        "Figure 1: An HST color image of NGC 1667 with a distance-based [N II] BPT overlaid on the nucleus. Displays primary regional ionization mechanisms: star formation (blue), AGN ionization (red) and composite (green). (Left): [N II] BPT diagrams for the high flux (large squares) and low flux (small squares) components as a function of distance from the nucleus along the APO DIS long-slit at PA = 55◦ (top), 108◦ (middle) and 160◦ (bottom). Photo courtesy of the Carnegie-Irvine Galaxy Survey."
+      ]
     },
     {
-      "caption1": "Figure 2: An HST color image of NGC 4051 with its [N II] BPT overlay. North is pointed toward 18◦ (Right): [N II] BPT diagrams for the high flux (large squares) and low flux (small squares) components as a function of distance from the nucleus along the APO DIS long-slit at PA = 98◦ (top), 233◦ (middle) and 188◦ (bottom). BPT for the fourth slit position angle 143◦ is not shown.",
-      "caption2": ""
+      "captions": [
+        "Figure 2: An HST color image of NGC 4051 with its [N II] BPT overlay. North is pointed toward 18◦ (Right): [N II] BPT diagrams for the high flux (large squares) and low flux (small squares) components as a function of distance from the nucleus along the APO DIS long-slit at PA = 98◦ (top), 233◦ (middle) and 188◦ (bottom). BPT for the fourth slit position angle 143◦ is not shown."
+      ]
     },
     {
-      "caption1": "Figure 3: Example of a two component Gaussian fit to [O III] emission line with high flux component (blue), low flux component (red), and total fit (magenta)",
-      "caption2": ""
+      "captions": [
+        "Figure 3: Example of a two component Gaussian fit to [O III] emission line with high flux component (blue), low flux component (red), and total fit (magenta)"
+      ]
     }
   ],
-  "tableCaption": [],
-  "$schema": "https://posters.science/schema/v0.1/poster_schema.json"
+  "tableCaptions": []
 }

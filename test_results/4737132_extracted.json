@@ -66,17 +66,19 @@
       }
     ]
   },
-  "imageCaption": [
+  "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
+  "imageCaptions": [
     {
-      "caption1": "https://kiid.com/1262 (Stand: 12.03.2021)",
-      "caption2": ""
+      "captions": [
+        "https://kiid.com/1262 (Stand: 12.03.2021)"
+      ]
     }
   ],
-  "tableCaption": [
+  "tableCaptions": [
     {
-      "caption1": "w1 | w2 | w3 | w4 | w5 w6 w7 | w8 w9 | w10\n2 | 3 | 4 | 3 | 2 | 3 | 2",
-      "caption2": ""
+      "captions": [
+        "w1 | w2 | w3 | w4 | w5 w6 w7 | w8 w9 | w10\n2 | 3 | 4 | 3 | 2 | 3 | 2"
+      ]
     }
-  ],
-  "$schema": "https://posters.science/schema/v0.1/poster_schema.json"
+  ]
 }
