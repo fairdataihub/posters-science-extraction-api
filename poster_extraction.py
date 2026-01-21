@@ -41,6 +41,7 @@ from transformers import (
     AutoTokenizer,
     Qwen2VLForConditionalGeneration,
     AutoProcessor,
+    TextStreamer,
 )
 from rouge_score import rouge_scorer
 
@@ -87,6 +88,30 @@ def log(msg: str):
     print(f"[{ts}] {msg}", flush=True)
 
 
+class ProgressStreamer(TextStreamer):
+    """
+    Custom streamer that logs progress during token generation.
+    Logs every N tokens to show generation is progressing.
+    """
+
+    def __init__(self, tokenizer, log_every: int = 100, **kwargs):
+        super().__init__(tokenizer, skip_prompt=True, skip_special_tokens=True)
+        self.log_every = log_every
+        self.token_count = 0
+        self.start_time = None
+
+    def on_finalized_text(self, text: str, stream_end: bool = False):
+        if self.start_time is None:
+            self.start_time = time.time()
+
+        self.token_count += len(text.split()) if text.strip() else 1
+
+        if self.token_count % self.log_every < 10 or stream_end:
+            elapsed = time.time() - self.start_time
+            tokens_per_sec = self.token_count / elapsed if elapsed > 0 else 0
+            log(f"   Generation progress: ~{self.token_count} tokens ({tokens_per_sec:.1f} tok/s)")
+
+
 def free_gpu():
     """Best-effort GPU memory cleanup helper."""
     gc.collect()
@@ -126,8 +151,8 @@ def get_best_gpu(min_memory_gb: int = 16):
     
     max_free_gb = max_free / (1024**3)
     if max_free_gb < min_memory_gb:
-        log(f"   ⚠ WARNING: Best GPU has only {max_free_gb:.1f}GB free, model needs ~{min_memory_gb}GB")
-        log(f"   ⚠ Other processes may be using GPU memory. Consider waiting or killing them.")
+        log(f"WARNING: Best GPU has only {max_free_gb:.1f}GB free, model needs ~{min_memory_gb}GB")
+        log("Other processes may be using GPU memory. Consider waiting or killing them.")
     
     log(f"   Selected GPU {best_gpu} with {max_free_gb:.1f}GB free")
     return f"cuda:{best_gpu}"
@@ -145,14 +170,28 @@ def load_vision_model():
     global _vision_model, _vision_processor
     if _vision_model is None:
         device = get_best_gpu()
+        # device_map expects integer or "auto", not "cuda:0" string
+        if device != "cpu":
+            device_map_value = int(device.split(":")[1])
+        else:
+            device_map_value = "cpu"
         log(f"Loading {VISION_MODEL_ID} for image OCR on {device}...")
-        _vision_model = Qwen2VLForConditionalGeneration.from_pretrained(
-            VISION_MODEL_ID,
-            torch_dtype=torch.bfloat16,
-            device_map=device,
-        )
-        _vision_processor = AutoProcessor.from_pretrained(VISION_MODEL_ID)
-        log(f"   ✓ Vision model loaded on {device}")
+        try:
+            _vision_model = Qwen2VLForConditionalGeneration.from_pretrained(
+                VISION_MODEL_ID,
+                torch_dtype=torch.bfloat16,
+                device_map=device_map_value,
+            )
+            _vision_processor = AutoProcessor.from_pretrained(VISION_MODEL_ID)
+            log(f"   ✓ Vision model loaded on {device}")
+        except Exception as e:
+            # Clean up on failure to prevent GPU memory leak
+            log(f"   ✗ Failed to load vision model: {e}")
+            if _vision_model is not None:
+                del _vision_model
+                _vision_model = None
+            free_gpu()
+            raise
     return _vision_model, _vision_processor
 
 
@@ -180,6 +219,7 @@ def extract_text_with_qwen_vision(image_path: str) -> str:
     model, processor = load_vision_model()
 
     image = Image.open(image_path).convert("RGB")
+    original_size = image.size
     max_size = 1280
     if max(image.size) > max_size:
         ratio = max_size / max(image.size)
@@ -187,6 +227,9 @@ def extract_text_with_qwen_vision(image_path: str) -> str:
             (int(image.size[0] * ratio), int(image.size[1] * ratio)),
             Image.Resampling.LANCZOS,
         )
+        log(f"   Resized image from {original_size} to {image.size}")
+    else:
+        log(f"   Image size: {image.size} (no resize needed)")
 
     prompt = """Transcribe ALL visible text from this scientific poster exactly as written.
 
@@ -398,50 +441,66 @@ def load_json_model(force_full_precision: bool = False):
 
     Automatically uses 8-bit quantization if GPU memory is limited (<16GB free),
     unless force_full_precision=True (used for image OCR pipeline where quality matters more).
-    
+
     Args:
         force_full_precision: If True, always use bfloat16 regardless of memory.
                               Used for image posters where OCR quality is critical.
-    
+
     Returns:
         (model, tokenizer) tuple for use with generate().
     """
     global _json_model, _json_tokenizer
     if _json_model is None:
         device = get_best_gpu()
-        
-        # Check available memory
+
+        # Check available memory and extract GPU id for device_map
+        # device_map expects integer (e.g., 0) or "auto", not "cuda:0" string
         if device != "cpu":
             gpu_id = int(device.split(":")[1])
             free_mem, _ = torch.cuda.mem_get_info(gpu_id)
             free_gb = free_mem / (1024**3)
+            device_map_value = gpu_id  # Use integer for device_map
         else:
             free_gb = 32  # Assume enough RAM
-        
+            device_map_value = "cpu"
+
         log(f"Loading {JSON_MODEL_ID} for JSON structuring on {device}...")
-        _json_tokenizer = AutoTokenizer.from_pretrained(JSON_MODEL_ID)
-        
-        use_8bit = free_gb < 16 and device != "cpu" and not force_full_precision
-        
-        if use_8bit:
-            # Use 8-bit quantization for limited memory
-            log(f"   Using 8-bit quantization (only {free_gb:.1f}GB free)")
-            _json_model = AutoModelForCausalLM.from_pretrained(
-                JSON_MODEL_ID,
-                load_in_8bit=True,
-                device_map=device,
-                low_cpu_mem_usage=True,
-            )
-        else:
-            if force_full_precision and free_gb < 16:
-                log(f"   Forcing full precision for image OCR quality ({free_gb:.1f}GB free)")
-            _json_model = AutoModelForCausalLM.from_pretrained(
-                JSON_MODEL_ID,
-                torch_dtype=torch.bfloat16,
-                device_map=device,
-                low_cpu_mem_usage=True,
-            )
-        log(f"   ✓ JSON model loaded on {device}")
+
+        try:
+            _json_tokenizer = AutoTokenizer.from_pretrained(JSON_MODEL_ID)
+
+            use_8bit = free_gb < 16 and device != "cpu" and not force_full_precision
+
+            if use_8bit:
+                # Use 8-bit quantization for limited memory
+                log(f"   Using 8-bit quantization (only {free_gb:.1f}GB free)")
+                _json_model = AutoModelForCausalLM.from_pretrained(
+                    JSON_MODEL_ID,
+                    load_in_8bit=True,
+                    device_map=device_map_value,
+                    low_cpu_mem_usage=True,
+                )
+            else:
+                if force_full_precision and free_gb < 16:
+                    log(f"   Forcing full precision for image OCR quality ({free_gb:.1f}GB free)")
+                _json_model = AutoModelForCausalLM.from_pretrained(
+                    JSON_MODEL_ID,
+                    torch_dtype=torch.bfloat16,
+                    device_map=device_map_value,
+                    low_cpu_mem_usage=True,
+                )
+            log(f"   ✓ JSON model loaded on {device}")
+        except Exception as e:
+            # Clean up on failure to prevent GPU memory leak
+            log(f"   ✗ Failed to load JSON model: {e}")
+            if _json_model is not None:
+                del _json_model
+                _json_model = None
+            if _json_tokenizer is not None:
+                del _json_tokenizer
+                _json_tokenizer = None
+            free_gpu()
+            raise
     return _json_model, _json_tokenizer
 
 
@@ -474,6 +533,9 @@ def generate(model, tokenizer, prompt: str, max_tokens: int) -> str:
         f"Calling model.generate() with max_new_tokens={max_tokens} "
         f"and input length={inputs['input_ids'].shape[1]} tokens"
     )
+    log("Generating JSON (this may take longer for large posters)...")
+
+    streamer = ProgressStreamer(tokenizer, log_every=200)
     t0 = time.time()
     with torch.no_grad():
         outputs = model.generate(
@@ -481,9 +543,14 @@ def generate(model, tokenizer, prompt: str, max_tokens: int) -> str:
             max_new_tokens=max_tokens,
             do_sample=False,
             pad_token_id=tokenizer.eos_token_id,
+            streamer=streamer,
         )
     elapsed = time.time() - t0
-    log(f"   model.generate() completed in {elapsed:.2f} seconds")
+    tokens_generated = outputs.shape[1] - inputs["input_ids"].shape[1]
+    log(
+        f"   model.generate() completed in {elapsed:.2f} seconds "
+        f"({tokens_generated} tokens, {tokens_generated / elapsed:.1f} tok/s)"
+    )
 
     # Decode only the new tokens (skip the input prompt)
     return tokenizer.decode(
@@ -1542,12 +1609,12 @@ def process_poster_file(poster_path: str) -> dict:
         f"using source={source} in {t_extract_elapsed:.2f} seconds"
     )
 
-    # IMPORTANT: Unload vision model BEFORE loading JSON model to free GPU memory
+    # IMPORTANT: Always unload vision model BEFORE loading JSON model to free GPU memory
     # This ensures only one large model is loaded at a time
+    # Must unload even for PDFs in case a previous image request left it loaded
     ext = Path(poster_path).suffix.lower()
     is_image_poster = ext in [".jpg", ".jpeg", ".png"]
-    if is_image_poster:
-        unload_vision_model()
+    unload_vision_model()
 
     # Load JSON model (force full precision for image posters - OCR quality is critical)
     model, tokenizer = load_json_model(force_full_precision=is_image_poster)

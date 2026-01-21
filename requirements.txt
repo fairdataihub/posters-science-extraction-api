@@ -1,5 +1,6 @@
 transformers>=4.40.0
 torch>=2.0.0
+torchvision>=0.15.0
 rouge-score
 qwen-vl-utils
 accelerate
