@@ -68,20 +68,23 @@
       }
     ]
   },
-  "imageCaption": [
+  "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
+  "imageCaptions": [
     {
-      "caption1": "Figure 1. Overview of the Task Force.",
-      "caption2": ""
+      "captions": [
+        "Figure 1. Overview of the Task Force."
+      ]
     },
     {
-      "caption1": "Figure 2. Illustration of the outcomes of task 1 of the Task Force, which consisted of understanding the requirements of each of the 17 FAIR4RS principles.",
-      "caption2": ""
+      "captions": [
+        "Figure 2. Illustration of the outcomes of task 1 of the Task Force, which consisted of understanding the requirements of each of the 17 FAIR4RS principles."
+      ]
     },
     {
-      "caption1": "Figure 3. Progress of the subgroup working on C5 - Metadata for software reuse.",
-      "caption2": ""
+      "captions": [
+        "Figure 3. Progress of the subgroup working on C5 - Metadata for software reuse."
+      ]
     }
   ],
-  "tableCaption": [],
-  "$schema": "https://posters.science/schema/v0.1/poster_schema.json"
+  "tableCaptions": []
 }
