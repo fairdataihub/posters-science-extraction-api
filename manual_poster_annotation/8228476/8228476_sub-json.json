@@ -4,92 +4,56 @@
   "creators": [
     {
       "name": "Toker, Michael",
+      "givenName": "Michael",
+      "familyName": "Toker",
       "nameType": "Personal",
-      "nameIdentifiers": [
-        {
-          "nameIdentifier": "tok@cs.technion.ac.il",
-          "nameIdentifierScheme": "contact"
-        }
-      ],
       "affiliation": [
-        {
-          "name": "Technion − Israel Institute of Technology"
-        }
+        "Technion − Israel Institute of Technology"
       ]
     },
     {
       "name": "Mishali, Oren",
+      "givenName": "Oren",
+      "familyName": "Mishali",
       "nameType": "Personal",
-      "nameIdentifiers": [
-        {
-          "nameIdentifier": "omishali@cs.technion.ac.il",
-          "nameIdentifierScheme": "contact"
-        }
-      ],
       "affiliation": [
-        {
-          "name": "Technion − Israel Institute of Technology"
-        }
+        "Technion − Israel Institute of Technology"
       ]
     },
     {
       "name": "Cohen, Adir",
+      "givenName": "Adir",
+      "familyName": "Cohen",
       "nameType": "Personal",
-      "nameIdentifiers": [
-        {
-          "nameIdentifier": "adircohen@campus.technion.ac.il",
-          "nameIdentifierScheme": "contact"
-        }
-      ],
       "affiliation": [
-        {
-          "name": "Technion − Israel Institute of Technology"
-        }
+        "Technion − Israel Institute of Technology"
       ]
     },
     {
       "name": "Münz-Manor, Ophir",
+      "givenName": "Ophir",
+      "familyName": "Münz-Manor",
       "nameType": "Personal",
-      "nameIdentifiers": [
-        {
-          "nameIdentifier": "ophirmm@openu.ac.il",
-          "nameIdentifierScheme": "contact"
-        }
-      ],
       "affiliation": [
-        {
-          "name": "The Open University of Israel"
-        }
+        "The Open University of Israel"
       ]
     },
     {
       "name": "Kimelfeld, Benny",
+      "givenName": "Benny",
+      "familyName": "Kimelfeld",
       "nameType": "Personal",
-      "nameIdentifiers": [
-        {
-          "nameIdentifier": "bennyk@cs.technion.ac.il",
-          "nameIdentifierScheme": "contact"
-        }
-      ],
       "affiliation": [
-        {
-          "name": "Technion − Israel Institute of Technology"
-        }
+        "Technion − Israel Institute of Technology"
       ]
     },
     {
       "name": "Belinkov, Yonatan",
+      "givenName": "Yonatan",
+      "familyName": "Belinkov",
       "nameType": "Personal",
-      "nameIdentifiers": [
-        {
-          "nameIdentifier": "belinkov@technion.ac.il",
-          "nameIdentifierScheme": "contact"
-        }
-      ],
       "affiliation": [
-        {
-          "name": "Technion − Israel Institute of Technology"
-        }
+        "Technion − Israel Institute of Technology"
       ]
     }
   ],

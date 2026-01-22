@@ -17,6 +17,8 @@
   "creators": [
     {
       "name": "Ma, Rongqian",
+      "givenName": "Rongqian",
+      "familyName": "Ma",
       "nameType": "Personal",
       "nameIdentifiers": [
         {
@@ -26,12 +28,7 @@
         }
       ],
       "affiliation": [
-        {
-          "name": "Indiana University Bloomington",
-          "affiliationIdentifier": "https://ror.org/02k40bc56",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
+        "Indiana University Bloomington"
       ]
     }
   ],

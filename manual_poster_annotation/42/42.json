@@ -17,65 +17,44 @@
   "creators": [
     {
       "name": "O'Neill, Jamey",
+      "givenName": "Jamey",
+      "familyName": "O'Neill",
       "nameType": "Personal",
       "nameIdentifiers": [
         {
           "nameIdentifier": "https://orcid.org/0009-0001-8532-8405",
           "nameIdentifierScheme": "ORCID",
           "schemeURI": "https://orcid.org"
-        },
-        {
-          "nameIdentifier": "joneilliii@sdsu.edu",
-          "nameIdentifierScheme": "contact"
         }
       ],
       "affiliation": [
-        {
-          "name": "Mechanical Engineering Department, San Diego State University",
-          "affiliationIdentifier": "https://ror.org/01zj77w89",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        },
-        {
-          "name": "Department of Bioengineering, University of California San Diego",
-          "affiliationIdentifier": "https://ror.org/0168r3w48",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
+        "Mechanical Engineering Department, San Diego State University",
+        "Department of Bioengineering, University of California San Diego"
       ]
     },
     {
       "name": "Reddy, Gudur Ashrith",
+      "givenName": "Gudur Ashrith",
+      "familyName": "Reddy",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "Mechanical Engineering Department, San Diego State University",
-          "affiliationIdentifier": "https://ror.org/01zj77w89",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        },
-        {
-          "name": "Department of Bioengineering, University of California San Diego",
-          "affiliationIdentifier": "https://ror.org/0168r3w48",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
+        "Mechanical Engineering Department, San Diego State University",
+        "Department of Bioengineering, University of California San Diego"
       ]
     },
     {
       "name": "Dhillon, Nermeeta",
+      "givenName": "Nermeeta",
+      "familyName": "Dhillon",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "Mechanical Engineering Department, San Diego State University",
-          "affiliationIdentifier": "https://ror.org/01zj77w89",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
+        "Mechanical Engineering Department, San Diego State University"
       ]
     },
     {
       "name": "Tripathi, Osika",
+      "givenName": "Osika",
+      "familyName": "Tripathi",
       "nameType": "Personal",
       "nameIdentifiers": [
         {
@@ -85,16 +64,13 @@
         }
       ],
       "affiliation": [
-        {
-          "name": "Herbert Wertheim School of Public Health and Human Longevity Science, University of California San Diego",
-          "affiliationIdentifier": "https://ror.org/0168r3w48",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
+        "Herbert Wertheim School of Public Health and Human Longevity Science, University of California San Diego"
       ]
     },
     {
       "name": "Alexandrov, Ludmil",
+      "givenName": "Ludmil",
+      "familyName": "Alexandrov",
       "nameType": "Personal",
       "nameIdentifiers": [
         {
@@ -104,28 +80,15 @@
         }
       ],
       "affiliation": [
-        {
-          "name": "Department of Bioengineering, University of California San Diego",
-          "affiliationIdentifier": "https://ror.org/0168r3w48",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        },
-        {
-          "name": "Department of Cellular and Molecular Medicine, University of California San Diego",
-          "affiliationIdentifier": "https://ror.org/0168r3w48",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        },
-        {
-          "name": "Moores Cancer Center, University of California San Diego",
-          "affiliationIdentifier": "https://ror.org/0168r3w48",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
+        "Department of Bioengineering, University of California San Diego",
+        "Department of Cellular and Molecular Medicine, University of California San Diego",
+        "Moores Cancer Center, University of California San Diego"
       ]
     },
     {
       "name": "Katira, Parag",
+      "givenName": "Parag",
+      "familyName": "Katira",
       "nameType": "Personal",
       "nameIdentifiers": [
         {
@@ -135,12 +98,7 @@
         }
       ],
       "affiliation": [
-        {
-          "name": "Mechanical Engineering Department, San Diego State University",
-          "affiliationIdentifier": "https://ror.org/01zj77w89",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
+        "Mechanical Engineering Department, San Diego State University"
       ]
     }
   ],

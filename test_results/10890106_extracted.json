@@ -2,66 +2,66 @@
   "creators": [
     {
       "name": "van der Zande, Meike",
+      "givenName": "Meike",
+      "familyName": "van der Zande",
       "affiliation": [
-        {
-          "name": "Wageningen Food Safety Research, Wageningen, The Netherlands"
-        }
+        "Wageningen Food Safety Research, Wageningen, The Netherlands"
       ]
     },
     {
       "name": "Duivenvoorde, Loes PM",
+      "givenName": "Loes PM",
+      "familyName": "Duivenvoorde",
       "affiliation": [
-        {
-          "name": "Wageningen Food Safety Research, Wageningen, The Netherlands"
-        }
+        "Wageningen Food Safety Research, Wageningen, The Netherlands"
       ]
     },
     {
       "name": "Jansen Holleboom, Wendy",
+      "givenName": "Wendy",
+      "familyName": "Jansen Holleboom",
       "affiliation": [
-        {
-          "name": "Wageningen Food Safety Research, Wageningen, The Netherlands"
-        }
+        "Wageningen Food Safety Research, Wageningen, The Netherlands"
       ]
     },
     {
       "name": "Fabrizi, Benedetta",
+      "givenName": "Benedetta",
+      "familyName": "Fabrizi",
       "affiliation": [
-        {
-          "name": "Wageningen Food Safety Research, Wageningen, The Netherlands"
-        }
+        "Wageningen Food Safety Research, Wageningen, The Netherlands"
       ]
     },
     {
       "name": "Vos, A Paul",
+      "givenName": "A Paul",
+      "familyName": "Vos",
       "affiliation": [
-        {
-          "name": "Wageningen Food & Biobased Research, Wageningen, The Netherlands"
-        }
+        "Wageningen Food & Biobased Research, Wageningen, The Netherlands"
       ]
     },
     {
       "name": "Bastiaan-Net, Shanna",
+      "givenName": "Shanna",
+      "familyName": "Bastiaan-Net",
       "affiliation": [
-        {
-          "name": "Wageningen Food & Biobased Research, Wageningen, The Netherlands"
-        }
+        "Wageningen Food & Biobased Research, Wageningen, The Netherlands"
       ]
     },
     {
       "name": "Tomassen, Monic MM",
+      "givenName": "Monic MM",
+      "familyName": "Tomassen",
       "affiliation": [
-        {
-          "name": "Wageningen Food & Biobased Research, Wageningen, The Netherlands"
-        }
+        "Wageningen Food & Biobased Research, Wageningen, The Netherlands"
       ]
     },
     {
       "name": "Janssen, Aafke WF",
+      "givenName": "Aafke WF",
+      "familyName": "Janssen",
       "affiliation": [
-        {
-          "name": "Wageningen Food Safety Research, Wageningen, The Netherlands"
-        }
+        "Wageningen Food Safety Research, Wageningen, The Netherlands"
       ]
     }
   ],

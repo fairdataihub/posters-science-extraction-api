@@ -4,20 +4,20 @@
   "creators": [
     {
       "name": "Patel, Bhavesh",
+      "givenName": "Bhavesh",
+      "familyName": "Patel",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "FAIR Data Innovations Hub, California Medical Innovations Institute, San Diego, CA, USA"
-        }
+        "FAIR Data Innovations Hub, California Medical Innovations Institute, San Diego, CA, USA"
       ]
     },
     {
       "name": "Garijo, Daniel",
+      "givenName": "Daniel",
+      "familyName": "Garijo",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "Universidad Politécnica de Madrid, Spain"
-        }
+        "Universidad Politécnica de Madrid, Spain"
       ]
     }
   ],

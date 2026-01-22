@@ -4,11 +4,11 @@
   "creators": [
     {
       "name": "Arnold, Frederik",
+      "givenName": "Frederik",
+      "familyName": "Arnold",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "Institut für Bibliotheks- und Informationswissenschaft"
-        }
+        "Institut für Bibliotheks- und Informationswissenschaft"
       ]
     }
   ],

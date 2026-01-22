@@ -4,11 +4,11 @@
   "creators": [
     {
       "name": "Ma, Rongqian",
+      "givenName": "Rongqian",
+      "familyName": "Ma",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "Indiana University Bloomington"
-        }
+        "Indiana University Bloomington"
       ]
     }
   ],

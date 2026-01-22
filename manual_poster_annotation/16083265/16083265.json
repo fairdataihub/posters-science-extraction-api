@@ -17,48 +17,27 @@
   "creators": [
     {
       "name": "Gul, Merve",
+      "givenName": "Merve",
+      "familyName": "Gul",
       "nameType": "Personal",
-      "nameIdentifiers": [
-        {
-          "nameIdentifier": "mailto:merve.gul@example.com",
-          "nameIdentifierScheme": "contact"
-        }
-      ],
       "affiliation": [
-        {
-          "name": "Department of Drug Sciences, University of Pavia, Pavia, Italy",
-          "affiliationIdentifier": "https://ror.org/00s6t1f81",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        },
-        {
-          "name": "Department of Chemical Engineering, Universitat Politècnica de Catalunya (UPC-EEBE), Barcelona, Spain",
-          "affiliationIdentifier": "https://ror.org/03mb6wj31",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
+        "Department of Drug Sciences, University of Pavia, Pavia, Italy",
+        "Department of Chemical Engineering, Universitat Politècnica de Catalunya (UPC-EEBE), Barcelona, Spain"
       ]
     },
     {
       "name": "Genta, Ida",
+      "givenName": "Ida",
+      "familyName": "Genta",
       "nameType": "Personal",
-      "nameIdentifiers": [
-        {
-          "nameIdentifier": "ida.genta@unipv.it",
-          "nameIdentifierScheme": "contact"
-        }
-      ],
       "affiliation": [
-        {
-          "name": "Department of Drug Sciences, University of Pavia, Pavia, Italy",
-          "affiliationIdentifier": "https://ror.org/00s6t1f81",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
+        "Department of Drug Sciences, University of Pavia, Pavia, Italy"
       ]
     },
     {
       "name": "Perez Madrigal, Maria M.",
+      "givenName": "Maria M.",
+      "familyName": "Perez Madrigal",
       "nameType": "Personal",
       "nameIdentifiers": [
         {
@@ -68,16 +47,13 @@
         }
       ],
       "affiliation": [
-        {
-          "name": "Department of Chemical Engineering, Universitat Politècnica de Catalunya (UPC-EEBE), Barcelona, Spain",
-          "affiliationIdentifier": "https://ror.org/03mb6wj31",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
+        "Department of Chemical Engineering, Universitat Politècnica de Catalunya (UPC-EEBE), Barcelona, Spain"
       ]
     },
     {
       "name": "Aleman, Carlos",
+      "givenName": "Carlos",
+      "familyName": "Aleman",
       "nameType": "Personal",
       "nameIdentifiers": [
         {
@@ -87,36 +63,17 @@
         }
       ],
       "affiliation": [
-        {
-          "name": "Department of Chemical Engineering, Universitat Politècnica de Catalunya (UPC-EEBE), Barcelona, Spain",
-          "affiliationIdentifier": "https://ror.org/03mb6wj31",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        },
-        {
-          "name": "Barcelona Research Center for Multiscale Science and Engineering, EEBE, Universitat Politècnica de Catalunya, Barcelona, Spain",
-          "affiliationIdentifier": "https://ror.org/03mb6wj31",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
+        "Department of Chemical Engineering, Universitat Politècnica de Catalunya (UPC-EEBE), Barcelona, Spain",
+        "Barcelona Research Center for Multiscale Science and Engineering, EEBE, Universitat Politècnica de Catalunya, Barcelona, Spain"
       ]
     },
     {
       "name": "Chiesa, Enrica",
+      "givenName": "Enrica",
+      "familyName": "Chiesa",
       "nameType": "Personal",
-      "nameIdentifiers": [
-        {
-          "nameIdentifier": "enrica.chiesa@unipv.it",
-          "nameIdentifierScheme": "contact"
-        }
-      ],
       "affiliation": [
-        {
-          "name": "Department of Drug Sciences, University of Pavia, Pavia, Italy",
-          "affiliationIdentifier": "https://ror.org/00s6t1f81",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
+        "Department of Drug Sciences, University of Pavia, Pavia, Italy"
       ]
     }
   ],

@@ -4,53 +4,49 @@
   "creators": [
     {
       "name": "Gul, Merve",
+      "givenName": "Merve",
+      "familyName": "Gul",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "Department of Drug Sciences, University of Pavia"
-        },
-        {
-          "name": "Department of Chemical Engineering, Universitat Politècnica de Catalunya (UPC-EEBE)"
-        }
+        "Department of Drug Sciences, University of Pavia",
+        "Department of Chemical Engineering, Universitat Politècnica de Catalunya (UPC-EEBE)"
       ]
     },
     {
       "name": "Genta, Ida",
+      "givenName": "Ida",
+      "familyName": "Genta",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "Department of Drug Sciences, University of Pavia"
-        }
+        "Department of Drug Sciences, University of Pavia"
       ]
     },
     {
       "name": "Perez Madrigal, Maria M.",
+      "givenName": "Maria M.",
+      "familyName": "Perez Madrigal",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "Department of Chemical Engineering, Universitat Politècnica de Catalunya (UPC-EEBE)"
-        }
+        "Department of Chemical Engineering, Universitat Politècnica de Catalunya (UPC-EEBE)"
       ]
     },
     {
       "name": "Aleman, Carlos",
+      "givenName": "Carlos",
+      "familyName": "Aleman",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "Department of Chemical Engineering, Universitat Politècnica de Catalunya (UPC-EEBE)"
-        },
-        {
-          "name": "Barcelona Research Center for Multiscale Science and Engineering, EEBE, Universitat Politècnica de Catalunya"
-        }
+        "Department of Chemical Engineering, Universitat Politècnica de Catalunya (UPC-EEBE)",
+        "Barcelona Research Center for Multiscale Science and Engineering, EEBE, Universitat Politècnica de Catalunya"
       ]
     },
     {
       "name": "Chiesa, Enrica",
+      "givenName": "Enrica",
+      "familyName": "Chiesa",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "Department of Drug Sciences, University of Pavia"
-        }
+        "Department of Drug Sciences, University of Pavia"
       ]
     }
   ],

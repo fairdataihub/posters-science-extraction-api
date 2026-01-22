@@ -585,7 +585,7 @@ CRITICAL RULES FOR SECTIONS:
 JSON SCHEMA:
 {{
   "creators": [
-    {{"name": "LastName, FirstName", "affiliation": [{{"name": "Institution Name"}}]}}
+    {{"name": "LastName, FirstName", "givenName": "FirstName", "familyName": "LastName", "affiliation": ["Institution Name"]}}
   ],
   "titles": [{{"title": "Main Poster Title"}}],
   "posterContent": {{
@@ -614,7 +614,7 @@ FALLBACK_PROMPT = """Convert poster text to JSON. RULES:
 3. Copy ALL text EXACTLY verbatim
 
 {{
-  "creators": [{{"name": "LastName, FirstName", "affiliation": [{{"name": "Institution"}}]}}],
+  "creators": [{{"name": "LastName, FirstName", "givenName": "FirstName", "familyName": "LastName", "affiliation": ["Institution"]}}],
   "titles": [{{"title": "Poster Title"}}],
   "posterContent": {{
     "sections": [{{"sectionTitle": "Header", "sectionContent": "verbatim text"}}]
