@@ -17,120 +17,70 @@
   "creators": [
     {
       "name": "Münz-Manor, Ophir",
+      "givenName": "Ophir",
+      "familyName": "Münz-Manor",
       "nameType": "Personal",
       "nameIdentifiers": [
         {
           "nameIdentifier": "https://orcid.org/0000-0001-6333-345X",
           "nameIdentifierScheme": "ORCID",
           "schemeURI": "https://orcid.org"
-        },
-        {
-          "nameIdentifier": "ophirmm@openu.ac.il",
-          "nameIdentifierScheme": "contact"
         }
       ],
       "affiliation": [
-        {
-          "name": "The Open University of Israel, Ra'anana, Israel",
-          "affiliationIdentifier": "https://ror.org/027z64205",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
+        "The Open University of Israel, Ra'anana, Israel"
       ]
     },
     {
       "name": "Toker, Michael",
+      "givenName": "Michael",
+      "familyName": "Toker",
       "nameType": "Personal",
-      "nameIdentifiers": [
-        {
-          "nameIdentifier": "tok@cs.technion.ac.il",
-          "nameIdentifierScheme": "contact"
-        }
-      ],
       "affiliation": [
-        {
-          "name": "Technion – Israel Institute of Technology, Haifa, Israel",
-          "affiliationIdentifier": "https://ror.org/03qryx823",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
+        "Technion – Israel Institute of Technology, Haifa, Israel"
       ]
     },
     {
       "name": "Mishali, Oren",
+      "givenName": "Oren",
+      "familyName": "Mishali",
       "nameType": "Personal",
-      "nameIdentifiers": [
-        {
-          "nameIdentifier": "omishali@cs.technion.ac.il",
-          "nameIdentifierScheme": "contact"
-        }
-      ],
       "affiliation": [
-        {
-          "name": "Technion – Israel Institute of Technology, Haifa, Israel",
-          "affiliationIdentifier": "https://ror.org/03qryx823",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
+        "Technion – Israel Institute of Technology, Haifa, Israel"
       ]
     },
     {
       "name": "Kimmelfeld, Benny",
+      "givenName": "Benny",
+      "familyName": "Kimmelfeld",
       "nameType": "Personal",
-      "nameIdentifiers": [
-        {
-          "nameIdentifier": "bennyk@cs.technion.ac.il",
-          "nameIdentifierScheme": "contact"
-        }
-      ],
       "affiliation": [
-        {
-          "name": "Technion – Israel Institute of Technology, Haifa, Israel",
-          "affiliationIdentifier": "https://ror.org/03qryx823",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
+        "Technion – Israel Institute of Technology, Haifa, Israel"
       ]
     },
     {
       "name": "Belinkov, Yonatan",
+      "givenName": "Yonatan",
+      "familyName": "Belinkov",
       "nameType": "Personal",
       "nameIdentifiers": [
         {
           "nameIdentifier": "https://orcid.org/0000-0001-9463-2575",
           "nameIdentifierScheme": "ORCID",
           "schemeURI": "https://orcid.org"
-        },
-        {
-          "nameIdentifier": "belinkov@technion.ac.il",
-          "nameIdentifierScheme": "contact"
         }
       ],
       "affiliation": [
-        {
-          "name": "Technion – Israel Institute of Technology, Haifa, Israel",
-          "affiliationIdentifier": "https://ror.org/03qryx823",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
+        "Technion – Israel Institute of Technology, Haifa, Israel"
       ]
     },
     {
       "name": "Cohen, Adir",
+      "givenName": "Adir",
+      "familyName": "Cohen",
       "nameType": "Personal",
-      "nameIdentifiers": [
-        {
-          "nameIdentifier": "adircohen@campus.technion.ac.il",
-          "nameIdentifierScheme": "contact"
-        }
-      ],
       "affiliation": [
-        {
-          "name": "Technion – Israel Institute of Technology, Haifa, Israel",
-          "affiliationIdentifier": "https://ror.org/03qryx823",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
+        "Technion – Israel Institute of Technology, Haifa, Israel"
       ]
     }
   ],

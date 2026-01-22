@@ -4,62 +4,58 @@
   "creators": [
     {
       "name": "Dettori, Laura",
+      "givenName": "Laura",
+      "familyName": "Dettori",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "National PhD Programme in One Health approaches to infectious diseases and life science research, Department of Public Health, Experimental and Forensic Medicine, University of Pavia, Pavia, 27100, Italy"
-        },
-        {
-          "name": "Department of Life and Environmental Sciences, University of Cagliari, 09042, Monserrato, Italy"
-        }
+        "National PhD Programme in One Health approaches to infectious diseases and life science research, Department of Public Health, Experimental and Forensic Medicine, University of Pavia, Pavia, 27100, Italy",
+        "Department of Life and Environmental Sciences, University of Cagliari, 09042, Monserrato, Italy"
       ]
     },
     {
       "name": "Malune, Paolo",
+      "givenName": "Paolo",
+      "familyName": "Malune",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "Department of Life and Environmental Sciences, University of Cagliari, 09042, Monserrato, Italy"
-        }
+        "Department of Life and Environmental Sciences, University of Cagliari, 09042, Monserrato, Italy"
       ]
     },
     {
       "name": "Cara, Marta Maria",
+      "givenName": "Marta Maria",
+      "familyName": "Cara",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "National PhD Programme in One Health approaches to infectious diseases and life science research, Department of Public Health, Experimental and Forensic Medicine, University of Pavia, Pavia, 27100, Italy"
-        },
-        {
-          "name": "Department of Life and Environmental Sciences, University of Cagliari, 09042, Monserrato, Italy"
-        }
+        "National PhD Programme in One Health approaches to infectious diseases and life science research, Department of Public Health, Experimental and Forensic Medicine, University of Pavia, Pavia, 27100, Italy",
+        "Department of Life and Environmental Sciences, University of Cagliari, 09042, Monserrato, Italy"
       ]
     },
     {
       "name": "Nieddu, Salvatore",
+      "givenName": "Salvatore",
+      "familyName": "Nieddu",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "Department of Life and Environmental Sciences, University of Cagliari, 09042, Monserrato, Italy"
-        }
+        "Department of Life and Environmental Sciences, University of Cagliari, 09042, Monserrato, Italy"
       ]
     },
     {
       "name": "Tramontano, Enzo",
+      "givenName": "Enzo",
+      "familyName": "Tramontano",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "Department of Life and Environmental Sciences, University of Cagliari, 09042, Monserrato, Italy"
-        }
+        "Department of Life and Environmental Sciences, University of Cagliari, 09042, Monserrato, Italy"
       ]
     },
     {
       "name": "Esposito, Francesca",
+      "givenName": "Francesca",
+      "familyName": "Esposito",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "Department of Life and Environmental Sciences, University of Cagliari, 09042, Monserrato, Italy"
-        }
+        "Department of Life and Environmental Sciences, University of Cagliari, 09042, Monserrato, Italy"
       ]
     }
   ],

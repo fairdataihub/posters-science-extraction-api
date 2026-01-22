@@ -4,56 +4,56 @@
   "creators": [
     {
       "name": "Polack, Garrett E.",
+      "givenName": "Garrett E.",
+      "familyName": "Polack",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "Georgia State University, Atlanta, GA, USA"
-        }
+        "Georgia State University, Atlanta, GA, USA"
       ]
     },
     {
       "name": "Crenshaw, D. M.",
+      "givenName": "D. M.",
+      "familyName": "Crenshaw",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "Georgia State University, Atlanta, GA, USA"
-        }
+        "Georgia State University, Atlanta, GA, USA"
       ]
     },
     {
       "name": "Meena, B.",
+      "givenName": "B.",
+      "familyName": "Meena",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "Georgia State University, Atlanta, GA, USA"
-        }
+        "Georgia State University, Atlanta, GA, USA"
       ]
     },
     {
       "name": "Revalski, M.",
+      "givenName": "M.",
+      "familyName": "Revalski",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "Space Telescope Science Institute, Baltimore, MD, USA"
-        }
+        "Space Telescope Science Institute, Baltimore, MD, USA"
       ]
     },
     {
       "name": "Fischer, T. C.",
+      "givenName": "T. C.",
+      "familyName": "Fischer",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "Space Telescope Science Institute, Baltimore, MD, USA"
-        }
+        "Space Telescope Science Institute, Baltimore, MD, USA"
       ]
     },
     {
       "name": "Falcone, J.",
+      "givenName": "J.",
+      "familyName": "Falcone",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "Georgia State University, Atlanta, GA, USA"
-        }
+        "Georgia State University, Atlanta, GA, USA"
       ]
     }
   ],

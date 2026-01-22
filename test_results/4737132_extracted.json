@@ -2,10 +2,10 @@
   "creators": [
     {
       "name": "Arnold, Frederik",
+      "givenName": "Frederik",
+      "familyName": "Arnold",
       "affiliation": [
-        {
-          "name": "Institut für Bibliotheks- und Informationswissenschaft"
-        }
+        "Institut für Bibliotheks- und Informationswissenschaft"
       ]
     }
   ],

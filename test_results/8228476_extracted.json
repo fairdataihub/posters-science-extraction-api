@@ -2,50 +2,50 @@
   "creators": [
     {
       "name": "Toker, Michael",
+      "givenName": "Michael",
+      "familyName": "Toker",
       "affiliation": [
-        {
-          "name": "Technion − Israel Institute of Technology"
-        }
+        "Technion − Israel Institute of Technology"
       ]
     },
     {
       "name": "Mishali, Oren",
+      "givenName": "Oren",
+      "familyName": "Mishali",
       "affiliation": [
-        {
-          "name": "Technion − Israel Institute of Technology"
-        }
+        "Technion − Israel Institute of Technology"
       ]
     },
     {
       "name": "Cohen, Adir",
+      "givenName": "Adir",
+      "familyName": "Cohen",
       "affiliation": [
-        {
-          "name": "Technion − Israel Institute of Technology"
-        }
+        "Technion − Israel Institute of Technology"
       ]
     },
     {
       "name": "Munz-Manor, Ophir",
+      "givenName": "Ophir",
+      "familyName": "Munz-Manor",
       "affiliation": [
-        {
-          "name": "The Open University of Israel"
-        }
+        "The Open University of Israel"
       ]
     },
     {
       "name": "Kimelfeld, Benny",
+      "givenName": "Benny",
+      "familyName": "Kimelfeld",
       "affiliation": [
-        {
-          "name": "Technion − Israel Institute of Technology"
-        }
+        "Technion − Israel Institute of Technology"
       ]
     },
     {
       "name": "Belinkov, Yonatan",
+      "givenName": "Yonatan",
+      "familyName": "Belinkov",
       "affiliation": [
-        {
-          "name": "Technion − Israel Institute of Technology"
-        }
+        "Technion − Israel Institute of Technology"
       ]
     }
   ],

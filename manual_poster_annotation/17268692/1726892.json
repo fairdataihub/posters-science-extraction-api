@@ -17,29 +17,24 @@
   "creators": [
     {
       "name": "Patel, Bhavesh",
+      "givenName": "Bhavesh",
+      "familyName": "Patel",
       "nameType": "Personal",
       "nameIdentifiers": [
         {
           "nameIdentifier": "https://orcid.org/0000-0002-0307-262X",
           "nameIdentifierScheme": "ORCID",
           "schemeURI": "https://orcid.org"
-        },
-        {
-          "nameIdentifier": "bpatel@calmi2.org",
-          "nameIdentifierScheme": "contact"
         }
       ],
       "affiliation": [
-        {
-          "name": "FAIR Data Innovations Hub, California Medical Innovations Institute, San Diego, CA, USA",
-          "affiliationIdentifier": "https://ror.org/0156zyn36",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
+        "FAIR Data Innovations Hub, California Medical Innovations Institute, San Diego, CA, USA"
       ]
     },
     {
       "name": "Garijo, Daniel",
+      "givenName": "Daniel",
+      "familyName": "Garijo",
       "nameType": "Personal",
       "nameIdentifiers": [
         {
@@ -49,12 +44,7 @@
         }
       ],
       "affiliation": [
-        {
-          "name": "Universidad Politécnica de Madrid, Spain",
-          "affiliationIdentifier": "https://ror.org/03ths8210",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
+        "Universidad Politécnica de Madrid, Spain"
       ]
     }
   ],

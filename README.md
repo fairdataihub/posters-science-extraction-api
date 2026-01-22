@@ -67,7 +67,7 @@ Output conforms to the [poster-json-schema](https://github.com/fairdataihub/post
 ```json
 {
   "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
-  "creators": [{"name": "LastName, FirstName", "affiliation": [{"name": "Institution"}]}],
+  "creators": [{"name": "LastName, FirstName", "givenName": "FirstName", "familyName": "LastName", "affiliation": ["Institution"]}],
   "titles": [{"title": "Poster Title"}],
   "posterContent": {
     "sections": [

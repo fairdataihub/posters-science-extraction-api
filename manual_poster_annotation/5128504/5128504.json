@@ -17,6 +17,8 @@
   "creators": [
     {
       "name": "Polack, Garrett E.",
+      "givenName": "Garrett E.",
+      "familyName": "Polack",
       "nameType": "Personal",
       "nameIdentifiers": [
         {
@@ -26,16 +28,13 @@
         }
       ],
       "affiliation": [
-        {
-          "name": "Georgia State University, Atlanta, GA, USA",
-          "affiliationIdentifier": "https://ror.org/03qt6ba18",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
+        "Georgia State University, Atlanta, GA, USA"
       ]
     },
     {
       "name": "Crenshaw, D. Michael",
+      "givenName": "D. Michael",
+      "familyName": "Crenshaw",
       "nameType": "Personal",
       "nameIdentifiers": [
         {
@@ -45,60 +44,43 @@
         }
       ],
       "affiliation": [
-        {
-          "name": "Georgia State University, Atlanta, GA, USA",
-          "affiliationIdentifier": "https://ror.org/03qt6ba18",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
+        "Georgia State University, Atlanta, GA, USA"
       ]
     },
     {
       "name": "Meena, Beena",
+      "givenName": "Beena",
+      "familyName": "Meena",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "Georgia State University, Atlanta, GA, USA",
-          "affiliationIdentifier": "https://ror.org/03qt6ba18",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
+        "Georgia State University, Atlanta, GA, USA"
       ]
     },
     {
       "name": "Revalski, Mitchell",
+      "givenName": "Mitchell",
+      "familyName": "Revalski",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "Space Telescope Science Institute, Baltimore, MD, USA",
-          "affiliationIdentifier": "https://ror.org/036f5mx38",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
+        "Space Telescope Science Institute, Baltimore, MD, USA"
       ]
     },
     {
       "name": "Fischer, Travis C.",
+      "givenName": "Travis C.",
+      "familyName": "Fischer",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "Space Telescope Science Institute, Baltimore, MD, USA",
-          "affiliationIdentifier": "https://ror.org/036f5mx38",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
+        "Space Telescope Science Institute, Baltimore, MD, USA"
       ]
     },
     {
       "name": "Falcone, Julia",
+      "givenName": "Julia",
+      "familyName": "Falcone",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "Georgia State University, Atlanta, GA, USA",
-          "affiliationIdentifier": "https://ror.org/03qt6ba18",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
+        "Georgia State University, Atlanta, GA, USA"
       ]
     }
   ],

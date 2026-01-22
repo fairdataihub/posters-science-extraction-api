@@ -9,38 +9,30 @@
   "creators": [
     {
       "name": "O'Neill, Jamey",
+      "givenName": "Jamey",
+      "familyName": "O'Neill",
       "nameType": "Personal",
-      "nameIdentifiers": [
-        {
-          "nameIdentifier": "joneilliii@sdsu.edu",
-          "nameIdentifierScheme": "contact"
-        }
-      ],
       "affiliation": [
-        {
-          "name": "Mechanical Engineering Department, San Diego State University"
-        },
-        {
-          "name": "Department of Bioengineering, University of California San Diego"
-        }
+        "Mechanical Engineering Department, San Diego State University",
+        "Department of Bioengineering, University of California San Diego"
       ]
     },
     {
       "name": "Alexandrov, Ludmil",
+      "givenName": "Ludmil",
+      "familyName": "Alexandrov",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "Department of Bioengineering, University of California San Diego"
-        }
+        "Department of Bioengineering, University of California San Diego"
       ]
     },
     {
       "name": "Katira, Parag",
+      "givenName": "Parag",
+      "familyName": "Katira",
       "nameType": "Personal",
       "affiliation": [
-        {
-          "name": "Mechanical Engineering Department, San Diego State University"
-        }
+        "Mechanical Engineering Department, San Diego State University"
       ]
     }
   ],

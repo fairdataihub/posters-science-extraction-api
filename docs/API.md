@@ -71,7 +71,9 @@ curl -X POST http://localhost:8000/extract \
   "creators": [
     {
       "name": "Smith, John",
-      "affiliation": [{"name": "University of Example"}]
+      "givenName": "John",
+      "familyName": "Smith",
+      "affiliation": ["University of Example"]
     }
   ],
   "titles": [{"title": "Research Poster Title"}],

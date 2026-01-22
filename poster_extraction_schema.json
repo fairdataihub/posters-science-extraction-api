@@ -17,6 +17,16 @@
             "description": "The full name of the creator. Personal name format should be: family, given.",
             "minLength": 1
           },
+          "givenName": {
+            "type": "string",
+            "description": "The given (first) name of the creator. Use only for personal names.",
+            "minLength": 1
+          },
+          "familyName": {
+            "type": "string",
+            "description": "The family (last) name of the creator. Use only for personal names.",
+            "minLength": 1
+          },
           "nameType": {
             "type": "string",
             "description": "The type of name of the creator.",
@@ -46,29 +56,38 @@
           },
           "affiliation": {
             "type": "array",
-            "description": "The affiliation of the creator.",
+            "description": "The affiliation(s) of the creator. Can be strings or objects.",
             "items": {
-              "type": "object",
-              "properties": {
-                "name": {
+              "oneOf": [
+                {
                   "type": "string",
-                  "description": "The name of the affiliated institution.",
+                  "description": "Simple affiliation name string.",
                   "minLength": 1
                 },
-                "affiliationIdentifier": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "affiliationIdentifierScheme": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "schemeURI": {
-                  "type": "string",
-                  "minLength": 1
+                {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "The name of the affiliated institution.",
+                      "minLength": 1
+                    },
+                    "affiliationIdentifier": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "affiliationIdentifierScheme": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "schemeURI": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": ["name"]
                 }
-              },
-              "required": ["name"]
+              ]
             }
           }
         },
@@ -125,42 +144,42 @@
         }
       }
     },
-    "imageCaption": {
+    "imageCaptions": {
       "type": "array",
-      "description": "List of captions for images in the poster.",
+      "description": "Array of image caption objects.",
       "items": {
         "type": "object",
-        "description": "Captions for a single image in the poster.",
+        "description": "Caption information for a single image.",
         "properties": {
-          "caption1": {
-            "type": "string",
-            "minLength": 1
-          },
-          "caption2": {
-            "type": "string",
-            "minLength": 1
+          "captions": {
+            "type": "array",
+            "description": "Array of caption text segments for this image.",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
           }
-        },
-        "additionalProperties": true
+        }
       }
     },
-    "tableCaption": {
+    "tableCaptions": {
       "type": "array",
-      "description": "List of captions for tables in the poster.",
+      "description": "Array of table caption objects.",
       "items": {
         "type": "object",
-        "description": "Captions for a single table in the poster.",
+        "description": "Caption information for a single table.",
         "properties": {
-          "caption1": {
-            "type": "string",
-            "minLength": 1
-          },
-          "caption2": {
-            "type": "string",
-            "minLength": 1
+          "captions": {
+            "type": "array",
+            "description": "Array of caption text segments for this table.",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
           }
-        },
-        "additionalProperties": true
+        }
       }
     }
   },

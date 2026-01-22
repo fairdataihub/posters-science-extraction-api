@@ -2,29 +2,27 @@
   "creators": [
     {
       "name": "O'Neill, Jamey",
+      "givenName": "Jamey",
+      "familyName": "O'Neill",
       "affiliation": [
-        {
-          "name": "San Diego State University"
-        },
-        {
-          "name": "University of California San Diego"
-        }
+        "San Diego State University",
+        "University of California San Diego"
       ]
     },
     {
       "name": "Alexandrov, Ludmil",
+      "givenName": "Ludmil",
+      "familyName": "Alexandrov",
       "affiliation": [
-        {
-          "name": "University of California San Diego"
-        }
+        "University of California San Diego"
       ]
     },
     {
       "name": "Katira, Parag",
+      "givenName": "Parag",
+      "familyName": "Katira",
       "affiliation": [
-        {
-          "name": "San Diego State University"
-        }
+        "San Diego State University"
       ]
     }
   ],

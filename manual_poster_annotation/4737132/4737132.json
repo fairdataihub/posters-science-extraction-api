@@ -17,25 +17,18 @@
   "creators": [
     {
       "name": "Arnold, Frederik",
+      "givenName": "Frederik",
+      "familyName": "Arnold",
       "nameType": "Personal",
       "nameIdentifiers": [
         {
           "nameIdentifier": "https://orcid.org/0000-0002-0417-4054",
           "nameIdentifierScheme": "ORCID",
           "schemeURI": "https://orcid.org"
-        },
-        {
-          "nameIdentifier": "frederik.arnold@hu-berlin.de",
-          "nameIdentifierScheme": "contact"
         }
       ],
       "affiliation": [
-        {
-          "name": "Institut für Bibliotheks- und Informationswissenschaft, Humboldt-Universität zu Berlin, Berlin, Germany",
-          "affiliationIdentifier": "https://ror.org/01hcx6992",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
+        "Institut für Bibliotheks- und Informationswissenschaft, Humboldt-Universität zu Berlin, Berlin, Germany"
       ]
     }
   ],

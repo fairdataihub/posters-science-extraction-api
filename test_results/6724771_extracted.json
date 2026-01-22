@@ -2,153 +2,127 @@
   "creators": [
     {
       "name": "Timmermans, Michaël",
+      "givenName": "Michaël",
+      "familyName": "Timmermans",
       "affiliation": [
-        {
-          "name": "Sciensano"
-        },
-        {
-          "name": "Faculté de médecine, Université Libre de Bruxelles"
-        },
-        {
-          "name": "Transversal Activities in Applied Genomics, Sciensano"
-        },
-        {
-          "name": "National Reference Centre-Staphylococcus aureus, Department of Microbiology, Hôpital Erasme, Université libre de Bruxelles"
-        },
-        {
-          "name": "Department of Microbiology, LHUB-ULB, Université Libre de Bruxelles"
-        },
-        {
-          "name": "Ecole de Santé Publique, Université Libre de Bruxelles"
-        },
-        {
-          "name": "Laboratory of Clinical Microbiology, National Reference Center for Monitoring Antimicrobial Resistance in Gram-Negative Bacteria, CHU UCL Namur"
-        }
+        "Sciensano",
+        "Faculté de médecine, Université Libre de Bruxelles",
+        "Transversal Activities in Applied Genomics, Sciensano",
+        "National Reference Centre-Staphylococcus aureus, Department of Microbiology, Hôpital Erasme, Université libre de Bruxelles",
+        "Department of Microbiology, LHUB-ULB, Université Libre de Bruxelles",
+        "Ecole de Santé Publique, Université Libre de Bruxelles",
+        "Laboratory of Clinical Microbiology, National Reference Center for Monitoring Antimicrobial Resistance in Gram-Negative Bacteria, CHU UCL Namur"
       ]
     },
     {
       "name": "Bogaerts, Bert",
+      "givenName": "Bert",
+      "familyName": "Bogaerts",
       "affiliation": [
-        {
-          "name": "Transversal Activities in Applied Genomics, Sciensano"
-        }
+        "Transversal Activities in Applied Genomics, Sciensano"
       ]
     },
     {
       "name": "Vanneste, Kevin",
+      "givenName": "Kevin",
+      "familyName": "Vanneste",
       "affiliation": [
-        {
-          "name": "Transversal Activities in Applied Genomics, Sciensano"
-        }
+        "Transversal Activities in Applied Genomics, Sciensano"
       ]
     },
     {
       "name": "De Keersmaecker, Sigrid C. J.",
+      "givenName": "Sigrid C. J.",
+      "familyName": "De Keersmaecker",
       "affiliation": [
-        {
-          "name": "Transversal Activities in Applied Genomics, Sciensano"
-        }
+        "Transversal Activities in Applied Genomics, Sciensano"
       ]
     },
     {
       "name": "Roosens, Nancy H. C.",
+      "givenName": "Nancy H. C.",
+      "familyName": "Roosens",
       "affiliation": [
-        {
-          "name": "Transversal Activities in Applied Genomics, Sciensano"
-        }
+        "Transversal Activities in Applied Genomics, Sciensano"
       ]
     },
     {
       "name": "Kowalewicz, Carole",
+      "givenName": "Carole",
+      "familyName": "Kowalewicz",
       "affiliation": [
-        {
-          "name": "Sciensano"
-        }
+        "Sciensano"
       ]
     },
     {
       "name": "Simon, Guillaume",
+      "givenName": "Guillaume",
+      "familyName": "Simon",
       "affiliation": [
-        {
-          "name": "Sciensano"
-        }
+        "Sciensano"
       ]
     },
     {
       "name": "Argudín, Maria A.",
+      "givenName": "Maria A.",
+      "familyName": "Argudín",
       "affiliation": [
-        {
-          "name": "National Reference Centre-Staphylococcus aureus, Department of Microbiology, Hôpital Erasme, Université libre de Bruxelles"
-        },
-        {
-          "name": "Department of Microbiology, LHUB-ULB, Université Libre de Bruxelles"
-        },
-        {
-          "name": "Ecole de Santé Publique, Université Libre de Bruxelles"
-        }
+        "National Reference Centre-Staphylococcus aureus, Department of Microbiology, Hôpital Erasme, Université libre de Bruxelles",
+        "Department of Microbiology, LHUB-ULB, Université Libre de Bruxelles",
+        "Ecole de Santé Publique, Université Libre de Bruxelles"
       ]
     },
     {
       "name": "Deplano, Ariane",
+      "givenName": "Ariane",
+      "familyName": "Deplano",
       "affiliation": [
-        {
-          "name": "National Reference Centre-Staphylococcus aureus, Department of Microbiology, Hôpital Erasme, Université libre de Bruxelles"
-        },
-        {
-          "name": "Department of Microbiology, LHUB-ULB, Université Libre de Bruxelles"
-        }
+        "National Reference Centre-Staphylococcus aureus, Department of Microbiology, Hôpital Erasme, Université libre de Bruxelles",
+        "Department of Microbiology, LHUB-ULB, Université Libre de Bruxelles"
       ]
     },
     {
       "name": "Hallin, Marie",
+      "givenName": "Marie",
+      "familyName": "Hallin",
       "affiliation": [
-        {
-          "name": "National Reference Centre-Staphylococcus aureus, Department of Microbiology, Hôpital Erasme, Université libre de Bruxelles"
-        },
-        {
-          "name": "Department of Microbiology, LHUB-ULB, Université Libre de Bruxelles"
-        },
-        {
-          "name": "Ecole de Santé Publique, Université Libre de Bruxelles"
-        }
+        "National Reference Centre-Staphylococcus aureus, Department of Microbiology, Hôpital Erasme, Université libre de Bruxelles",
+        "Department of Microbiology, LHUB-ULB, Université Libre de Bruxelles",
+        "Ecole de Santé Publique, Université Libre de Bruxelles"
       ]
     },
     {
       "name": "Wattiau, Pierre",
+      "givenName": "Pierre",
+      "familyName": "Wattiau",
       "affiliation": [
-        {
-          "name": "Sciensano"
-        }
+        "Sciensano"
       ]
     },
     {
       "name": "Fretin, David",
+      "givenName": "David",
+      "familyName": "Fretin",
       "affiliation": [
-        {
-          "name": "Sciensano"
-        }
+        "Sciensano"
       ]
     },
     {
       "name": "Denis, Olivier",
+      "givenName": "Olivier",
+      "familyName": "Denis",
       "affiliation": [
-        {
-          "name": "Sciensano"
-        },
-        {
-          "name": "Ecole de Santé Publique, Université Libre de Bruxelles"
-        },
-        {
-          "name": "Laboratory of Clinical Microbiology, National Reference Center for Monitoring Antimicrobial Resistance in Gram-Negative Bacteria, CHU UCL Namur"
-        }
+        "Sciensano",
+        "Ecole de Santé Publique, Université Libre de Bruxelles",
+        "Laboratory of Clinical Microbiology, National Reference Center for Monitoring Antimicrobial Resistance in Gram-Negative Bacteria, CHU UCL Namur"
       ]
     },
     {
       "name": "Boland, Cécile",
+      "givenName": "Cécile",
+      "familyName": "Boland",
       "affiliation": [
-        {
-          "name": "Sciensano"
-        }
+        "Sciensano"
       ]
     }
   ],

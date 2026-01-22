@@ -2,50 +2,50 @@
   "creators": [
     {
       "name": "Polack, Garrett E.",
+      "givenName": "Garrett E.",
+      "familyName": "Polack",
       "affiliation": [
-        {
-          "name": "Georgia State University"
-        }
+        "Georgia State University"
       ]
     },
     {
       "name": "Crenshaw, D. M.",
+      "givenName": "D. M.",
+      "familyName": "Crenshaw",
       "affiliation": [
-        {
-          "name": "Georgia State University"
-        }
+        "Georgia State University"
       ]
     },
     {
       "name": "Meena, B.",
+      "givenName": "B.",
+      "familyName": "Meena",
       "affiliation": [
-        {
-          "name": "Georgia State University"
-        }
+        "Georgia State University"
       ]
     },
     {
       "name": "Revalski, M.",
+      "givenName": "M.",
+      "familyName": "Revalski",
       "affiliation": [
-        {
-          "name": "Space Telescope Science Institute"
-        }
+        "Space Telescope Science Institute"
       ]
     },
     {
       "name": "Fischer, T. C.",
+      "givenName": "T. C.",
+      "familyName": "Fischer",
       "affiliation": [
-        {
-          "name": "Space Telescope Science Institute"
-        }
+        "Space Telescope Science Institute"
       ]
     },
     {
       "name": "Falcone, J.",
+      "givenName": "J.",
+      "familyName": "Falcone",
       "affiliation": [
-        {
-          "name": "Georgia State University"
-        }
+        "Georgia State University"
       ]
     }
   ],

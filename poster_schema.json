@@ -78,7 +78,7 @@
     },
     "creators": {
       "type": "array",
-      "description": "The authors of the poster, in priority order. Format: family, given. The DataCite schema refers to authors as creators so we will use creator in the descriptions below.",
+      "description": "The authors of the poster, in priority order. The DataCite schema refers to authors as creators so we will use creator in the descriptions below.",
       "items": {
         "type": "object",
         "properties": {
@@ -87,6 +87,18 @@
             "description": "The full name of the creator (personal name or organization name). Personal name format should be: family, given.",
             "minLength": 1,
             "examples": ["Garcia, Sofia", "Smith, John", "AI Research Laboratory"]
+          },
+          "givenName": {
+            "type": "string",
+            "description": "The given (first) name of the creator. Use only for personal names, not organizational names.",
+            "minLength": 1,
+            "examples": ["Sofia", "John", "Marie"]
+          },
+          "familyName": {
+            "type": "string",
+            "description": "The family (last) name of the creator. Use only for personal names, not organizational names.",
+            "minLength": 1,
+            "examples": ["Garcia", "Smith", "Curie"]
           },
           "nameType": {
             "type": "string",
@@ -113,7 +125,7 @@
                   "type": "string",
                   "description": "The scheme of the name identifier of the creator.",
                   "minLength": 1,
-                  "examples": ["ORCID", "ISNI", "ROR", "contact"]
+                  "examples": ["ORCID", "ISNI", "ROR"]
                 },
                 "schemeURI": {
                   "type": "string",
@@ -133,63 +145,70 @@
           },
           "affiliation": {
             "type": "array",
-            "description": "The affiliation of the creator.",
+            "description": "The affiliation(s) of the creator. Can be simple strings or objects with identifier information.",
             "items": {
-              "type": "object",
-              "properties": {
-                "name": {
+              "oneOf": [
+                {
                   "type": "string",
-                  "description": "The creator's nameType may be Organizational or Personal. In the case of an organizational creator, e.g., a research group, this will often be the name of the institution to which that organization belongs.",
+                  "description": "Simple affiliation name string.",
                   "minLength": 1,
                   "examples": [
                     "University of California, Los Angeles",
-                    "German National Library of Science and Technology",
-                    "DataCite"
+                    "German National Library of Science and Technology"
                   ]
                 },
-                "affiliationIdentifier": {
-                  "type": "string",
-                  "description": "The identifier of the affiliation of the creator.",
-                  "minLength": 1,
-                  "examples": [
-                    "https://ror.org/000000000",
-                    "https://isni.org/0000000000000000"
-                  ]
-                },
-                "affiliationIdentifierScheme": {
-                  "type": "string",
-                  "description": "The scheme of the affiliation identifier of the creator. If affiliationIdentifier is used, affiliationIdentifierScheme is mandatory",
-                  "minLength": 1,
-                  "examples": ["ROR", "ISNI"]
-                },
-                "schemeURI": {
-                  "type": "string",
-                  "description": "The URI of the affiliation identifier scheme of the creator.",
-                  "minLength": 1,
-                  "examples": ["https://ror.org", "https://isni.org"]
+                {
+                  "type": "object",
+                  "description": "Affiliation with optional identifier information.",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "The name of the affiliated organization.",
+                      "minLength": 1,
+                      "examples": [
+                        "University of California, Los Angeles",
+                        "German National Library of Science and Technology",
+                        "DataCite"
+                      ]
+                    },
+                    "affiliationIdentifier": {
+                      "type": "string",
+                      "description": "The identifier of the affiliation.",
+                      "minLength": 1,
+                      "examples": [
+                        "https://ror.org/000000000",
+                        "https://isni.org/0000000000000000"
+                      ]
+                    },
+                    "affiliationIdentifierScheme": {
+                      "type": "string",
+                      "description": "The scheme of the affiliation identifier. If affiliationIdentifier is used, affiliationIdentifierScheme is mandatory.",
+                      "minLength": 1,
+                      "examples": ["ROR", "ISNI"]
+                    },
+                    "schemeURI": {
+                      "type": "string",
+                      "description": "The URI of the affiliation identifier scheme.",
+                      "minLength": 1,
+                      "examples": ["https://ror.org", "https://isni.org"]
+                    }
+                  },
+                  "required": ["name"],
+                  "additionalProperties": false,
+                  "if": {
+                    "properties": {
+                      "affiliationIdentifier": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": ["affiliationIdentifier"]
+                  },
+                  "then": {
+                    "required": ["affiliationIdentifierScheme"]
+                  }
                 }
-              },
-              "required": ["name"],
-              "additionalProperties": false,
-              "if": {
-                "properties": {
-                  "affiliationIdentifier": {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                },
-                "required": ["affiliationIdentifier"],
-                "additionalProperties": false
-              },
-              "then": {
-                "properties": {
-                  "affiliationIdentifierScheme": {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                },
-                "required": ["affiliationIdentifierScheme"]
-              }
+              ]
             },
             "uniqueItems": true
           }
@@ -809,46 +828,50 @@
       },
       "additionalProperties": false
     },
-    "tableCaption": {
+    "tableCaptions": {
       "type": "array",
-      "description": "List of captions for tables in the poster. Each item represents captions for a single table.",
+      "description": "Array of table caption objects. Each object represents one table and contains its caption text segments.",
       "items": {
         "type": "object",
-        "description": "Captions for a single table in the poster",
+        "description": "Caption information for a single table. Structure allows for future extension with properties like tableId or tableNumber.",
         "properties": {
-          "caption1": {
-            "type": "string",
-            "minLength": 1,
-            "description": "First table caption or caption line"
-          },
-          "caption2": {
-            "type": "string",
-            "minLength": 1,
-            "description": "Second table caption or caption line"
+          "captions": {
+            "type": "array",
+            "description": "Array of caption text segments for this table. Can include table label, title, description, etc.",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1,
+            "examples": [
+              ["Table 1. Summary of Results", "Comparison of model performance across datasets"]
+            ]
           }
         },
-        "additionalProperties": true
+        "additionalProperties": false
       }
     },
-    "imageCaption": {
+    "imageCaptions": {
       "type": "array",
-      "description": "List of captions for images in the poster. Each item represents captions for a single image.",
+      "description": "Array of image caption objects. Each object represents one image/figure and contains its caption text segments.",
       "items": {
         "type": "object",
-        "description": "Captions for a single image in the poster",
+        "description": "Caption information for a single image. Structure allows for future extension with properties like imageId or figureNumber.",
         "properties": {
-          "caption1": {
-            "type": "string",
-            "minLength": 1,
-            "description": "First image caption or caption line"
-          },
-          "caption2": {
-            "type": "string",
-            "minLength": 1,
-            "description": "Second image caption or caption line"
+          "captions": {
+            "type": "array",
+            "description": "Array of caption text segments for this image. Can include figure label, title, description, etc.",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1,
+            "examples": [
+              ["Figure 1. Overview of the Task Force", "Shows approximately 12 active members from various locations..."]
+            ]
           }
         },
-        "additionalProperties": true
+        "additionalProperties": false
       }
     },
     "domain": {

@@ -2,16 +2,12 @@
   "creators": [
     {
       "name": "Patel, Bhavesh, Ph.D. 1, Garijo, Daniel, Ph.D. 2",
+      "givenName": "Bhavesh, Ph.D. 1, Garijo, Daniel, Ph.D. 2",
+      "familyName": "Patel",
       "affiliation": [
-        {
-          "name": "FAIR4RS Task Force, Research Software Alliance (ReSA)"
-        },
-        {
-          "name": "FAIR Data Innovations Hub, California Medical Innovations Institute, San Diego, CA, USA"
-        },
-        {
-          "name": "Universidad Politécnica de Madrid, Spain"
-        }
+        "FAIR4RS Task Force, Research Software Alliance (ReSA)",
+        "FAIR Data Innovations Hub, California Medical Innovations Institute, San Diego, CA, USA",
+        "Universidad Politécnica de Madrid, Spain"
       ]
     }
   ],
