@@ -7,24 +7,14 @@ services:
     container_name: poster-extraction
     networks:
       - ollama-network
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
     environment:
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
       - HF_TOKEN=${HF_TOKEN:-}
       - PORT=8000
       - HOST=0.0.0.0
-    deploy:
-      resources:
-        limits:
-          memory: 48G
-        reservations:
-          memory: 24G
-          devices:
-            - driver: nvidia
-              device_ids: ['1']
-              capabilities: [gpu]
+    # pin to GPU device 1 only
+    gpus:
+      - device_ids: ["1"]
     ports:
       - "${APP_PORT:-47362}:8000"
     volumes:
