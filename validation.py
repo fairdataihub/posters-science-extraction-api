@@ -73,8 +73,8 @@ def get_empty_field_defaults() -> dict:
         "descriptions": [],
         "fundingReferences": [],
         "ethicsApprovals": [],
-        "imageCaption": [],
-        "tableCaption": [],
+        "imageCaptions": [],  # Updated: was imageCaption
+        "tableCaptions": [],  # Updated: was tableCaption
         "publisher": {},
         "types": {},
         "conference": {},
@@ -169,6 +169,54 @@ def validate_and_fix_extraction(
     warnings_list = [w.to_dict() for w in warnings]
 
     return result, warnings_list
+
+
+def _convert_old_captions_to_new(captions_input) -> list:
+    """
+    Convert old caption formats to new structure: [{"captions": [...]}]
+    
+    Handles:
+    - Old wrapped format: {"captions": [{"captionParts": [...]}]}
+    - Old numbered format: [{"caption1": "...", "caption2": "..."}]
+    - String arrays: ["caption text", ...]
+    """
+    result = []
+    
+    if isinstance(captions_input, dict):
+        # Old wrapped format: {"captions": [...], "unstructuredCaptions": "..."}
+        inner = captions_input.get("captions", [])
+        for item in inner:
+            if isinstance(item, dict):
+                # Has captionParts? Convert to captions
+                parts = item.get("captionParts", item.get("captions", []))
+                if parts:
+                    result.append({"captions": parts if isinstance(parts, list) else [parts]})
+            elif isinstance(item, str) and item.strip():
+                result.append({"captions": [item.strip()]})
+    elif isinstance(captions_input, list):
+        for item in captions_input:
+            if isinstance(item, dict):
+                # Check for new format first
+                if "captions" in item and isinstance(item["captions"], list):
+                    result.append(item)
+                # Check for captionParts (old intermediate format)
+                elif "captionParts" in item:
+                    parts = item["captionParts"]
+                    result.append({"captions": parts if isinstance(parts, list) else [parts]})
+                else:
+                    # Old numbered format: {"caption1": "...", "caption2": "..."}
+                    caption_parts = []
+                    for key in sorted(item.keys()):
+                        if key.startswith("caption") and isinstance(item[key], str):
+                            val = item[key].strip()
+                            if val:
+                                caption_parts.append(val)
+                    if caption_parts:
+                        result.append({"captions": caption_parts})
+            elif isinstance(item, str) and item.strip():
+                result.append({"captions": [item.strip()]})
+    
+    return result
 
 
 def _apply_structural_fixes(data: dict) -> Tuple[dict, List[ValidationWarning]]:
@@ -268,33 +316,84 @@ def _apply_structural_fixes(data: dict) -> Tuple[dict, List[ValidationWarning]]:
             )
         )
 
-    # Fix 4: Ensure imageCaption and tableCaption are arrays (optional fields)
-    for field in ["imageCaption", "tableCaption"]:
+    # Fix 4: Handle caption field migrations and ensure arrays
+    # Migrate old field names to new ones
+    if "imageCaption" in data:
+        old_captions = data.pop("imageCaption")
+        if "imageCaptions" not in data:
+            data["imageCaptions"] = []
+        if old_captions:
+            converted = _convert_old_captions_to_new(old_captions)
+            data["imageCaptions"].extend(converted)
+            warnings.append(
+                ValidationWarning(
+                    field="imageCaption",
+                    issue="deprecated_field",
+                    message="Migrated 'imageCaption' to 'imageCaptions' with new structure",
+                    auto_fixed=True,
+                )
+            )
+    
+    if "tableCaption" in data:
+        old_captions = data.pop("tableCaption")
+        if "tableCaptions" not in data:
+            data["tableCaptions"] = []
+        if old_captions:
+            converted = _convert_old_captions_to_new(old_captions)
+            data["tableCaptions"].extend(converted)
+            warnings.append(
+                ValidationWarning(
+                    field="tableCaption",
+                    issue="deprecated_field",
+                    message="Migrated 'tableCaption' to 'tableCaptions' with new structure",
+                    auto_fixed=True,
+                )
+            )
+    
+    # Ensure imageCaptions and tableCaptions are arrays
+    for field in ["imageCaptions", "tableCaptions"]:
         if field in data and not isinstance(data[field], list):
             if isinstance(data[field], dict):
-                data[field] = [data[field]]
+                # Old wrapped format: {"captions": [...]}
+                data[field] = _convert_old_captions_to_new(data[field])
             else:
                 data[field] = []
+            warnings.append(
+                ValidationWarning(
+                    field=field,
+                    issue="wrong_type",
+                    message=f"Converted {field} to array format",
+                    auto_fixed=True,
+                )
+            )
+        elif field not in data:
+            data[field] = []
 
-    # Fix 4b: Remove empty caption fields from imageCaption items
-    if "imageCaption" in data and isinstance(data["imageCaption"], list):
-        for i, caption_obj in enumerate(data["imageCaption"]):
-            if isinstance(caption_obj, dict):
-                # Find and remove empty string fields
-                empty_fields = [
-                    key for key, value in caption_obj.items()
-                    if isinstance(value, str) and len(value.strip()) < 1
-                ]
-                for field in empty_fields:
-                    del caption_obj[field]
-                    warnings.append(
-                        ValidationWarning(
-                            field=f"imageCaption[{i}].{field}",
-                            issue="empty_string",
-                            message=f"Removed empty caption field '{field}' from imageCaption[{i}]",
-                            auto_fixed=True,
-                        )
-                    )
+    # Fix 4b: Clean up caption objects - ensure proper structure
+    for field in ["imageCaptions", "tableCaptions"]:
+        if field in data and isinstance(data[field], list):
+            for i, caption_obj in enumerate(data[field]):
+                if isinstance(caption_obj, dict):
+                    # Ensure 'captions' array exists
+                    if "captions" not in caption_obj:
+                        # Try to extract from old format (caption1, caption2, etc.)
+                        caption_parts = []
+                        old_keys = sorted([k for k in caption_obj.keys() if k.startswith("caption")])
+                        for key in old_keys:
+                            val = caption_obj.pop(key, "")
+                            if val and isinstance(val, str) and val.strip():
+                                caption_parts.append(val.strip())
+                        if caption_parts:
+                            caption_obj["captions"] = caption_parts
+                        else:
+                            caption_obj["captions"] = []
+                    
+                    # Clean empty strings from captions array
+                    if "captions" in caption_obj and isinstance(caption_obj["captions"], list):
+                        caption_obj["captions"] = [
+                            c for c in caption_obj["captions"] 
+                            if isinstance(c, str) and c.strip()
+                        ]
 
     # Fix 5: Clean up creators - fix affiliations and add missing required fields
     # Process creators in place, converting invalid items to placeholders
@@ -336,42 +435,35 @@ def _apply_structural_fixes(data: dict) -> Tuple[dict, List[ValidationWarning]]:
                 )
             )
 
-        # Fix affiliation if it's a string instead of array
+        # Fix affiliation - schema accepts both strings and objects in array (oneOf)
         if "affiliation" in creator:
             if isinstance(creator["affiliation"], str):
-                creator["affiliation"] = [{"name": creator["affiliation"]}]
+                # Single string -> wrap in array (schema accepts string items)
+                creator["affiliation"] = [creator["affiliation"]]
                 warnings.append(
                     ValidationWarning(
                         field=f"creators[{i}].affiliation",
                         issue="string_not_array",
-                        message=f"Converted string affiliation to array format for creator at index {i}",
+                        message=f"Converted string affiliation to array for creator at index {i}",
                         auto_fixed=True,
                     )
                 )
             elif isinstance(creator["affiliation"], list):
-                # Fix individual affiliations that are strings or missing required 'name'
+                # Validate each item - schema accepts strings OR objects with "name"
                 for j, aff in enumerate(creator["affiliation"]):
-                    if isinstance(aff, str):
-                        creator["affiliation"][j] = {"name": aff}
-                        warnings.append(
-                            ValidationWarning(
-                                field=f"creators[{i}].affiliation[{j}]",
-                                issue="string_not_object",
-                                message="Converted string affiliation to object format",
-                                auto_fixed=True,
-                            )
-                        )
-                    elif isinstance(aff, dict):
+                    if isinstance(aff, dict):
+                        # Object format needs "name" field
                         if "name" not in aff:
                             aff["name"] = ""
                             warnings.append(
                                 ValidationWarning(
                                     field=f"creators[{i}].affiliation[{j}].name",
                                     issue="missing_required_field",
-                                    message=f"Added empty 'name' to affiliation at creators[{i}].affiliation[{j}]",
+                                    message=f"Added empty 'name' to affiliation object at creators[{i}].affiliation[{j}]",
                                     auto_fixed=True,
                                 )
                             )
+                    # Strings are valid as-is per schema oneOf
 
         # add missing 'nameIdentifier' field
         if "nameIdentifiers" in creator and isinstance(creator["nameIdentifiers"], list):
