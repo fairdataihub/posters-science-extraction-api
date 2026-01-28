@@ -6,6 +6,7 @@ Accepts file uploads (PDF, images) and returns extracted JSON.
 
 import os
 import tempfile
+import threading
 from pathlib import Path
 
 import torch
@@ -17,6 +18,10 @@ from validation import validate_and_fix_extraction
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
+
+# Lock to prevent concurrent model usage (GPU memory is limited)
+# Only one extraction can run at a time
+_extraction_lock = threading.Lock()
 
 # Allowed file extensions
 ALLOWED_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png"}
@@ -136,8 +141,25 @@ def extract_poster():
 
         log(f"Received file: {file.filename} ({file_size} bytes)")
 
-        # Process the poster
-        result = process_poster_file(tmp_file_path)
+        # Try to acquire lock (non-blocking) to check if model is busy
+        if not _extraction_lock.acquire(blocking=False):
+            log("Model is busy processing another request")
+            # Clean up temp file before returning
+            if os.path.exists(tmp_file_path):
+                os.unlink(tmp_file_path)
+            return jsonify({
+                "error": "Model is currently processing another poster. Please try again in a few moments.",
+                "retry": True
+            }), 503
+
+        try:
+            log("Acquired extraction lock, starting processing...")
+            # Process the poster
+            result = process_poster_file(tmp_file_path)
+            log("Processing complete")
+        finally:
+            _extraction_lock.release()
+            log("Released extraction lock")
 
         # Check for errors in result
         if "error" in result:
@@ -167,4 +189,6 @@ if __name__ == "__main__":
     host = os.environ.get("HOST", "0.0.0.0")
 
     log(f"Starting Poster Extraction API on {host}:{port}")
-    app.run(host=host, port=port, debug=False)
+    # threaded=False ensures only one request is processed at a time
+    # This prevents GPU memory contention when loading models
+    app.run(host=host, port=port, debug=False, threaded=False)
