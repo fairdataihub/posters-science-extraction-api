@@ -446,18 +446,18 @@ def load_json_model(force_full_precision: bool = False):
 
     Automatically uses 8-bit quantization if GPU memory is limited (<16GB free),
     unless force_full_precision=True (used for image OCR pipeline where quality matters more).
-
+    
     Args:
         force_full_precision: If True, always use bfloat16 regardless of memory.
                               Used for image posters where OCR quality is critical.
-
+    
     Returns:
         (model, tokenizer) tuple for use with generate().
     """
     global _json_model, _json_tokenizer
     if _json_model is None:
         device = get_best_gpu()
-
+        
         # Check available memory and extract GPU id for device_map
         # device_map expects integer (e.g., 0) or "auto", not "cuda:0" string
         if device != "cpu":
@@ -468,31 +468,51 @@ def load_json_model(force_full_precision: bool = False):
         else:
             free_gb = 32  # Assume enough RAM
             device_map_value = "cpu"
-
+        
         log(f"Loading {JSON_MODEL_ID} for JSON structuring on {device}...")
 
         try:
             _json_tokenizer = AutoTokenizer.from_pretrained(JSON_MODEL_ID)
-
+            
             use_8bit = free_gb < 16 and device != "cpu" and not force_full_precision
-
+            
+            # Try to use Flash Attention 2 for faster inference (1.5-2x speedup)
+            # Falls back to default attention if flash-attn not installed
+            try:
+                import flash_attn
+                attn_impl = "flash_attention_2"
+                log("   Using Flash Attention 2 for faster inference")
+            except ImportError:
+                attn_impl = None
+                log("   Flash Attention not available, using default attention")
+            
             if use_8bit:
                 # Use 8-bit quantization for limited memory
                 log(f"   Using 8-bit quantization (only {free_gb:.1f}GB free)")
+                model_kwargs = {
+                    "load_in_8bit": True,
+                    "device_map": device_map_value,
+                    "low_cpu_mem_usage": True,
+                }
+                if attn_impl:
+                    model_kwargs["attn_implementation"] = attn_impl
                 _json_model = AutoModelForCausalLM.from_pretrained(
                     JSON_MODEL_ID,
-                    load_in_8bit=True,
-                    device_map=device_map_value,
-                    low_cpu_mem_usage=True,
+                    **model_kwargs,
                 )
             else:
                 if force_full_precision and free_gb < 16:
                     log(f"   Forcing full precision for image OCR quality ({free_gb:.1f}GB free)")
+                model_kwargs = {
+                    "torch_dtype": torch.bfloat16,
+                    "device_map": device_map_value,
+                    "low_cpu_mem_usage": True,
+                }
+                if attn_impl:
+                    model_kwargs["attn_implementation"] = attn_impl
                 _json_model = AutoModelForCausalLM.from_pretrained(
                     JSON_MODEL_ID,
-                    torch_dtype=torch.bfloat16,
-                    device_map=device_map_value,
-                    low_cpu_mem_usage=True,
+                    **model_kwargs,
                 )
             log(f"   ✓ JSON model loaded on {device}")
         except Exception as e:

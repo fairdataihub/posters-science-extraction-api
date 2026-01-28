@@ -7,6 +7,11 @@ bitsandbytes>=0.41.0
 safetensors
 sentencepiece
 
+# Flash Attention 2 for faster inference (optional but recommended)
+# Requires CUDA 11.6+ and compatible GPU (Ampere, Ada Lovelace, Hopper)
+# Install with: pip install flash-attn --no-build-isolation
+flash-attn>=2.5.0; platform_system == "Linux"
+
 # Text processing
 rouge-score
 numpy
