@@ -34,6 +34,6 @@ keywords:
   - scientific poster
   - conference
 license: MIT
-repository-code: https://github.com/fairdataihub/poster2json
+repository-code: https://github.com/fairdataihub/posters-science-extraction-api
 date-released: '2026-01-20'
 version: 1.0.1

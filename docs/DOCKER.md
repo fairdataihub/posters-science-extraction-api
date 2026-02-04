@@ -83,16 +83,16 @@ container=$(docker create pdfalto-builder)
 docker cp "${container}":/pdfalto/pdfalto ./pdfalto
 docker rm "${container}"
 
-# Move to poster2json executables folder
-mkdir -p ../poster2json/executables
-mv ./pdfalto ../poster2json/executables/
+# Move to posters-science-extraction-api executables folder
+mkdir -p ../posters-science-extraction-api/executables
+mv ./pdfalto ../posters-science-extraction-api/executables/
 ```
 
 ### Running on Windows
 
 ```powershell
 # From PowerShell or Windows Terminal
-cd poster2json
+cd posters-science-extraction-api
 docker compose up --build
 ```
 

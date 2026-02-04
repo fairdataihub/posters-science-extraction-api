@@ -31,4 +31,4 @@ If you believe someone is violating the code of conduct, we ask that you report 
 
 ## Questions?
 
-If you have questions, feel free to [open an issue](https://github.com/fairdataihub/poster2json/issues) or contact us at bpatel@calmi2.org.
+If you have questions, feel free to [open an issue](https://github.com/fairdataihub/posters-science-extraction-api/issues) or contact us at bpatel@calmi2.org.
