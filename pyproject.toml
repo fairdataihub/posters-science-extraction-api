@@ -61,10 +61,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/fairdataihub/poster2json"
-Documentation = "https://github.com/fairdataihub/poster2json/tree/main/docs"
-Repository = "https://github.com/fairdataihub/poster2json"
-Issues = "https://github.com/fairdataihub/poster2json/issues"
+Homepage = "https://github.com/fairdataihub/posters-science-extraction-api"
+Documentation = "https://github.com/fairdataihub/posters-science-extraction-api/tree/main/docs"
+Repository = "https://github.com/fairdataihub/posters-science-extraction-api"
+Issues = "https://github.com/fairdataihub/posters-science-extraction-api/issues"
 
 [project.scripts]
 poster2json = "poster_extraction:main"

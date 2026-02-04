@@ -31,7 +31,7 @@ Complete installation instructions for poster2json.
 ### Option A: pip install from GitHub (Recommended)
 
 ```bash
-pip install git+https://github.com/fairdataihub/poster2json.git
+pip install git+https://github.com/fairdataihub/posters-science-extraction-api.git
 ```
 
 This installs poster2json and all dependencies. You can then run:
@@ -42,16 +42,16 @@ poster2json --annotation-dir ./posters --output-dir ./output
 ### Option B: Clone and Install (Development)
 
 ```bash
-git clone https://github.com/fairdataihub/poster2json.git
-cd poster2json
+git clone https://github.com/fairdataihub/posters-science-extraction-api.git
+cd posters-science-extraction-api
 pip install -e .  # Editable install
 ```
 
 ### Option C: Requirements Only
 
 ```bash
-git clone https://github.com/fairdataihub/poster2json.git
-cd poster2json
+git clone https://github.com/fairdataihub/posters-science-extraction-api.git
+cd posters-science-extraction-api
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -120,9 +120,9 @@ container=$(docker create pdfalto-builder)
 docker cp "${container}":/pdfalto/pdfalto ./pdfalto
 docker rm "${container}"
 
-# Move to poster2json
-mv ./pdfalto /path/to/poster2json/executables/pdfalto
-chmod +x /path/to/poster2json/executables/pdfalto
+# Move to posters-science-extraction-api
+mv ./pdfalto /path/to/posters-science-extraction-api/executables/pdfalto
+chmod +x /path/to/posters-science-extraction-api/executables/pdfalto
 ```
 
 ### Option B: Build from Source (Linux/macOS)

@@ -48,19 +48,19 @@
       "type": "Person"
     }
   ],
-  "codeRepository": "https://github.com/fairdataihub/poster2json",
+  "codeRepository": "https://github.com/fairdataihub/posters-science-extraction-api",
   "dateCreated": "2025-11-27",
   "dateModified": "2026-01-20",
   "datePublished": "2026-01-10",
   "description": "A tool for extracting structured metadata from scientific posters, converting visual poster content into machine-actionable JSON format conforming to the poster-json-schema. Uses Qwen2-VL for image OCR and a fine-tuned Llama 3.1 8B for JSON structuring. Part of the posters.science platform.",
   "developmentStatus": "active",
-  "downloadUrl": "https://github.com/fairdataihub/poster2json/releases/tag/v1.0.0",
+  "downloadUrl": "https://github.com/fairdataihub/posters-science-extraction-api/releases/tag/v1.0.0",
   "funder": {
     "name": "The Navigation Fund",
     "type": "Organization"
   },
   "identifier": "10.5281/zenodo.18320010",
-  "issueTracker": "https://github.com/fairdataihub/poster2json/issues",
+  "issueTracker": "https://github.com/fairdataihub/posters-science-extraction-api/issues",
   "keywords": [
     "posters",
     "machine actionable",

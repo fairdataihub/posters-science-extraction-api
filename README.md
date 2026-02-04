@@ -12,20 +12,20 @@ Convert scientific posters (PDF/images) into structured JSON metadata using Larg
 
 **Option 1: pip install from GitHub**
 ```bash
-pip install git+https://github.com/fairdataihub/poster2json.git
+pip install git+https://github.com/fairdataihub/posters-science-extraction-api.git
 ```
 
 **Option 2: Clone and install**
 ```bash
-git clone https://github.com/fairdataihub/poster2json.git
-cd poster2json
+git clone https://github.com/fairdataihub/posters-science-extraction-api.git
+cd posters-science-extraction-api
 pip install -e .
 ```
 
 **Option 3: Requirements only**
 ```bash
-git clone https://github.com/fairdataihub/poster2json.git
-cd poster2json
+git clone https://github.com/fairdataihub/posters-science-extraction-api.git
+cd posters-science-extraction-api
 pip install -r requirements.txt
 ```
 

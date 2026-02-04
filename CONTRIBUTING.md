@@ -46,7 +46,7 @@ Unsure where to begin? Look for issues labeled:
 ### For Code Contributions
 
 1. Fork the repository
-2. Clone your fork: `git clone https://github.com/YOUR-USERNAME/poster2json.git`
+2. Clone your fork: `git clone https://github.com/YOUR-USERNAME/posters-science-extraction-api.git`
 3. Create a branch: `git checkout -b my-feature`
 4. Install dependencies: `pip install -e .` or `pip install -r requirements.txt`
 5. Make your changes
