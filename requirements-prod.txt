@@ -1,4 +1,8 @@
 # Production dependencies only
+# Poster extraction library
+poster2json>=0.1.0
+
+# ML dependencies (required by poster2json)
 transformers>=4.40.0
 torch>=2.0.0
 torchvision>=0.15.0

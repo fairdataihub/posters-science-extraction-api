@@ -16,7 +16,7 @@ import torch
 from flask import Flask, jsonify
 from flask_cors import CORS
 
-from poster_extraction import log, load_json_model
+from poster2json.extract import log, load_json_model
 from job_worker import run_worker_loop, run_one_cycle
 
 app = Flask(__name__)
