@@ -30,3 +30,4 @@ llama_v*_output/
 .DS_Store
 Thumbs.db
 
+.env

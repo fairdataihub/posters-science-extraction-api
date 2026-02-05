@@ -1,11 +1,20 @@
 # API Reference
 
-REST API documentation for poster2json.
+REST API and job worker for poster extraction.
+
+## Overview
+
+The API **does not accept file uploads**. The frontend uploads poster files to Bunny storage and creates `ExtractionJob` records in the database. This service polls the database for new jobs, downloads the file from Bunny, runs extraction, and writes results to `PosterMetadata`.
 
 ## Quick Start
 
 ```bash
-# Start the API server
+# Set required environment variables (see Configuration)
+export DATABASE_URL="postgresql://..."
+export BUNNY_STORAGE_ZONE="your-zone"
+export BUNNY_ACCESS_KEY="your-storage-password"
+
+# Start the API server (starts background job worker)
 python api.py
 
 # Or via Docker
@@ -26,130 +35,49 @@ Simple health check returning API status.
 ```json
 {
   "status": "ok",
-  "message": "Poster Extraction API is running"
+  "service": "Poster Extraction API",
+  "version": "1.0.0"
 }
 ```
 
-#### `GET /health`
+#### `GET /health`  
+#### `GET /up`
 
-Detailed health status including GPU information.
+Detailed health status including GPU and model availability.
 
 **Response:**
 ```json
 {
   "status": "healthy",
-  "gpu_available": true,
-  "gpu_name": "NVIDIA GeForce RTX 4090",
-  "gpu_memory_free": "20.5 GB"
-}
-```
-
-### Extract Poster
-
-#### `POST /extract`
-
-Extract structured JSON from an uploaded poster file.
-
-**Request:**
-- Content-Type: `multipart/form-data`
-- Body: File upload with key `file`
-
-**Supported formats:**
-- PDF (`.pdf`)
-- Images (`.jpg`, `.jpeg`, `.png`)
-
-**Example:**
-```bash
-curl -X POST http://localhost:8000/extract \
-  -F "file=@poster.pdf"
-```
-
-**Success Response (200):**
-```json
-{
-  "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
-  "creators": [
-    {
-      "name": "Smith, John",
-      "givenName": "John",
-      "familyName": "Smith",
-      "affiliation": ["University of Example"]
-    }
-  ],
-  "titles": [{"title": "Research Poster Title"}],
-  "posterContent": {
-    "sections": [
-      {"sectionTitle": "Abstract", "sectionContent": "..."},
-      {"sectionTitle": "Methods", "sectionContent": "..."}
-    ]
-  },
-  "imageCaptions": [
-    {"captions": ["Figure 1.", "Description of figure"]}
-  ],
-  "tableCaptions": {
-    "captions": []
+  "checks": {
+    "api": "ok",
+    "cuda": "ok",
+    "gpu": "NVIDIA GeForce RTX 4090",
+    "json_model": "ok"
   }
 }
 ```
 
-**Error Response (400):**
-```json
-{
-  "error": "No file provided"
-}
-```
+### Trigger job check
 
-**Error Response (500):**
-```json
-{
-  "error": "Extraction failed: [error details]"
-}
-```
+#### `POST /jobs/check`
 
-## Usage Examples
+Run one job-worker cycle: if there is an uncompleted (pending) job, it is claimed and processed immediately. Call this after submitting a job to start processing without waiting for the next poll interval.
 
-### Python (requests)
+**Response:** `204 No Content` (no body).
 
-```python
-import requests
+## Job Worker
 
-url = "http://localhost:8000/extract"
-files = {"file": open("poster.pdf", "rb")}
+A background thread runs continuously:
 
-response = requests.post(url, files=files)
-result = response.json()
+1. **Poll** the database for an `ExtractionJob` with `completed = false` and `status = 'pending'`.
+2. **Claim** the job (set `status = 'processing'`).
+3. **Download** the file from Bunny storage using the job’s `filePath` (and optional `fileName`).
+4. **Extract** using the same pipeline as the CLI (no extraction logic changes).
+5. **Upsert** `PosterMetadata` for the job’s `posterId` with the extracted JSON (creators, titles, posterContent, imageCaption, tableCaption, etc.).
+6. **Complete** the job (`status = 'completed'`, `completed = true`) or **fail** it (`status = 'failed'`, `error` set).
 
-print(result["titles"][0]["title"])
-```
-
-### JavaScript (fetch)
-
-```javascript
-const formData = new FormData();
-formData.append('file', fileInput.files[0]);
-
-const response = await fetch('http://localhost:8000/extract', {
-  method: 'POST',
-  body: formData
-});
-
-const result = await response.json();
-console.log(result.titles[0].title);
-```
-
-### cURL
-
-```bash
-# Extract from PDF
-curl -X POST http://localhost:8000/extract \
-  -F "file=@poster.pdf" \
-  -o result.json
-
-# Extract from image
-curl -X POST http://localhost:8000/extract \
-  -F "file=@poster.jpg" \
-  -o result.json
-```
+Only one extraction runs at a time (shared lock with any future HTTP-triggered work).
 
 ## Configuration
 
@@ -157,9 +85,15 @@ curl -X POST http://localhost:8000/extract \
 
 | Variable | Description | Default |
 |----------|-------------|---------|
+| `DATABASE_URL` | PostgreSQL connection URL (for ExtractionJob / PosterMetadata) | *required* |
+| `BUNNY_STORAGE_ZONE` | Bunny storage zone name | *required* |
+| `BUNNY_ACCESS_KEY` | Bunny storage zone password (AccessKey) | *required* |
+| `BUNNY_REGION` | Optional region (e.g. `ny`, `uk`); omit for default `storage.bunnycdn.com` | — |
+| `POLL_INTERVAL_SECONDS` | Seconds between job poll cycles | 30 |
 | `PORT` | API server port | 8000 |
 | `HOST` | API server host | 0.0.0.0 |
 | `CUDA_VISIBLE_DEVICES` | GPU device(s) | All available |
+| `PDFALTO_PATH` | Path to pdfalto binary (for PDF processing) | See poster_extraction |
 
 ### Starting with Custom Port
 
@@ -169,21 +103,12 @@ PORT=9000 python api.py
 
 ## Error Handling
 
-The API returns appropriate HTTP status codes:
-
 | Code | Description |
 |------|-------------|
-| 200 | Success |
-| 400 | Bad request (missing file, invalid format) |
-| 500 | Server error (extraction failed) |
+| 200 | Success (health) |
+| 503 | Unhealthy (e.g. GPU or model unavailable) |
 
-## Rate Limiting
-
-The API processes one poster at a time due to GPU memory constraints. Concurrent requests are queued.
-
-For high-throughput scenarios:
-- Deploy multiple containers
-- Use batch processing via CLI instead
+Job failures are recorded in the database: `ExtractionJob.status = 'failed'` and `ExtractionJob.error` set.
 
 ## CORS
 
@@ -199,4 +124,3 @@ CORS(app, origins=["https://your-domain.com"])
 - [Docker Setup](DOCKER.md) - Container deployment
 - [Architecture](ARCHITECTURE.md) - Technical details
 - [Installation](INSTALLATION.md) - Setup instructions
-
