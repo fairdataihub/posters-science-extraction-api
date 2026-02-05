@@ -58,7 +58,7 @@ PDF/Image → Raw Text Extraction → LLM JSON Structuring → Structured JSON
 
 1. **PDF files** → Processed via `pdfalto` for layout-aware text extraction
 2. **Image files** → Processed via `Qwen2-VL-7B` vision-language model
-3. **All files** → Structured into JSON by fine-tuned Llama 3.1 8B
+3. **All files** → Structured into JSON by [Llama-3.1-8B-Poster-Extraction](https://huggingface.co/jimnoneill/Llama-3.1-8B-Poster-Extraction)
 
 ## Output Format
 
