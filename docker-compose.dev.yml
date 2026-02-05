@@ -21,12 +21,20 @@ services:
       dockerfile: Dockerfile
     image: poster-extraction:dev
     container_name: poster-extraction-dev
+    env_file:
+      - .env
     environment:
       - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
       - PORT=8000
       - HOST=0.0.0.0
+      - DATABASE_URL=${DATABASE_URL:-}
+      - BUNNY_PRIVATE_STORAGE=${BUNNY_PRIVATE_STORAGE:-}
+      - BUNNY_PRIVATE_STORAGE_KEY=${BUNNY_PRIVATE_STORAGE_KEY:-}
+      - BUNNY_PUBLIC_STORAGE=${BUNNY_PUBLIC_STORAGE:-}
+      - BUNNY_PUBLIC_STORAGE_KEY=${BUNNY_PUBLIC_STORAGE_KEY:-}
+      - POLL_INTERVAL_SECONDS=${POLL_INTERVAL_SECONDS:-30}
     ports:
       - "${API_PORT:-8000}:8000"
     # Mount source code for hot reload - edit locally, restart to apply
