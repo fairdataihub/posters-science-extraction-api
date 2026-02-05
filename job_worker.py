@@ -37,6 +37,7 @@ DATABASE_URL = _env("DATABASE_URL")
 BUNNY_PRIVATE_STORAGE = _env("BUNNY_PRIVATE_STORAGE")
 BUNNY_PRIVATE_STORAGE_KEY = _env("BUNNY_PRIVATE_STORAGE_KEY")
 POLL_INTERVAL_SECONDS = int(_env("POLL_INTERVAL_SECONDS") or "30")
+STUCK_PROCESSING_MINUTES = int(_env("STUCK_PROCESSING_MINUTES") or "5")
 
 
 # --- Bunny: download file ---------------------------------------------------
@@ -111,6 +112,30 @@ def claim_next_job(conn) -> Optional[dict]:
         conn.commit()
     print(f"[status] claim_next_job: claimed job {job_id}")
     return dict(row)
+
+
+def fail_stuck_processing_jobs(conn, stuck_minutes: int = STUCK_PROCESSING_MINUTES) -> int:
+    """
+    Mark ExtractionJobs stuck in 'processing' for longer than stuck_minutes as failed.
+    Returns the number of jobs updated.
+    """
+    error_msg = f"Job stuck in processing for over {stuck_minutes} minutes; marked failed by cleanup"
+    print(f"[status] fail_stuck_processing_jobs: checking for processing jobs older than {stuck_minutes} min")
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            UPDATE "ExtractionJob"
+            SET status = 'failed', error = %s, completed = true, updated = now()
+            WHERE completed = false AND status = 'processing'
+              AND updated < now() - (%s::text || ' minutes')::interval
+            """,
+            (error_msg, stuck_minutes),
+        )
+        updated = cur.rowcount
+        conn.commit()
+    if updated:
+        print(f"[status] fail_stuck_processing_jobs: marked {updated} stuck job(s) as failed")
+    return updated
 
 
 def mark_job_failed(conn, job_id: str, error: str) -> None:
@@ -326,6 +351,7 @@ def run_one_cycle(extraction_lock) -> bool:
 
     conn = get_conn()
     try:
+        fail_stuck_processing_jobs(conn)
         job = claim_next_job(conn)
         if not job:
             print("[status] run_one_cycle: no job, cycle done")
