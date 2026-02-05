@@ -136,24 +136,49 @@ The `-v` flag removes named volumes, forcing fresh model download.
 ### Using Production Config
 
 ```bash
+# Copy .env.example to .env and set values, then:
 docker compose -f docker-compose-prod.yml up -d
 ```
 
 ### Environment Variables
 
-Create a `.env` file:
+Create a `.env` file (see `.env.example`). Required for the job worker:
 
-```bash
-# GPU Configuration
-CUDA_VISIBLE_DEVICES=0
-GPU_COUNT=1
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `BUNNY_PRIVATE_STORAGE` | Bunny CDN storage URL (for job input files) |
+| `BUNNY_PRIVATE_STORAGE_KEY` | Bunny storage AccessKey |
 
-# API Configuration
-API_PORT=8000
+Optional:
 
-# Container Configuration
-RESTART_POLICY=unless-stopped
-```
+| Variable | Description |
+|----------|-------------|
+| `APP_PORT` | Host port (default `47362`) |
+| `HF_TOKEN` | HuggingFace token for gated models |
+| `BUNNY_PUBLIC_STORAGE`, `BUNNY_PUBLIC_STORAGE_KEY` | Public Bunny storage |
+| `CUDA_VISIBLE_DEVICES` | GPU device(s), e.g. `0` or `0,1` |
+| `POLL_INTERVAL_SECONDS` | Job poll interval (default `30`) |
+| `RESTART_POLICY` | Container restart policy (default `unless-stopped`) |
+
+### GitHub Actions (Deploy to GPU server)
+
+The workflow `.github/workflows/deploy-main.yml` deploys on push to `main`. Configure these **GitHub repo secrets**:
+
+**Required:**
+
+- `SSH_HOST` – Deploy server hostname
+- `SSH_USER` – SSH user
+- `SSH_PRIVATE_KEY` – SSH private key (e.g. ed25519)
+- `DATABASE_URL` – PostgreSQL connection string
+- `BUNNY_PRIVATE_STORAGE` – Bunny storage URL
+- `BUNNY_PRIVATE_STORAGE_KEY` – Bunny AccessKey
+
+**Optional (have defaults or can be empty):**
+
+- `APP_PORT` (default `47362`), `HF_TOKEN`, `BUNNY_PUBLIC_STORAGE`, `BUNNY_PUBLIC_STORAGE_KEY`, `CUDA_VISIBLE_DEVICES`, `POLL_INTERVAL_SECONDS`
+
+The workflow creates a `.env` on the server from these secrets and runs `docker compose -f docker-compose-prod.yml up -d --build`.
 
 ### Health Checks
 

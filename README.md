@@ -1,31 +1,10 @@
-# poster2json
+# Posters Science Extraction API
 
 Convert scientific posters (PDF/images) into structured JSON metadata using Large Language Models.
 
-[![DOI](https://zenodo.org/badge/1105067405.svg)](https://doi.org/10.5281/zenodo.18319796)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-
 ## Quick Start
 
-### Installation
-
-**Option 1: pip install from GitHub**
 ```bash
-pip install git+https://github.com/fairdataihub/posters-science-extraction-api.git
-```
-
-**Option 2: Clone and install**
-```bash
-git clone https://github.com/fairdataihub/posters-science-extraction-api.git
-cd posters-science-extraction-api
-pip install -e .
-```
-
-**Option 3: Requirements only**
-```bash
-git clone https://github.com/fairdataihub/posters-science-extraction-api.git
-cd posters-science-extraction-api
 pip install -r requirements.txt
 ```
 
@@ -67,47 +46,63 @@ Output conforms to the [poster-json-schema](https://github.com/fairdataihub/post
 ```json
 {
   "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
-  "creators": [{"name": "LastName, FirstName", "givenName": "FirstName", "familyName": "LastName", "affiliation": ["Institution"]}],
-  "titles": [{"title": "Poster Title"}],
+  "creators": [
+    {
+      "name": "LastName, FirstName",
+      "givenName": "FirstName",
+      "familyName": "LastName",
+      "affiliation": ["Institution"]
+    }
+  ],
+  "titles": [{ "title": "Poster Title" }],
   "posterContent": {
     "sections": [
-      {"sectionTitle": "Abstract", "sectionContent": "..."},
-      {"sectionTitle": "Methods", "sectionContent": "..."}
+      { "sectionTitle": "Abstract", "sectionContent": "..." },
+      { "sectionTitle": "Methods", "sectionContent": "..." }
     ]
   },
-  "imageCaptions": [{"captions": ["Figure 1.", "Description"]}],
-  "tableCaptions": [{"captions": ["Table 1.", "Description"]}]
+  "imageCaptions": [{ "captions": ["Figure 1.", "Description"] }],
+  "tableCaptions": [{ "captions": ["Table 1.", "Description"] }]
 }
 ```
 
 ## System Requirements
 
-| Requirement | Specification |
-|-------------|---------------|
-| GPU | CUDA-capable, ≥16GB VRAM |
-| RAM | ≥32GB recommended |
-| Python | 3.10+ |
-| OS | Linux, macOS, Windows (via Docker/WSL2) |
+| Requirement | Specification                           |
+| ----------- | --------------------------------------- |
+| GPU         | CUDA-capable, ≥16GB VRAM                |
+| RAM         | ≥32GB recommended                       |
+| Python      | 3.10+                                   |
+| OS          | Linux, macOS, Windows (via Docker/WSL2) |
 
 ## API Server
 
+The API does **not** accept file uploads. The frontend uploads poster files to Bunny storage and creates `ExtractionJob` records in the database. This service polls the database for new jobs, downloads the file from Bunny, runs extraction, and writes results to `PosterMetadata`.
+
 ```bash
-# Start the API
+# Set required environment variables
+export DATABASE_URL="postgresql://user:pass@host:5432/dbname"
+export BUNNY_STORAGE_ZONE="your-storage-zone"
+export BUNNY_ACCESS_KEY="your-storage-zone-password"
+
+# Start the API (starts background job worker)
 python api.py
 
-# POST a poster file
-curl -X POST http://localhost:8000/extract -F "file=@poster.pdf"
+# Health check
+curl http://localhost:8000/health
 ```
+
+See [API Reference](docs/API.md) for full configuration and environment variables.
 
 ## Documentation
 
-| Document | Description |
-|----------|-------------|
-| [Installation Guide](docs/INSTALLATION.md) | Detailed setup instructions |
-| [Docker Setup](docs/DOCKER.md) | Docker deployment & Windows support |
-| [Architecture](docs/ARCHITECTURE.md) | Technical details & methodology |
-| [Evaluation](docs/EVALUATION.md) | Validation metrics & results |
-| [API Reference](docs/API.md) | REST API documentation |
+| Document                                   | Description                         |
+| ------------------------------------------ | ----------------------------------- |
+| [Installation Guide](docs/INSTALLATION.md) | Detailed setup instructions         |
+| [Docker Setup](docs/DOCKER.md)             | Docker deployment & Windows support |
+| [Architecture](docs/ARCHITECTURE.md)       | Technical details & methodology     |
+| [Evaluation](docs/EVALUATION.md)           | Validation metrics & results        |
+| [API Reference](docs/API.md)               | REST API documentation              |
 
 ## Project Structure
 
@@ -127,12 +122,12 @@ poster2json/
 
 **Validation Results**: 10/10 (100%) passing on test set
 
-| Metric | Score | Threshold |
-|--------|-------|-----------|
-| Word Capture | 0.96 | ≥0.75 |
-| ROUGE-L | 0.89 | ≥0.75 |
-| Number Capture | 0.93 | ≥0.75 |
-| Field Proportion | 0.99 | 0.50–2.00 |
+| Metric           | Score | Threshold |
+| ---------------- | ----- | --------- |
+| Word Capture     | 0.96  | ≥0.75     |
+| ROUGE-L          | 0.89  | ≥0.75     |
+| Number Capture   | 0.93  | ≥0.75     |
+| Field Proportion | 0.99  | 0.50–2.00 |
 
 ## License
 

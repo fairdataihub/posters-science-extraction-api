@@ -132,12 +132,14 @@ def validate_and_fix_extraction(
         - validated_data: The data with validation metadata added
         - warnings_list: List of warning dicts describing any issues found
     """
+    print("[status] validate_and_fix_extraction: starting")
     # Don't modify original
     result = copy.deepcopy(data)
     warnings: List[ValidationWarning] = []
 
     # Handle error responses from extraction
     if "error" in result:
+        print("[status] validate_and_fix_extraction: data has error, returning as-is")
         return result, []
 
     # Schema validation
@@ -166,6 +168,7 @@ def validate_and_fix_extraction(
     # Convert warnings to dicts for JSON serialization
     warnings_list = [w.to_dict() for w in warnings]
 
+    print(f"[status] validate_and_fix_extraction: done, warnings={len(warnings_list)}")
     return result, warnings_list
 
 
