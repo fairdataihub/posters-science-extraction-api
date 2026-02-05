@@ -471,6 +471,7 @@ def load_json_model(force_full_precision: bool = False):
             # Try to use Flash Attention 2 for faster inference (1.5-2x speedup)
             # Falls back to default attention if flash-attn not installed
             try:
+                import flash_attn  # noqa: F401
                 attn_impl = "flash_attention_2"
                 log("   Using Flash Attention 2 for faster inference")
             except ImportError:
