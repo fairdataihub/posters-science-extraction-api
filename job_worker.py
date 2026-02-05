@@ -3,9 +3,8 @@
 Job worker for poster extraction.
 
 Polls the database for new ExtractionJob records, downloads the file from
-Bunny storage, runs extraction (poster_extraction), and writes results
-to PosterMetadata. Only the Flask/worker layer; extraction logic stays in
-poster_extraction.py.
+Bunny storage, runs extraction via the poster2json library, and writes results
+to PosterMetadata.
 """
 
 import os
@@ -20,7 +19,8 @@ from psycopg2.extras import RealDictCursor
 import requests
 
 import config
-from poster_extraction import process_poster_file, log
+from poster2json import extract_poster
+from poster2json.extract import log
 from validation import validate_and_fix_extraction
 
 
@@ -357,9 +357,9 @@ def run_one_cycle(extraction_lock) -> bool:
                 return True
 
             try:
-                print(f"[status] run_one_cycle: calling process_poster_file({tmp_path})")
-                result = process_poster_file(tmp_path)
-                print("[status] run_one_cycle: process_poster_file returned")
+                print(f"[status] run_one_cycle: calling extract_poster({tmp_path})")
+                result = extract_poster(tmp_path)
+                print("[status] run_one_cycle: extract_poster returned")
             finally:
                 extraction_lock.release()
                 print("[status] run_one_cycle: released extraction lock")
