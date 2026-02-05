@@ -222,7 +222,6 @@ OSError: We couldn't connect to huggingface.co
 
 **Solutions:**
 - Check internet connection
-- Set `HF_TOKEN` for gated models: `export HF_TOKEN="your_token"`
 - Use offline mode with pre-downloaded models
 
 ## Environment Variables
@@ -231,7 +230,6 @@ OSError: We couldn't connect to huggingface.co
 |----------|-------------|---------|
 | `PDFALTO_PATH` | Path to pdfalto binary | Auto-detected |
 | `CUDA_VISIBLE_DEVICES` | GPU device(s) to use | All available |
-| `HF_TOKEN` | HuggingFace API token | None |
 
 ## Next Steps
 

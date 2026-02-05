@@ -16,7 +16,6 @@ Requirements:
 Environment Variables:
 - PDFALTO_PATH: Path to pdfalto binary (required for PDF processing)
 - CUDA_VISIBLE_DEVICES: GPU device(s) to use (default: 0)
-- HF_TOKEN: HuggingFace token for gated models
 """
 
 import os
@@ -1730,7 +1729,7 @@ def passes(m: dict) -> bool:
         m["word_capture"] >= 0.75
         and m["rouge_l"] >= 0.75
         and m["number_capture"] >= 0.75
-        and 0.3 <= m["field_proportion"] <= 2.5
+        and 0.5 <= m["field_proportion"] <= 2.0
     )
 
 
