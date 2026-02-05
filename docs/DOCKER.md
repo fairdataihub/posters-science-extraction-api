@@ -155,7 +155,6 @@ Optional:
 | Variable | Description |
 |----------|-------------|
 | `APP_PORT` | Host port (default `47362`) |
-| `HF_TOKEN` | HuggingFace token for gated models |
 | `BUNNY_PUBLIC_STORAGE`, `BUNNY_PUBLIC_STORAGE_KEY` | Public Bunny storage |
 | `CUDA_VISIBLE_DEVICES` | GPU device(s), e.g. `0` or `0,1` |
 | `POLL_INTERVAL_SECONDS` | Job poll interval (default `30`) |
@@ -176,7 +175,7 @@ The workflow `.github/workflows/deploy-main.yml` deploys on push to `main`. Conf
 
 **Optional (have defaults or can be empty):**
 
-- `APP_PORT` (default `47362`), `HF_TOKEN`, `BUNNY_PUBLIC_STORAGE`, `BUNNY_PUBLIC_STORAGE_KEY`, `CUDA_VISIBLE_DEVICES`, `POLL_INTERVAL_SECONDS`
+- `APP_PORT` (default `47362`), `BUNNY_PUBLIC_STORAGE`, `BUNNY_PUBLIC_STORAGE_KEY`, `CUDA_VISIBLE_DEVICES`, `POLL_INTERVAL_SECONDS`
 
 The workflow creates a `.env` on the server from these secrets and runs `docker compose -f docker-compose-prod.yml up -d --build`.
 
