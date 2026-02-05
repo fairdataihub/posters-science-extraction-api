@@ -235,6 +235,7 @@ _POSTER_METADATA_COLUMNS = [
 ]
 
 # Static upsert SQL: column names are fixed (no composition). Values are bound via %s.
+# "created" and "updated" are set via now() so they are never null.
 _POSTER_METADATA_UPSERT_SQL = """
     INSERT INTO "PosterMetadata" (
         "posterId", "doi", "identifiers", "alternateIdentifiers", "creators",
@@ -244,11 +245,13 @@ _POSTER_METADATA_UPSERT_SQL = """
         "conferenceName", "conferenceLocation", "conferenceUri",
         "conferenceIdentifier", "conferenceIdentifierType", "conferenceSchemaUri",
         "conferenceStartDate", "conferenceEndDate", "conferenceAcronym", "conferenceSeries",
-        "posterContent", "tableCaption", "imageCaption", "domain"
+        "posterContent", "tableCaption", "imageCaption", "domain",
+        "created", "updated"
     )
     VALUES (
         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+        now(), now()
     )
     ON CONFLICT ("posterId") DO UPDATE SET
         "doi" = EXCLUDED."doi",
@@ -283,7 +286,8 @@ _POSTER_METADATA_UPSERT_SQL = """
         "posterContent" = EXCLUDED."posterContent",
         "tableCaption" = EXCLUDED."tableCaption",
         "imageCaption" = EXCLUDED."imageCaption",
-        "domain" = EXCLUDED."domain"
+        "domain" = EXCLUDED."domain",
+        "updated" = now()
 """
 
 
