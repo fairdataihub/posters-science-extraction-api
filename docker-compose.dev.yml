@@ -35,6 +35,7 @@ services:
       - BUNNY_PUBLIC_STORAGE=${BUNNY_PUBLIC_STORAGE:-}
       - BUNNY_PUBLIC_STORAGE_KEY=${BUNNY_PUBLIC_STORAGE_KEY:-}
       - POLL_INTERVAL_SECONDS=${POLL_INTERVAL_SECONDS:-30}
+      - STUCK_PROCESSING_MINUTES=${STUCK_PROCESSING_MINUTES:-5}
     ports:
       - "${API_PORT:-8000}:8000"
     # Mount source code for hot reload - edit locally, restart to apply
