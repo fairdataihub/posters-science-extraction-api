@@ -1729,7 +1729,7 @@ def passes(m: dict) -> bool:
         m["word_capture"] >= 0.75
         and m["rouge_l"] >= 0.75
         and m["number_capture"] >= 0.75
-        and 0.3 <= m["field_proportion"] <= 2.5
+        and 0.5 <= m["field_proportion"] <= 2.0
     )
 
 
