@@ -7,7 +7,7 @@
 #   BUNNY_PRIVATE_STORAGE_KEY             - Bunny storage AccessKey
 # Optional (have defaults or can be empty):
 #   APP_PORT (default 47362), HF_TOKEN, BUNNY_PUBLIC_STORAGE, BUNNY_PUBLIC_STORAGE_KEY,
-#   CUDA_VISIBLE_DEVICES, POLL_INTERVAL_SECONDS
+#   CUDA_VISIBLE_DEVICES, POLL_INTERVAL_SECONDS, STUCK_PROCESSING_MINUTES (default 5)
 #
 name: Deploy to GPU server
 
@@ -84,6 +84,7 @@ jobs:
             echo "HF_TOKEN=${{ secrets.HF_TOKEN }}"
             echo "CUDA_VISIBLE_DEVICES=${{ secrets.CUDA_VISIBLE_DEVICES }}"
             echo "POLL_INTERVAL_SECONDS=${{ secrets.POLL_INTERVAL_SECONDS }}"
+            echo "STUCK_PROCESSING_MINUTES=${{ secrets.STUCK_PROCESSING_MINUTES }}"
           } > .env.deploy
 
       # Copy .env to server so docker-compose can substitute variables
