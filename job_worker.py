@@ -17,7 +17,6 @@ from typing import Optional
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from psycopg2 import sql
 import requests
 
 import config
@@ -235,45 +234,73 @@ _POSTER_METADATA_COLUMNS = [
     "domain",
 ]
 
+# Static upsert SQL: column names are fixed (no composition). Values are bound via %s.
+_POSTER_METADATA_UPSERT_SQL = """
+    INSERT INTO "PosterMetadata" (
+        "posterId", "doi", "identifiers", "alternateIdentifiers", "creators",
+        "titles", "descriptions", "publisher", "publicationYear", "subjects",
+        "dates", "language", "types", "relatedIdentifiers", "sizes", "formats",
+        "version", "rightsList", "fundingReferences", "ethicsApproval",
+        "conferenceName", "conferenceLocation", "conferenceUri",
+        "conferenceIdentifier", "conferenceIdentifierType", "conferenceSchemaUri",
+        "conferenceStartDate", "conferenceEndDate", "conferenceAcronym", "conferenceSeries",
+        "posterContent", "tableCaption", "imageCaption", "domain"
+    )
+    VALUES (
+        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+    )
+    ON CONFLICT ("posterId") DO UPDATE SET
+        "doi" = EXCLUDED."doi",
+        "identifiers" = EXCLUDED."identifiers",
+        "alternateIdentifiers" = EXCLUDED."alternateIdentifiers",
+        "creators" = EXCLUDED."creators",
+        "titles" = EXCLUDED."titles",
+        "descriptions" = EXCLUDED."descriptions",
+        "publisher" = EXCLUDED."publisher",
+        "publicationYear" = EXCLUDED."publicationYear",
+        "subjects" = EXCLUDED."subjects",
+        "dates" = EXCLUDED."dates",
+        "language" = EXCLUDED."language",
+        "types" = EXCLUDED."types",
+        "relatedIdentifiers" = EXCLUDED."relatedIdentifiers",
+        "sizes" = EXCLUDED."sizes",
+        "formats" = EXCLUDED."formats",
+        "version" = EXCLUDED."version",
+        "rightsList" = EXCLUDED."rightsList",
+        "fundingReferences" = EXCLUDED."fundingReferences",
+        "ethicsApproval" = EXCLUDED."ethicsApproval",
+        "conferenceName" = EXCLUDED."conferenceName",
+        "conferenceLocation" = EXCLUDED."conferenceLocation",
+        "conferenceUri" = EXCLUDED."conferenceUri",
+        "conferenceIdentifier" = EXCLUDED."conferenceIdentifier",
+        "conferenceIdentifierType" = EXCLUDED."conferenceIdentifierType",
+        "conferenceSchemaUri" = EXCLUDED."conferenceSchemaUri",
+        "conferenceStartDate" = EXCLUDED."conferenceStartDate",
+        "conferenceEndDate" = EXCLUDED."conferenceEndDate",
+        "conferenceAcronym" = EXCLUDED."conferenceAcronym",
+        "conferenceSeries" = EXCLUDED."conferenceSeries",
+        "posterContent" = EXCLUDED."posterContent",
+        "tableCaption" = EXCLUDED."tableCaption",
+        "imageCaption" = EXCLUDED."imageCaption",
+        "domain" = EXCLUDED."domain"
+"""
+
 
 def save_poster_metadata(conn, poster_id: int, extraction: dict) -> None:
     """
     Upsert PosterMetadata for the given poster from validated extraction result.
+    Uses a static SQL string and bound parameters only (no string composition).
     """
     print(f"[status] save_poster_metadata: poster_id={poster_id}")
     row = _extraction_to_metadata_row(extraction)
     row["posterId"] = poster_id
 
-    cols = [c for c in _POSTER_METADATA_COLUMNS if c in row]
-    if not cols:
-        print("[status] save_poster_metadata: no columns to save, skipping")
-        return
+    # Build values tuple in fixed column order (all columns; missing keys → None)
+    values = tuple(row.get(c) for c in _POSTER_METADATA_COLUMNS)
 
-    values = [row[c] for c in cols]
-    col_list = sql.SQL(", ").join(sql.Identifier(c) for c in cols)
-    placeholders = sql.SQL(", ").join(sql.Placeholder() for _ in cols)
-    updates = sql.SQL(", ").join(
-        sql.SQL("{} = EXCLUDED.{}").format(sql.Identifier(c), sql.Identifier(c))
-        for c in cols
-        if c != "posterId"
-    )
-
-    print(f"[status] save_poster_metadata: upserting {len(cols)} columns")
     with conn.cursor() as cur:
-        cur.execute(
-            sql.SQL(
-                """
-                INSERT INTO "PosterMetadata" ({cols})
-                VALUES ({placeholders})
-                ON CONFLICT ("posterId") DO UPDATE SET {updates}
-            """
-            ).format(
-                cols=col_list,
-                placeholders=placeholders,
-                updates=updates,
-            ),
-            values,
-        )
+        cur.execute(_POSTER_METADATA_UPSERT_SQL, values)
         conn.commit()
     print(f"[status] save_poster_metadata: done for poster_id={poster_id}")
 
