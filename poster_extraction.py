@@ -16,7 +16,6 @@ Requirements:
 Environment Variables:
 - PDFALTO_PATH: Path to pdfalto binary (required for PDF processing)
 - CUDA_VISIBLE_DEVICES: GPU device(s) to use (default: 0)
-- HF_TOKEN: HuggingFace token for gated models
 """
 
 import os
