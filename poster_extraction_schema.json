@@ -19,12 +19,12 @@
           },
           "givenName": {
             "type": "string",
-            "description": "The given (first) name of the creator. Use only for personal names.",
+            "description": "The given (first) name of the creator.",
             "minLength": 1
           },
           "familyName": {
             "type": "string",
-            "description": "The family (last) name of the creator. Use only for personal names.",
+            "description": "The family (last) name of the creator.",
             "minLength": 1
           },
           "nameType": {
@@ -32,62 +32,12 @@
             "description": "The type of name of the creator.",
             "enum": ["Personal", "Organizational"]
           },
-          "nameIdentifiers": {
-            "type": "array",
-            "description": "The name identifiers of the creator (e.g., ORCID).",
-            "items": {
-              "type": "object",
-              "properties": {
-                "nameIdentifier": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "nameIdentifierScheme": {
-                  "type": "string",
-                  "minLength": 1
-                },
-                "schemeURI": {
-                  "type": "string",
-                  "minLength": 1
-                }
-              },
-              "required": ["nameIdentifier"]
-            }
-          },
           "affiliation": {
             "type": "array",
-            "description": "The affiliation(s) of the creator. Can be strings or objects.",
+            "description": "The affiliation(s) of the creator as plain-text strings.",
             "items": {
-              "oneOf": [
-                {
-                  "type": "string",
-                  "description": "Simple affiliation name string.",
-                  "minLength": 1
-                },
-                {
-                  "type": "object",
-                  "properties": {
-                    "name": {
-                      "type": "string",
-                      "description": "The name of the affiliated institution.",
-                      "minLength": 1
-                    },
-                    "affiliationIdentifier": {
-                      "type": "string",
-                      "minLength": 1
-                    },
-                    "affiliationIdentifierScheme": {
-                      "type": "string",
-                      "minLength": 1
-                    },
-                    "schemeURI": {
-                      "type": "string",
-                      "minLength": 1
-                    }
-                  },
-                  "required": ["name"]
-                }
-              ]
+              "type": "string",
+              "minLength": 1
             }
           }
         },
@@ -105,18 +55,117 @@
             "type": "string",
             "description": "The title of the poster.",
             "minLength": 1
-          },
-          "titleType": {
-            "type": "string",
-            "description": "The type of title.",
-            "enum": ["AlternativeTitle", "Subtitle", "TranslatedTitle", "Other"]
           }
         },
         "required": ["title"]
       },
       "minItems": 1
     },
-    "posterContent": {
+    "publicationYear": {
+      "type": "integer",
+      "description": "The year when the poster was presented or published. Format: YYYY",
+      "minimum": 1900,
+      "maximum": 2100
+    },
+    "subjects": {
+      "type": "array",
+      "description": "Keywords or subject terms extracted from the poster.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "subject": {
+            "type": "string",
+            "description": "A keyword or subject term.",
+            "minLength": 1
+          }
+        },
+        "required": ["subject"]
+      },
+      "minItems": 1
+    },
+    "descriptions": {
+      "type": "array",
+      "description": "Abstract or description text extracted from the poster.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Description text (typically the abstract).",
+            "minLength": 1
+          },
+          "descriptionType": {
+            "type": "string",
+            "description": "The type of description.",
+            "enum": ["Abstract", "Methods", "SeriesInformation", "TableOfContents", "TechnicalInfo", "Other"]
+          }
+        },
+        "required": ["descriptionType", "description"]
+      },
+      "minItems": 1
+    },
+    "conference": {
+      "type": "object",
+      "description": "Conference information extracted from the poster.",
+      "properties": {
+        "conferenceName": {
+          "type": "string",
+          "description": "Name of the conference",
+          "minLength": 1
+        },
+        "conferenceLocation": {
+          "type": "string",
+          "description": "Location of the conference",
+          "minLength": 1
+        },
+        "conferenceStartDate": {
+          "type": "string",
+          "description": "Start date of the conference (YYYY-MM-DD)"
+        },
+        "conferenceEndDate": {
+          "type": "string",
+          "description": "End date of the conference (YYYY-MM-DD)"
+        },
+        "conferenceAcronym": {
+          "type": "string",
+          "description": "Acronym of the conference"
+        }
+      }
+    },
+    "rightsList": {
+      "type": "array",
+      "description": "Rights and license information. Required for FAIR compliance.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "rights": {
+            "type": "string",
+            "description": "License name or identifier.",
+            "minLength": 1
+          },
+          "rightsUri": {
+            "type": "string",
+            "description": "URI of the license."
+          },
+          "rightsIdentifier": {
+            "type": "string",
+            "description": "Short standardized license identifier (e.g., CC-BY-4.0)."
+          }
+        },
+        "required": ["rights"]
+      },
+      "minItems": 1
+    },
+    "formats": {
+      "type": "array",
+      "description": "Technical format of the poster file. Auto-detected from upload.",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "content": {
       "type": "object",
       "description": "Text content extracted from the poster organized into sections.",
       "properties": {
@@ -146,42 +195,42 @@
     },
     "imageCaptions": {
       "type": "array",
-      "description": "Array of image caption objects.",
+      "description": "Array of image/figure caption objects with optional id for cross-referencing.",
       "items": {
         "type": "object",
-        "description": "Caption information for a single image.",
         "properties": {
-          "captions": {
-            "type": "array",
-            "description": "Array of caption text segments for this image.",
-            "items": {
-              "type": "string",
-              "minLength": 1
-            },
-            "minItems": 1
+          "id": {
+            "type": "string",
+            "description": "Optional identifier for cross-referencing (e.g., 'fig1')."
+          },
+          "caption": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The full caption text for this image/figure."
           }
-        }
+        },
+        "required": ["caption"]
       }
     },
     "tableCaptions": {
       "type": "array",
-      "description": "Array of table caption objects.",
+      "description": "Array of table caption objects with optional id for cross-referencing.",
       "items": {
         "type": "object",
-        "description": "Caption information for a single table.",
         "properties": {
-          "captions": {
-            "type": "array",
-            "description": "Array of caption text segments for this table.",
-            "items": {
-              "type": "string",
-              "minLength": 1
-            },
-            "minItems": 1
+          "id": {
+            "type": "string",
+            "description": "Optional identifier for cross-referencing (e.g., 'table1')."
+          },
+          "caption": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The full caption text for this table."
           }
-        }
+        },
+        "required": ["caption"]
       }
     }
   },
-  "required": ["creators", "titles", "posterContent"]
+  "required": ["creators", "titles", "publicationYear", "subjects", "descriptions", "conference", "rightsList", "formats"]
 }
