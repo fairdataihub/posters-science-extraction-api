@@ -306,7 +306,7 @@ API_PORT=8001 docker compose up
   docker run -it --rm \
     -v model-cache:/root/.cache \
     poster-extraction \
-    python -c "from transformers import AutoModelForCausalLM; AutoModelForCausalLM.from_pretrained('jimnoneill/Llama-3.1-8B-Poster-Extraction')"
+    python -c "from transformers import AutoModelForCausalLM; AutoModelForCausalLM.from_pretrained('fairdataihub/Llama-3.1-8B-Poster-Extraction')"
   ```
 
 ## Docker Commands Reference
