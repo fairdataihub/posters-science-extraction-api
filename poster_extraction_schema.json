@@ -104,6 +104,18 @@
       },
       "minItems": 1
     },
+    "publisher": {
+      "type": "object",
+      "description": "The entity responsible for making the poster available (e.g., conference organizer, institution).",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the publisher.",
+          "minLength": 1
+        }
+      },
+      "required": ["name"]
+    },
     "conference": {
       "type": "object",
       "description": "Conference information extracted from the poster.",
@@ -112,6 +124,12 @@
           "type": "string",
           "description": "Name of the conference",
           "minLength": 1
+        },
+        "conferenceYear": {
+          "type": "integer",
+          "description": "Year of the conference. Format: YYYY",
+          "minimum": 1900,
+          "maximum": 2100
         },
         "conferenceLocation": {
           "type": "string",
@@ -130,7 +148,8 @@
           "type": "string",
           "description": "Acronym of the conference"
         }
-      }
+      },
+      "required": ["conferenceName", "conferenceYear"]
     },
     "rightsList": {
       "type": "array",
@@ -232,5 +251,5 @@
       }
     }
   },
-  "required": ["creators", "titles", "publicationYear", "subjects", "descriptions", "conference", "rightsList", "formats"]
+  "required": ["creators", "titles", "publicationYear", "subjects", "descriptions", "publisher", "conference", "formats"]
 }
