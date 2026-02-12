@@ -22,6 +22,7 @@ import config
 from poster2json import extract_poster
 from poster2json.extract import log
 from validation import validate_and_fix_extraction
+from poster_sentry_check import sentry_gate, SENTRY_ALLOW_ON_ERROR
 
 
 # --- Config from config.py --------------------------------------------------
@@ -376,6 +377,28 @@ def run_one_cycle(extraction_lock) -> bool:
         try:
             download_from_bunny(file_path, tmp_path)
             log(f"Job worker: downloaded to {tmp_path}")
+
+            # --- PosterSentry gate -------------------------------------------
+            # Classify the document *before* acquiring the GPU extraction lock.
+            # This keeps the expensive lock free while the lightweight CPU-only
+            # sentry model runs (~300 docs/sec).
+            print("[status] run_one_cycle: running PosterSentry classification")
+            sentry_result, sentry_error, sentry_detail = sentry_gate(tmp_path)
+
+            if sentry_error is not None:
+                err_msg = (
+                    f"[{sentry_error.code}] {sentry_error.title}: "
+                    f"{sentry_detail or sentry_error.message}"
+                )
+                log(f"Job worker: job {job_id} rejected by PosterSentry — {err_msg}")
+                mark_job_failed(conn, job_id, err_msg)
+                return True
+
+            log(
+                f"Job worker: PosterSentry passed "
+                f"(confidence={sentry_result.get('confidence', '?')})"
+            )
+            # -----------------------------------------------------------------
 
             print("[status] run_one_cycle: acquiring extraction lock")
             if not extraction_lock.acquire(blocking=True):

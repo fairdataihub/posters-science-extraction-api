@@ -18,6 +18,7 @@ from flask_cors import CORS
 
 from poster2json.extract import log, load_json_model
 from job_worker import run_worker_loop, run_one_cycle
+from poster_sentry_check import get_sentry_status
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -59,6 +60,13 @@ def health():
         except Exception as e:
             checks["json_model"] = f"error: {str(e)}"
             print(f"[status] api: health check json_model error: {e}")
+
+        # Check PosterSentry model
+        sentry_status = get_sentry_status()
+        checks["poster_sentry"] = sentry_status.get("status", "unknown")
+        if sentry_status.get("confidence_threshold"):
+            checks["sentry_threshold"] = sentry_status["confidence_threshold"]
+        print(f"[status] api: health check poster_sentry={checks['poster_sentry']}")
 
         # Determine overall status
         if checks.get("cuda") == "ok" and checks.get("json_model") == "ok":
