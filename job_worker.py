@@ -22,7 +22,8 @@ import config
 from poster2json import extract_poster
 from poster2json.extract import log
 from validation import validate_and_fix_extraction
-from poster_sentry_check import sentry_gate, SENTRY_ALLOW_ON_ERROR
+from error_codes import PipelineWarnings
+from poster_sentry_check import sentry_gate
 
 
 # --- Config from config.py --------------------------------------------------
@@ -383,21 +384,29 @@ def run_one_cycle(extraction_lock) -> bool:
             # This keeps the expensive lock free while the lightweight CPU-only
             # sentry model runs (~300 docs/sec).
             print("[status] run_one_cycle: running PosterSentry classification")
-            sentry_result, sentry_error, sentry_detail = sentry_gate(tmp_path)
+            pipeline_warnings = PipelineWarnings()
+            sentry_result, sentry_error, pipeline_warnings = sentry_gate(
+                tmp_path, warnings=pipeline_warnings
+            )
 
             if sentry_error is not None:
                 err_msg = (
                     f"[{sentry_error.code}] {sentry_error.title}: "
-                    f"{sentry_detail or sentry_error.message}"
+                    f"{sentry_error.message}"
                 )
                 log(f"Job worker: job {job_id} rejected by PosterSentry — {err_msg}")
                 mark_job_failed(conn, job_id, err_msg)
                 return True
 
-            log(
-                f"Job worker: PosterSentry passed "
-                f"(confidence={sentry_result.get('confidence', '?')})"
-            )
+            confidence = sentry_result.get("confidence", "?")
+            if pipeline_warnings:
+                log(
+                    f"Job worker: PosterSentry passed with "
+                    f"{len(pipeline_warnings)} warning(s) "
+                    f"(confidence={confidence})"
+                )
+            else:
+                log(f"Job worker: PosterSentry passed (confidence={confidence})")
             # -----------------------------------------------------------------
 
             print("[status] run_one_cycle: acquiring extraction lock")
@@ -419,7 +428,16 @@ def run_one_cycle(extraction_lock) -> bool:
                 return True
 
             print("[status] run_one_cycle: validating extraction")
-            result, _ = validate_and_fix_extraction(result)
+            result, validation_warnings = validate_and_fix_extraction(result)
+
+            # Attach any pipeline warnings (sentry, extraction, etc.)
+            if pipeline_warnings:
+                result["_pipeline_warnings"] = pipeline_warnings.to_list()
+                log(
+                    f"Job worker: {len(pipeline_warnings)} pipeline warning(s) "
+                    f"attached to result"
+                )
+
             try:
                 save_poster_metadata(conn, poster_id, result)
                 mark_job_completed(conn, job_id)

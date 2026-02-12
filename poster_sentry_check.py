@@ -2,15 +2,20 @@
 PosterSentry integration for the extraction API.
 
 Wraps the fairdataihub/poster-sentry model to gate the extraction
-pipeline: only scientific posters are allowed through.
+pipeline.  Documents are sorted into three buckets:
+
+    confidence ≥ THRESHOLD            → ACCEPTED  (clean pass)
+    WARN_FLOOR ≤ confidence < THRESH  → ACCEPTED with WARNING  (borderline)
+    confidence < WARN_FLOOR           → REJECTED with ERROR    (not a poster)
 
 Usage in the pipeline:
     from poster_sentry_check import sentry_gate
 
-    ok, err = sentry_gate("/tmp/upload.pdf")
-    if err is not None:
-        mark_job_failed(conn, job_id, err.message)
+    result, error, warnings = sentry_gate("/tmp/upload.pdf")
+    if error is not None:
+        mark_job_failed(conn, job_id, ...)
         return
+    # `warnings` is a PipelineWarnings accumulator — pass it downstream
 
 Model reference:
     https://huggingface.co/fairdataihub/poster-sentry
@@ -23,6 +28,7 @@ from typing import Optional, Tuple
 
 from error_codes import (
     FAIRError,
+    PipelineWarnings,
     SENTRY_NOT_A_POSTER,
     SENTRY_LOW_CONFIDENCE,
     SENTRY_CLASSIFICATION_FAILED,
@@ -35,11 +41,15 @@ logger = logging.getLogger(__name__)
 # Configuration
 # ---------------------------------------------------------------------------
 
-# Minimum confidence to accept a document as a poster.
-# The model's decision boundary is 0.5; we require a higher bar to reduce
-# false positives entering the expensive extraction pipeline.
+# Minimum confidence for a clean pass (no warning).
 SENTRY_CONFIDENCE_THRESHOLD = float(
     os.environ.get("SENTRY_CONFIDENCE_THRESHOLD", "0.65")
+)
+
+# Floor below which the document is hard-rejected.  Anything between
+# WARN_FLOOR and THRESHOLD gets a warning but proceeds through extraction.
+SENTRY_WARN_FLOOR = float(
+    os.environ.get("SENTRY_WARN_FLOOR", "0.50")
 )
 
 # When True, a failed or unavailable sentry check lets the document
@@ -134,7 +144,11 @@ def get_sentry_status() -> dict:
         return {"status": "disabled"}
     sentry = load_sentry()
     if sentry is not None:
-        return {"status": "ok", "confidence_threshold": SENTRY_CONFIDENCE_THRESHOLD}
+        return {
+            "status": "ok",
+            "confidence_threshold": SENTRY_CONFIDENCE_THRESHOLD,
+            "warn_floor": SENTRY_WARN_FLOOR,
+        }
     return {"status": "unavailable", "error": _sentry_load_error or "unknown"}
 
 
@@ -145,23 +159,32 @@ def get_sentry_status() -> dict:
 
 def sentry_gate(
     file_path: str,
-) -> Tuple[Optional[dict], Optional[FAIRError], Optional[str]]:
+    warnings: Optional[PipelineWarnings] = None,
+) -> Tuple[Optional[dict], Optional[FAIRError], PipelineWarnings]:
     """
     Classify a file with PosterSentry before extraction.
 
     Args:
         file_path: Local path to the downloaded poster file.
+        warnings:  Optional existing PipelineWarnings accumulator.
+                   A new one is created if not provided.
 
     Returns:
-        (result_dict, error, detail)
-        - On success (poster accepted): (classification_result, None, None)
-        - On rejection / error:         (None, FAIRError, detail_string)
+        (result_dict, error_or_None, warnings)
 
-    The caller decides what to do with errors based on SENTRY_ALLOW_ON_ERROR.
+        - Hard reject (not a poster / infrastructure failure):
+              (None, FAIRError, warnings)
+        - Borderline poster (confidence between warn_floor and threshold):
+              (classification_result, None, warnings)   # warning appended
+        - Clean pass:
+              (classification_result, None, warnings)
     """
+    if warnings is None:
+        warnings = PipelineWarnings()
+
     if not SENTRY_ENABLED:
         _log("PosterSentry is disabled — skipping classification.")
-        return ({"is_poster": True, "confidence": 1.0, "skipped": True}, None, None)
+        return ({"is_poster": True, "confidence": 1.0, "skipped": True}, None, warnings)
 
     sentry = load_sentry()
 
@@ -170,8 +193,9 @@ def sentry_gate(
         _log(f"Sentry unavailable: {detail}")
         if SENTRY_ALLOW_ON_ERROR:
             _log("SENTRY_ALLOW_ON_ERROR=true — allowing document through.")
-            return ({"is_poster": True, "confidence": 0.0, "skipped": True}, None, None)
-        return (None, SENTRY_MODEL_UNAVAILABLE, detail)
+            warnings.add(SENTRY_MODEL_UNAVAILABLE, detail)
+            return ({"is_poster": True, "confidence": 0.0, "skipped": True}, None, warnings)
+        return (None, SENTRY_MODEL_UNAVAILABLE, warnings)
 
     # Run classification
     try:
@@ -189,30 +213,43 @@ def sentry_gate(
         _log(f"ERROR: {detail}")
         if SENTRY_ALLOW_ON_ERROR:
             _log("SENTRY_ALLOW_ON_ERROR=true — allowing document through.")
-            return ({"is_poster": True, "confidence": 0.0, "skipped": True}, None, None)
-        return (None, SENTRY_CLASSIFICATION_FAILED, detail)
+            warnings.add(SENTRY_CLASSIFICATION_FAILED, detail)
+            return ({"is_poster": True, "confidence": 0.0, "skipped": True}, None, warnings)
+        return (None, SENTRY_CLASSIFICATION_FAILED, warnings)
 
     is_poster = result.get("is_poster", False)
     confidence = result.get("confidence", 0.0)
 
-    # Decision: is this a poster?
-    if not is_poster:
+    # --- Decision tree -------------------------------------------------------
+    #
+    #   confidence ≥ THRESHOLD              → clean pass
+    #   WARN_FLOOR ≤ confidence < THRESHOLD → pass with FAIR-PP11 warning
+    #   confidence < WARN_FLOOR  (or not a poster) → hard reject FAIR-PP10
+    #
+    # -------------------------------------------------------------------------
+
+    if not is_poster or confidence < SENTRY_WARN_FLOOR:
+        # Hard reject — this is very likely not a poster.
         detail = (
-            f"Classified as non-poster with confidence {confidence:.3f}. "
+            f"Classified as non-poster (is_poster={is_poster}, "
+            f"confidence={confidence:.3f}). "
             f"File: {os.path.basename(file_path)}"
         )
         _log(f"REJECTED: {detail}")
-        return (None, SENTRY_NOT_A_POSTER, detail)
+        return (None, SENTRY_NOT_A_POSTER, warnings)
 
     if confidence < SENTRY_CONFIDENCE_THRESHOLD:
+        # Borderline — let it through but flag it.
         detail = (
             f"Poster confidence {confidence:.3f} is below threshold "
-            f"{SENTRY_CONFIDENCE_THRESHOLD:.2f}. "
+            f"{SENTRY_CONFIDENCE_THRESHOLD:.2f} (warn floor "
+            f"{SENTRY_WARN_FLOOR:.2f}). "
             f"File: {os.path.basename(file_path)}"
         )
-        _log(f"REJECTED (low confidence): {detail}")
-        return (None, SENTRY_LOW_CONFIDENCE, detail)
+        _log(f"WARNING (borderline): {detail}")
+        warnings.add(SENTRY_LOW_CONFIDENCE, detail)
+        return (result, None, warnings)
 
-    # Accepted
+    # Clean pass
     _log(f"ACCEPTED: confidence={confidence:.3f}")
-    return (result, None, None)
+    return (result, None, warnings)
