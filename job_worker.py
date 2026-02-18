@@ -251,7 +251,7 @@ _POSTER_METADATA_COLUMNS = [
     "size",
     "format",
     "version",
-    "rightsIdentifier",
+    "license",
     "fundingReferences",
     "conferenceName",
     "conferenceLocation",
@@ -274,7 +274,7 @@ _POSTER_METADATA_COLUMNS = [
 _POSTER_METADATA_UPSERT_SQL = """
     INSERT INTO "PosterMetadata" (
         "posterId", "doi", "identifiers", "creators", "publisher", "publicationYear", "subjects",
-        "language", "relatedIdentifiers", "size", "format", "version", "rightsIdentifier",
+        "language", "relatedIdentifiers", "size", "format", "version", "license",
         "fundingReferences", "conferenceName", "conferenceLocation", "conferenceUri",
         "conferenceIdentifier", "conferenceIdentifierType", "conferenceYear", "conferenceStartDate",
         "conferenceEndDate", "conferenceAcronym", "conferenceSeries", "posterContent",
@@ -298,7 +298,7 @@ _POSTER_METADATA_UPSERT_SQL = """
         "size" = EXCLUDED."size",
         "format" = EXCLUDED."format",
         "version" = EXCLUDED."version",
-        "rightsIdentifier" = EXCLUDED."rightsIdentifier",
+        "license" = EXCLUDED."license",
         "fundingReferences" = EXCLUDED."fundingReferences",
         "conferenceName" = EXCLUDED."conferenceName",
         "conferenceLocation" = EXCLUDED."conferenceLocation",
