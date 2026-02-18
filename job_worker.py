@@ -187,8 +187,8 @@ def _extraction_to_metadata_row(extraction: dict) -> dict:
     for k, v in row.items():
         if v is None and k in ("publicationYear", "doi", "language", "version", "domain"):
             out[k] = None
-        elif k in ("sizes", "formats") and isinstance(v, list):
-            # PosterMetadata sizes/formats are String[]; keep as list for psycopg2
+        elif k in ("sizes", "formats", "subjects") and isinstance(v, list):
+            # PosterMetadata String[] columns; keep as list for psycopg2 array binding
             out[k] = v
         elif isinstance(v, (dict, list)) and not isinstance(v, str):
             out[k] = json.dumps(v)
@@ -211,6 +211,12 @@ def _extraction_to_metadata_row(extraction: dict) -> dict:
             out["format"] = extraction["formats"][0]
         else:
             out["format"] = None
+
+    # subjects is PostgreSQL String[] — keep as list for psycopg2
+    if "subjects" in extraction and isinstance(extraction["subjects"], list):
+        out["subjects"] = extraction["subjects"]
+    elif "subjects" not in out:
+        out["subjects"] = []
 
     # Spread conference object into DB columns if present
     conference = extraction.get("conference")
