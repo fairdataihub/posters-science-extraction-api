@@ -277,7 +277,7 @@ _POSTER_METADATA_UPSERT_SQL = """
     )
     VALUES (
         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
         now(), now()
     )
     ON CONFLICT ("posterId") DO UPDATE SET
