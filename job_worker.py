@@ -195,6 +195,23 @@ def _extraction_to_metadata_row(extraction: dict) -> dict:
         else:
             out[k] = v
 
+    # if extraction has sizes or formats, convert to string
+    if "sizes" in extraction and isinstance(extraction["sizes"], list):
+        if len(extraction["sizes"]) > 1:
+            out["size"] = json.dumps(extraction["sizes"])
+        elif len(extraction["sizes"]) == 1:
+            out["size"] = extraction["sizes"][0]
+        else:
+            out["size"] = None
+
+    if "formats" in extraction and isinstance(extraction["formats"], list):
+        if len(extraction["formats"]) > 1:
+            out["format"] = json.dumps(extraction["formats"])
+        elif len(extraction["formats"]) == 1:
+            out["format"] = extraction["formats"][0]
+        else:
+            out["format"] = None
+
     # Spread conference object into DB columns if present
     conference = extraction.get("conference")
     if isinstance(conference, dict):
