@@ -318,10 +318,71 @@ _POSTER_METADATA_UPSERT_SQL = """
 """
 
 
+def _title_and_description_from_extraction(extraction: dict) -> tuple[str, str]:
+    """
+    Derive poster title and description from extraction result.
+    Returns (title, description) as non-empty strings when possible; otherwise ("", "").
+    """
+    title = ""
+    if extraction.get("titles") and isinstance(extraction["titles"], list):
+        for t in extraction["titles"]:
+            if isinstance(t, dict) and t.get("title"):
+                title = (t.get("title") or "").strip()
+                break
+
+    description = ""
+    if extraction.get("descriptions") and isinstance(extraction["descriptions"], list):
+        for d in extraction["descriptions"]:
+            if (
+                isinstance(d, dict)
+                and d.get("description")
+                and (d.get("descriptionType") or "").strip() == "Abstract"
+            ):
+                description = (d.get("description") or "").strip()
+                break
+        if not description:
+            for d in extraction["descriptions"]:
+                if isinstance(d, dict) and d.get("description"):
+                    description = (d.get("description") or "").strip()
+                    break
+    if (
+        not description
+        and extraction.get("posterContent")
+        and isinstance(extraction["posterContent"], dict)
+    ):
+        sections = extraction["posterContent"].get("sections") or []
+        for s in sections:
+            if isinstance(s, dict):
+                st = (s.get("sectionTitle") or "").strip()
+                if st and "abstract" in st.lower():
+                    description = (s.get("sectionContent") or "").strip()
+                    break
+
+    return (title or "", description or "")
+
+
+def update_poster_title_description(conn, poster_id: int, title: str, description: str) -> None:
+    """
+    Update Poster.title and Poster.description for the given poster.
+    """
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            UPDATE "Poster"
+            SET title = %s, description = %s, updated = now()
+            WHERE id = %s
+            """,
+            (title, description, poster_id),
+        )
+        conn.commit()
+    print(f"[status] update_poster_title_description: poster_id={poster_id}")
+
+
 def save_poster_metadata(conn, poster_id: int, extraction: dict) -> None:
     """
     Upsert PosterMetadata for the given poster from validated extraction result.
     Uses a static SQL string and bound parameters only (no string composition).
+    Also updates Poster.title and Poster.description from extraction.
     """
     print(f"[status] save_poster_metadata: poster_id={poster_id}")
     row = _extraction_to_metadata_row(extraction)
@@ -333,6 +394,10 @@ def save_poster_metadata(conn, poster_id: int, extraction: dict) -> None:
     with conn.cursor() as cur:
         cur.execute(_POSTER_METADATA_UPSERT_SQL, values)
         conn.commit()
+
+    title, description = _title_and_description_from_extraction(extraction)
+    update_poster_title_description(conn, poster_id, title, description)
+
     print(f"[status] save_poster_metadata: done for poster_id={poster_id}")
 
 
