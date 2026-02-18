@@ -1,5 +1,5 @@
 # Poster extraction library
-poster2json>=0.1.0
+poster2json
 
 # Core dependencies (required by poster2json, included for explicit pinning)
 transformers>=4.40.0
