@@ -119,8 +119,12 @@ def fail_stuck_processing_jobs(conn, stuck_minutes: int = STUCK_PROCESSING_MINUT
     Mark ExtractionJobs stuck in 'processing' for longer than stuck_minutes as failed.
     Returns the number of jobs updated.
     """
-    error_msg = f"Job stuck in processing for over {stuck_minutes} minutes; marked failed by cleanup"
-    print(f"[status] fail_stuck_processing_jobs: checking for processing jobs older than {stuck_minutes} min")
+    error_msg = (
+        f"Job stuck in processing for over {stuck_minutes} minutes; marked failed by cleanup"
+    )
+    print(
+        f"[status] fail_stuck_processing_jobs: checking for processing jobs older than {stuck_minutes} min"
+    )
     with conn.cursor() as cur:
         cur.execute(
             """
@@ -172,23 +176,12 @@ def _extraction_to_metadata_row(extraction: dict) -> dict:
     """
     Map extraction result (and validation defaults) to PosterMetadata columns.
     Strips internal keys and renames extraction fields to DB column names
-    (e.g. imageCaptions -> imageCaption, tableCaptions -> tableCaption).
     """
     print("[status] _extraction_to_metadata_row: mapping extraction to metadata row")
     # Keys we never persist
     skip = {"_validation", "validation_warnings", "error", "raw"}
     row = {k: v for k, v in extraction.items() if k not in skip and not k.startswith("_")}
 
-    # Rename to DB column names (PosterMetadata uses singular caption names)
-    if "imageCaptions" in row:
-        row["imageCaption"] = row.pop("imageCaptions")
-    if "tableCaptions" in row:
-        row["tableCaption"] = row.pop("tableCaptions")
-    if "ethicsApprovals" in row:
-        row["ethicsApproval"] = row.pop("ethicsApprovals")
-
-    # PosterMetadata has alternateIdentifiers with alternateIdentifier/alternateIdentifierType
-    # Extraction may use alternateIdentifiers with same shape; leave as-is if already list of objects.
     # Ensure JSON-serializable and Prisma-compatible types
     out = {}
     for k, v in row.items():
@@ -226,36 +219,30 @@ _POSTER_METADATA_COLUMNS = [
     "posterId",
     "doi",
     "identifiers",
-    "alternateIdentifiers",
     "creators",
-    "titles",
-    "descriptions",
     "publisher",
     "publicationYear",
     "subjects",
-    "dates",
     "language",
-    "types",
     "relatedIdentifiers",
-    "sizes",
-    "formats",
+    "size",
+    "format",
     "version",
-    "rightsList",
+    "rightsIdentifier",
     "fundingReferences",
-    "ethicsApproval",
     "conferenceName",
     "conferenceLocation",
     "conferenceUri",
     "conferenceIdentifier",
     "conferenceIdentifierType",
-    "conferenceSchemaUri",
+    "conferenceYear",
     "conferenceStartDate",
     "conferenceEndDate",
     "conferenceAcronym",
     "conferenceSeries",
     "posterContent",
-    "tableCaption",
-    "imageCaption",
+    "tableCaptions",
+    "imageCaptions",
     "domain",
 ]
 
@@ -263,14 +250,12 @@ _POSTER_METADATA_COLUMNS = [
 # "created" and "updated" are set via now() so they are never null.
 _POSTER_METADATA_UPSERT_SQL = """
     INSERT INTO "PosterMetadata" (
-        "posterId", "doi", "identifiers", "alternateIdentifiers", "creators",
-        "titles", "descriptions", "publisher", "publicationYear", "subjects",
-        "dates", "language", "types", "relatedIdentifiers", "sizes", "formats",
-        "version", "rightsList", "fundingReferences", "ethicsApproval",
-        "conferenceName", "conferenceLocation", "conferenceUri",
-        "conferenceIdentifier", "conferenceIdentifierType", "conferenceSchemaUri",
-        "conferenceStartDate", "conferenceEndDate", "conferenceAcronym", "conferenceSeries",
-        "posterContent", "tableCaption", "imageCaption", "domain",
+        "posterId", "doi", "identifiers", "creators", "publisher", "publicationYear", "subjects",
+        "language", "relatedIdentifiers", "size", "format", "version", "rightsIdentifier",
+        "fundingReferences", "conferenceName", "conferenceLocation", "conferenceUri",
+        "conferenceIdentifier", "conferenceIdentifierType", "conferenceYear", "conferenceStartDate",
+        "conferenceEndDate", "conferenceAcronym", "conferenceSeries", "posterContent",
+        "tableCaptions", "imageCaptions", "domain",
         "created", "updated"
     )
     VALUES (
@@ -281,36 +266,30 @@ _POSTER_METADATA_UPSERT_SQL = """
     ON CONFLICT ("posterId") DO UPDATE SET
         "doi" = EXCLUDED."doi",
         "identifiers" = EXCLUDED."identifiers",
-        "alternateIdentifiers" = EXCLUDED."alternateIdentifiers",
         "creators" = EXCLUDED."creators",
-        "titles" = EXCLUDED."titles",
-        "descriptions" = EXCLUDED."descriptions",
         "publisher" = EXCLUDED."publisher",
         "publicationYear" = EXCLUDED."publicationYear",
         "subjects" = EXCLUDED."subjects",
-        "dates" = EXCLUDED."dates",
         "language" = EXCLUDED."language",
-        "types" = EXCLUDED."types",
         "relatedIdentifiers" = EXCLUDED."relatedIdentifiers",
-        "sizes" = EXCLUDED."sizes",
-        "formats" = EXCLUDED."formats",
+        "size" = EXCLUDED."size",
+        "format" = EXCLUDED."format",
         "version" = EXCLUDED."version",
-        "rightsList" = EXCLUDED."rightsList",
+        "rightsIdentifier" = EXCLUDED."rightsIdentifier",
         "fundingReferences" = EXCLUDED."fundingReferences",
-        "ethicsApproval" = EXCLUDED."ethicsApproval",
         "conferenceName" = EXCLUDED."conferenceName",
         "conferenceLocation" = EXCLUDED."conferenceLocation",
         "conferenceUri" = EXCLUDED."conferenceUri",
         "conferenceIdentifier" = EXCLUDED."conferenceIdentifier",
         "conferenceIdentifierType" = EXCLUDED."conferenceIdentifierType",
-        "conferenceSchemaUri" = EXCLUDED."conferenceSchemaUri",
+        "conferenceYear" = EXCLUDED."conferenceYear",
         "conferenceStartDate" = EXCLUDED."conferenceStartDate",
         "conferenceEndDate" = EXCLUDED."conferenceEndDate",
         "conferenceAcronym" = EXCLUDED."conferenceAcronym",
         "conferenceSeries" = EXCLUDED."conferenceSeries",
         "posterContent" = EXCLUDED."posterContent",
-        "tableCaption" = EXCLUDED."tableCaption",
-        "imageCaption" = EXCLUDED."imageCaption",
+        "tableCaptions" = EXCLUDED."tableCaptions",
+        "imageCaptions" = EXCLUDED."imageCaptions",
         "domain" = EXCLUDED."domain",
         "updated" = now()
 """
