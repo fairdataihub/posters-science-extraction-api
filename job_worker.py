@@ -175,7 +175,11 @@ def mark_job_completed(conn, job_id: str) -> None:
 def _extraction_to_metadata_row(extraction: dict) -> dict:
     """
     Map extraction result (and validation defaults) to PosterMetadata columns.
-    Strips internal keys and renames extraction fields to DB column names
+    Strips internal keys and renames extraction fields to DB column names.
+
+    Handles field name mapping between poster2json v0.1.3+ output (which uses
+    canonical schema names like ``content``, ``researchField``) and the DB
+    columns (which use Prisma names like ``posterContent``, ``domain``).
     """
     print("[status] _extraction_to_metadata_row: mapping extraction to metadata row")
     # Keys we never persist
@@ -185,7 +189,8 @@ def _extraction_to_metadata_row(extraction: dict) -> dict:
     # Ensure JSON-serializable and Prisma-compatible types
     out = {}
     for k, v in row.items():
-        if v is None and k in ("publicationYear", "doi", "language", "version", "domain"):
+        if v is None and k in ("publicationYear", "doi", "language", "version", "domain",
+                               "researchField"):
             out[k] = None
         elif k in ("sizes", "formats", "subjects") and isinstance(v, list):
             # PosterMetadata String[] columns; keep as list for psycopg2 array binding
@@ -195,7 +200,45 @@ def _extraction_to_metadata_row(extraction: dict) -> dict:
         else:
             out[k] = v
 
-    # if extraction has sizes or formats, convert to string
+    # --- Field name mapping: schema → DB column names ---
+
+    # Bug 1 fix: poster2json v0.1.3+ outputs "content", DB column is "posterContent"
+    if "content" in extraction:
+        content_val = extraction["content"]
+        out["posterContent"] = json.dumps(content_val) if isinstance(content_val, (dict, list)) else content_val
+    elif "posterContent" in extraction:
+        content_val = extraction["posterContent"]
+        out["posterContent"] = json.dumps(content_val) if isinstance(content_val, (dict, list)) else content_val
+    out.pop("content", None)
+
+    # Bug 2 fix: poster2json v0.1.3+ outputs "researchField", DB column is "domain"
+    if "researchField" in extraction:
+        out["domain"] = extraction["researchField"]
+    elif "domain" in extraction:
+        out["domain"] = extraction["domain"]
+    out.pop("researchField", None)
+
+    # Bug 6 fix: extract license SPDX identifier from rightsList array
+    if "rightsList" in extraction and isinstance(extraction["rightsList"], list):
+        for r in extraction["rightsList"]:
+            if isinstance(r, dict) and r.get("rightsIdentifier"):
+                out["license"] = r["rightsIdentifier"]
+                break
+    out.pop("rightsList", None)
+
+    # Bug 7 fix: publisher may be {"name": "..."} object — extract plain string
+    if isinstance(out.get("publisher"), str):
+        # Already a string (possibly json.dumps'd from the generic loop)
+        try:
+            parsed = json.loads(out["publisher"])
+            if isinstance(parsed, dict):
+                out["publisher"] = parsed.get("name", "")
+        except (json.JSONDecodeError, TypeError):
+            pass
+    elif isinstance(extraction.get("publisher"), dict):
+        out["publisher"] = extraction["publisher"].get("name", "")
+
+    # if extraction has sizes or formats, convert to single string for DB
     if "sizes" in extraction and isinstance(extraction["sizes"], list):
         if len(extraction["sizes"]) > 1:
             out["size"] = json.dumps(extraction["sizes"])
@@ -212,27 +255,44 @@ def _extraction_to_metadata_row(extraction: dict) -> dict:
         else:
             out["format"] = None
 
-    # subjects is PostgreSQL String[] — keep as list for psycopg2
+    # Bug 4 fix: flatten subjects from [{subject: "kw"}] → ["kw"]
     if "subjects" in extraction and isinstance(extraction["subjects"], list):
-        out["subjects"] = extraction["subjects"]
+        flat = []
+        for s in extraction["subjects"]:
+            if isinstance(s, dict) and "subject" in s:
+                flat.append(s["subject"])
+            elif isinstance(s, str):
+                flat.append(s)
+        out["subjects"] = flat
     elif "subjects" not in out:
         out["subjects"] = []
 
-    # Spread conference object into DB columns if present
+    # Bug 3 fix: spread conference object into DB columns using full schema key names
     conference = extraction.get("conference")
     if isinstance(conference, dict):
-        out["conferenceName"] = conference.get("name")
-        out["conferenceLocation"] = conference.get("location")
-        out["conferenceUri"] = conference.get("uri")
-        out["conferenceIdentifier"] = conference.get("identifier")
-        out["conferenceIdentifierType"] = conference.get("identifierType")
-        out["conferenceSchemaUri"] = conference.get("schemaUri")
-        out["conferenceStartDate"] = conference.get("startDate")
-        out["conferenceEndDate"] = conference.get("endDate")
-        out["conferenceAcronym"] = conference.get("acronym")
-        out["conferenceSeries"] = conference.get("series")
-    if "conference" in out:
-        del out["conference"]
+        out["conferenceName"] = conference.get("conferenceName")
+        out["conferenceLocation"] = conference.get("conferenceLocation")
+        out["conferenceUri"] = conference.get("conferenceUri")
+        out["conferenceIdentifier"] = conference.get("conferenceIdentifier")
+        out["conferenceIdentifierType"] = conference.get("conferenceIdentifierType")
+        out["conferenceStartDate"] = conference.get("conferenceStartDate")
+        out["conferenceEndDate"] = conference.get("conferenceEndDate")
+        out["conferenceAcronym"] = conference.get("conferenceAcronym")
+        out["conferenceSeries"] = conference.get("conferenceSeries")
+        # conferenceYear needs int conversion for DB Integer column
+        cy = conference.get("conferenceYear")
+        if cy is not None:
+            try:
+                out["conferenceYear"] = int(cy)
+            except (ValueError, TypeError):
+                out["conferenceYear"] = None
+    out.pop("conference", None)
+
+    # Clean up schema-only keys that have no DB column (prevent stale json.dumps values)
+    for key in ["titles", "descriptions", "dates", "types", "ethicsApprovals",
+                "alternateIdentifiers", "$schema", "prefix", "suffix",
+                "sizes", "formats"]:
+        out.pop(key, None)
 
     return out
 
@@ -345,12 +405,14 @@ def _title_and_description_from_extraction(extraction: dict) -> tuple[str, str]:
                 if isinstance(d, dict) and d.get("description"):
                     description = (d.get("description") or "").strip()
                     break
+    # Check both new ("content") and old ("posterContent") field names
+    poster_content = extraction.get("content") or extraction.get("posterContent")
     if (
         not description
-        and extraction.get("posterContent")
-        and isinstance(extraction["posterContent"], dict)
+        and poster_content
+        and isinstance(poster_content, dict)
     ):
-        sections = extraction["posterContent"].get("sections") or []
+        sections = poster_content.get("sections") or []
         for s in sections:
             if isinstance(s, dict):
                 st = (s.get("sectionTitle") or "").strip()

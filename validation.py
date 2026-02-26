@@ -81,11 +81,11 @@ def get_empty_field_defaults() -> dict:
         "publisher": {},
         "types": {},
         "conference": {},
-        "posterContent": {"sections": []},
+        "content": {"sections": []},
         "publicationYear": None,
         "language": "en",
         "version": "",
-        "domain": "",
+        "researchField": "",
     }
 
 
