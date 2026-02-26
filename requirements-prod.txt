@@ -1,6 +1,6 @@
 # Production dependencies only
 # Poster extraction library
-poster2json>=0.1.0
+poster2json>=0.1.6
 
 # ML dependencies (required by poster2json)
 transformers>=4.40.0
