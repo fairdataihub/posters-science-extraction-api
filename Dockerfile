@@ -28,6 +28,7 @@ RUN chmod +x /usr/local/bin/pdfalto
 WORKDIR /app
 
 # Copy requirements and install Python dependencies
+# IMPORTANT: rebuild with `docker build --no-cache` when poster2json has a new release
 COPY requirements-prod.txt requirements.txt
 RUN pip3 install --upgrade pip && \
     pip3 install --no-cache-dir -r requirements.txt

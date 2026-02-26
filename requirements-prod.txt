@@ -1,6 +1,6 @@
 # Production dependencies only
-# Poster extraction library
-poster2json>=0.1.6
+# Poster extraction library (always use latest; rebuild with --no-cache)
+poster2json
 
 # ML dependencies (required by poster2json)
 transformers>=4.40.0
