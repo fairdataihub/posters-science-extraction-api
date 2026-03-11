@@ -17,11 +17,13 @@ concurrency:
   group: production
   cancel-in-progress: true
 
-# Trigger conditions: runs on push to main branch or manual trigger
+# Trigger conditions: runs on push to main branch, manual trigger, or poster2json release
 on:
   push:
     branches: [main]
   workflow_dispatch: # Allows manual triggering from GitHub Actions UI
+  repository_dispatch:
+    types: [poster2json-published]
 
 jobs:
   deploy:
