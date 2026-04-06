@@ -33,7 +33,7 @@ def _env(key: str, default: Optional[str] = None) -> Optional[str]:
     return val
 
 
-DATABASE_URL = _env("DATABASE_URL")
+DATABASE_URL = _env("STAGING_DATABASE_URL")
 BUNNY_PRIVATE_STORAGE = _env("BUNNY_PRIVATE_STORAGE")
 BUNNY_PRIVATE_STORAGE_KEY = _env("BUNNY_PRIVATE_STORAGE_KEY")
 POLL_INTERVAL_SECONDS = int(_env("POLL_INTERVAL_SECONDS") or "30")
@@ -67,12 +67,13 @@ def download_from_bunny(file_path: str, dest_path: str) -> None:
 # --- DB: claim job, update status, save metadata ----------------------------
 
 
-def get_conn():
+def get_conn(db_url: Optional[str] = None):
     """Return a new DB connection (caller must close)."""
+    url = db_url or DATABASE_URL
     print("[status] get_conn: opening database connection")
-    if not DATABASE_URL:
+    if not url:
         raise RuntimeError("DATABASE_URL is not set")
-    conn = psycopg2.connect(DATABASE_URL)
+    conn = psycopg2.connect(url)
     print("[status] get_conn: connected")
     return conn
 
@@ -466,19 +467,21 @@ def save_poster_metadata(conn, poster_id: int, extraction: dict) -> None:
 # --- Worker loop ------------------------------------------------------------
 
 
-def run_one_cycle(extraction_lock) -> bool:
+def run_one_cycle(extraction_lock, db_url: Optional[str] = None) -> bool:
     """
     Poll DB for one job, claim it, download from Bunny, extract, save metadata.
     Uses extraction_lock to serialize with any other extractors (e.g. Flask).
+    db_url overrides DATABASE_URL when polling a second database (e.g. production).
     Returns True if a job was processed, False if no job found.
     """
     print("[status] run_one_cycle: starting")
-    if not DATABASE_URL or not BUNNY_PRIVATE_STORAGE or not BUNNY_PRIVATE_STORAGE_KEY:
+    url = db_url or DATABASE_URL
+    if not url or not BUNNY_PRIVATE_STORAGE or not BUNNY_PRIVATE_STORAGE_KEY:
         log("Job worker: DATABASE_URL, BUNNY_PRIVATE_STORAGE, BUNNY_PRIVATE_STORAGE_KEY required")
         print("[status] run_one_cycle: missing env, aborting")
         return False
 
-    conn = get_conn()
+    conn = get_conn(url)
     try:
         fail_stuck_processing_jobs(conn)
         job = claim_next_job(conn)
@@ -556,21 +559,26 @@ def run_one_cycle(extraction_lock) -> bool:
     return False
 
 
-def run_worker_loop(extraction_lock, poll_interval: int = POLL_INTERVAL_SECONDS) -> None:
-    """Run the poll loop forever. Use in a background thread."""
-    log(f"Job worker: starting poll loop (interval={poll_interval}s)")
-    print(f"[status] run_worker_loop: started, poll_interval={poll_interval}s")
+def run_worker_loop(extraction_lock, poll_interval: int = POLL_INTERVAL_SECONDS, db_urls: Optional[list] = None) -> None:
+    """Run the poll loop forever. Use in a background thread.
+    db_urls is a list of (label, db_url) pairs to poll sequentially each cycle.
+    Defaults to [("default", None)] which uses DATABASE_URL.
+    """
+    targets = db_urls or [("default", None)]
+    log(f"Job worker: starting poll loop (interval={poll_interval}s, dbs={[l for l, _ in targets]})")
+    print(f"[status] run_worker_loop: started, poll_interval={poll_interval}s dbs={[l for l, _ in targets]}")
     cycle = 0
     while True:
         cycle += 1
-        print(f"[status] run_worker_loop: cycle {cycle}")
-        try:
-            run_one_cycle(extraction_lock)
-        except Exception as e:
-            log(f"Job worker: error in cycle: {e}")
-            print(f"[status] run_worker_loop: cycle error: {e}")
-            import traceback
+        for label, db_url in targets:
+            print(f"[status] run_worker_loop: cycle {cycle} db={label}")
+            try:
+                run_one_cycle(extraction_lock, db_url=db_url)
+            except Exception as e:
+                log(f"Job worker: error in cycle (db={label}): {e}")
+                print(f"[status] run_worker_loop: cycle error db={label}: {e}")
+                import traceback
 
-            traceback.print_exc()
+                traceback.print_exc()
         print(f"[status] run_worker_loop: sleeping {poll_interval}s")
         time.sleep(poll_interval)

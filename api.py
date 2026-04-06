@@ -89,13 +89,19 @@ def jobs_check():
     return "", 204
 
 
-def _start_worker():
-    """Run the job worker loop in a daemon thread."""
-    print("[status] api: starting background job worker thread")
-    t = threading.Thread(target=run_worker_loop, args=(_extraction_lock,), daemon=True)
+def _start_worker(db_urls: list):
+    """Run the job worker loop in a daemon thread, polling db_urls sequentially."""
+    labels = [l for l, _ in db_urls]
+    print(f"[status] api: starting background job worker thread (dbs={labels})")
+    t = threading.Thread(
+        target=run_worker_loop,
+        kwargs={"extraction_lock": _extraction_lock, "db_urls": db_urls},
+        daemon=True,
+        name="job-worker",
+    )
     t.start()
-    log("Background job worker thread started")
-    print("[status] api: background job worker thread started")
+    log(f"Background job worker thread started (dbs={labels})")
+    print(f"[status] api: background job worker thread started (dbs={labels})")
 
 
 if __name__ == "__main__":
@@ -105,7 +111,11 @@ if __name__ == "__main__":
     print(f"[status] api: host={host} port={port}")
 
     log(f"Starting Poster Extraction API on {host}:{port}")
-    _start_worker()
+    db_urls = [("staging", None)]
+    if prod_db_url := config.get_env("PRODUCTION_DATABASE_URL"):
+        db_urls.append(("production", prod_db_url))
+        log("Production database polling enabled")
+    _start_worker(db_urls)
     # threaded=False so only one request at a time; worker runs in separate thread
     print(f"[status] api: running Flask app.run(host={host}, port={port})")
     app.run(host=host, port=port, debug=False, threaded=False)
