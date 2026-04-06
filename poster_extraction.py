@@ -292,7 +292,7 @@ Rules:
 # ============================
 
 
-def extract_text_with_pdfalto(pdf_path: str) -> str:
+def extract_text_with_pdfalto(pdf_path: str) -> str | None:
     """
     Extract text from a PDF using pdfalto (preferred for layout-aware text).
 
@@ -326,10 +326,10 @@ def extract_text_with_pdfalto(pdf_path: str) -> str:
                     f"in {elapsed:.2f} seconds"
                 )
             return text
-    except subprocess.TimeoutExpired:
-        raise RuntimeError(f"pdfalto timeout processing {pdf_path}")
+    except subprocess.TimeoutExpired as e:
+        raise RuntimeError(f"pdfalto timeout processing {pdf_path}") from e
     except Exception as e:
-        raise RuntimeError(f"pdfalto error: {e}")
+        raise RuntimeError(f"pdfalto error: {e}") from e
 
 
 def parse_alto_xml(xml_path: str) -> str:
@@ -471,6 +471,7 @@ def load_json_model(force_full_precision: bool = False):
             # Falls back to default attention if flash-attn not installed
             try:
                 import flash_attn  # noqa: F401
+
                 attn_impl = "flash_attention_2"
                 log("   Using Flash Attention 2 for faster inference")
             except ImportError:
@@ -669,26 +670,28 @@ def extract_json_with_retry(raw_text: str, model, tokenizer) -> dict:
     log("Starting primary JSON extraction with full prompt")
     response = generate(model, tokenizer, prompt, MAX_JSON_TOKENS)
     result = robust_json_parse(response)
+    should_retry = "error" in result or is_truncated(response)
     if "error" in result:
         log(f"Primary JSON parse reported error: {result['error']}")
     else:
         log("Primary JSON parse succeeded")
 
     # If truncation/error, retry with more tokens
-    if "error" in result or is_truncated(result.get("raw", "")):
+    if should_retry:
         log(
             f"Truncation or error detected, retrying JSON extraction "
             f"with max_tokens={MAX_RETRY_TOKENS}"
         )
         response = generate(model, tokenizer, prompt, MAX_RETRY_TOKENS)
         result = robust_json_parse(response)
+        should_retry = "error" in result or is_truncated(response)
         if "error" in result:
             log(f"Retry JSON parse reported error: {result['error']}")
         else:
             log("Retry JSON parse succeeded")
 
     # If still failing, try FALLBACK shorter prompt (saves input tokens for output)
-    if "error" in result or is_truncated(result.get("raw", "")):
+    if should_retry:
         log("Still seeing truncation or errors, using FALLBACK shorter prompt")
         fallback_prompt = FALLBACK_PROMPT.format(raw_text=raw_text)
         response = generate(model, tokenizer, fallback_prompt, MAX_RETRY_TOKENS)
@@ -698,8 +701,9 @@ def extract_json_with_retry(raw_text: str, model, tokenizer) -> dict:
         else:
             log("Fallback JSON parse succeeded")
 
-    # Comprehensive post-processing for schema compliance
-    result = postprocess_json(result)
+    # Keep error payloads unchanged so callers can inspect the original failure.
+    if "error" not in result:
+        result = postprocess_json(result)
 
     return result
 
@@ -1458,7 +1462,7 @@ def repair_trailing_commas(s: str) -> str:
 
 def repair_unicode(s: str) -> str:
     s = re.sub(r"\\u[0-9a-fA-F]{0,3}(?![0-9a-fA-F])", "", s)
-    s = re.sub(r"[\x00-\x1f]", " ", s)
+    s = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", " ", s)
     return s
 
 
@@ -1831,7 +1835,10 @@ def run(annotation_dir: str, output_dir: str):
     log(f"JSON Model: {JSON_MODEL_ID}")
     log(f"Vision Model: {VISION_MODEL_ID}")
     log(f"Total posters to process: {len(pairs)}")
-    log(f"GPU: {torch.cuda.get_device_name(0)}")
+    if torch.cuda.is_available() and torch.cuda.device_count() > 0:
+        log(f"GPU: {torch.cuda.get_device_name(0)}")
+    else:
+        log("GPU: unavailable (CPU mode)")
 
     image_posters = [p for p in pairs if Path(p[0]).suffix.lower() in [".jpg", ".jpeg", ".png"]]
     pdf_posters = [p for p in pairs if Path(p[0]).suffix.lower() == ".pdf"]

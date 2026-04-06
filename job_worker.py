@@ -29,7 +29,7 @@ from validation import validate_and_fix_extraction
 
 def _env(key: str, default: Optional[str] = None) -> Optional[str]:
     val = config.get_env(key) or default
-    print(f"[status] {key}: {val}")
+    print(f"[status] {key}: {'set' if val else 'unset'}")
     return val
 
 
@@ -38,6 +38,7 @@ BUNNY_PRIVATE_STORAGE = _env("BUNNY_PRIVATE_STORAGE")
 BUNNY_PRIVATE_STORAGE_KEY = _env("BUNNY_PRIVATE_STORAGE_KEY")
 POLL_INTERVAL_SECONDS = int(_env("POLL_INTERVAL_SECONDS") or "30")
 STUCK_PROCESSING_MINUTES = int(_env("STUCK_PROCESSING_MINUTES") or "5")
+EXTRACTION_LOCK_TIMEOUT_SECONDS = int(_env("EXTRACTION_LOCK_TIMEOUT_SECONDS") or "300")
 
 
 # --- Bunny: download file ---------------------------------------------------
@@ -57,11 +58,16 @@ def download_from_bunny(file_path: str, dest_path: str) -> None:
         "AccessKey": f"{BUNNY_PRIVATE_STORAGE_KEY}",
         "Content-Type": "application/octet-stream",
     }
-    resp = requests.get(url, headers=headers, timeout=120)
-    resp.raise_for_status()
-    with open(dest_path, "wb") as f:
-        f.write(resp.content)
-    print(f"[status] download_from_bunny: done, wrote {len(resp.content)} bytes")
+    total_bytes = 0
+    with requests.get(url, headers=headers, timeout=120, stream=True) as resp:
+        resp.raise_for_status()
+        with open(dest_path, "wb") as f:
+            for chunk in resp.iter_content(chunk_size=1024 * 1024):
+                if not chunk:
+                    continue
+                f.write(chunk)
+                total_bytes += len(chunk)
+    print(f"[status] download_from_bunny: done, wrote {total_bytes} bytes")
 
 
 # --- DB: claim job, update status, save metadata ----------------------------
@@ -84,6 +90,8 @@ def claim_next_job(conn) -> Optional[dict]:
     Returns the job row as dict or None if no job available.
     """
     print("[status] claim_next_job: querying for pending job")
+    job_id = None
+    row = None
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
         # Select one pending job and lock it
         cur.execute(
@@ -110,7 +118,7 @@ def claim_next_job(conn) -> Optional[dict]:
         """,
             (job_id,),
         )
-        conn.commit()
+    conn.commit()
     print(f"[status] claim_next_job: claimed job {job_id}")
     return dict(row)
 
@@ -190,10 +198,16 @@ def _extraction_to_metadata_row(extraction: dict) -> dict:
     # Ensure JSON-serializable and Prisma-compatible types
     out = {}
     for k, v in row.items():
-        if v is None and k in ("publicationYear", "doi", "language", "version", "domain",
-                               "researchField"):
+        if v is None and k in (
+            "publicationYear",
+            "doi",
+            "language",
+            "version",
+            "domain",
+            "researchField",
+        ):
             out[k] = None
-        elif k in ("sizes", "formats", "subjects") and isinstance(v, list):
+        elif k in ("subjects",) and isinstance(v, list):
             # PosterMetadata String[] columns; keep as list for psycopg2 array binding
             out[k] = v
         elif isinstance(v, (dict, list)) and not isinstance(v, str):
@@ -206,10 +220,14 @@ def _extraction_to_metadata_row(extraction: dict) -> dict:
     # Bug 1 fix: poster2json v0.1.3+ outputs "content", DB column is "posterContent"
     if "content" in extraction:
         content_val = extraction["content"]
-        out["posterContent"] = json.dumps(content_val) if isinstance(content_val, (dict, list)) else content_val
+        out["posterContent"] = (
+            json.dumps(content_val) if isinstance(content_val, (dict, list)) else content_val
+        )
     elif "posterContent" in extraction:
         content_val = extraction["posterContent"]
-        out["posterContent"] = json.dumps(content_val) if isinstance(content_val, (dict, list)) else content_val
+        out["posterContent"] = (
+            json.dumps(content_val) if isinstance(content_val, (dict, list)) else content_val
+        )
     out.pop("content", None)
 
     # Bug 2 fix: poster2json v0.1.3+ outputs "researchField", DB column is "domain"
@@ -233,11 +251,13 @@ def _extraction_to_metadata_row(extraction: dict) -> dict:
         try:
             parsed = json.loads(out["publisher"])
             if isinstance(parsed, dict):
-                out["publisher"] = parsed.get("name", "")
+                name = (parsed.get("name") or "").strip()
+                out["publisher"] = name or None
         except (json.JSONDecodeError, TypeError):
             pass
     elif isinstance(extraction.get("publisher"), dict):
-        out["publisher"] = extraction["publisher"].get("name", "")
+        name = (extraction["publisher"].get("name") or "").strip()
+        out["publisher"] = name or None
 
     # if extraction has sizes or formats, convert to single string for DB
     if "sizes" in extraction and isinstance(extraction["sizes"], list):
@@ -290,9 +310,19 @@ def _extraction_to_metadata_row(extraction: dict) -> dict:
     out.pop("conference", None)
 
     # Clean up schema-only keys that have no DB column (prevent stale json.dumps values)
-    for key in ["titles", "descriptions", "dates", "types", "ethicsApprovals",
-                "alternateIdentifiers", "$schema", "prefix", "suffix",
-                "sizes", "formats"]:
+    for key in [
+        "titles",
+        "descriptions",
+        "dates",
+        "types",
+        "ethicsApprovals",
+        "alternateIdentifiers",
+        "$schema",
+        "prefix",
+        "suffix",
+        "sizes",
+        "formats",
+    ]:
         out.pop(key, None)
 
     return out
@@ -408,11 +438,7 @@ def _title_and_description_from_extraction(extraction: dict) -> tuple[str, str]:
                     break
     # Check both new ("content") and old ("posterContent") field names
     poster_content = extraction.get("content") or extraction.get("posterContent")
-    if (
-        not description
-        and poster_content
-        and isinstance(poster_content, dict)
-    ):
+    if not description and poster_content and isinstance(poster_content, dict):
         sections = poster_content.get("sections") or []
         for s in sections:
             if isinstance(s, dict):
@@ -510,7 +536,8 @@ def run_one_cycle(extraction_lock, db_url: Optional[str] = None) -> bool:
             log(f"Job worker: downloaded to {tmp_path}")
 
             print("[status] run_one_cycle: acquiring extraction lock")
-            if not extraction_lock.acquire(blocking=True):
+            acquired = extraction_lock.acquire(timeout=EXTRACTION_LOCK_TIMEOUT_SECONDS)
+            if not acquired:
                 mark_job_failed(conn, job_id, "Could not acquire extraction lock")
                 return True
 
@@ -556,17 +583,21 @@ def run_one_cycle(extraction_lock, db_url: Optional[str] = None) -> bool:
         conn.close()
         print("[status] run_one_cycle: closed DB connection")
 
-    return False
 
-
-def run_worker_loop(extraction_lock, poll_interval: int = POLL_INTERVAL_SECONDS, db_urls: Optional[list] = None) -> None:
+def run_worker_loop(
+    extraction_lock, poll_interval: int = POLL_INTERVAL_SECONDS, db_urls: Optional[list] = None
+) -> None:
     """Run the poll loop forever. Use in a background thread.
     db_urls is a list of (label, db_url) pairs to poll sequentially each cycle.
     Defaults to [("default", None)] which uses DATABASE_URL.
     """
     targets = db_urls or [("default", None)]
-    log(f"Job worker: starting poll loop (interval={poll_interval}s, dbs={[l for l, _ in targets]})")
-    print(f"[status] run_worker_loop: started, poll_interval={poll_interval}s dbs={[l for l, _ in targets]}")
+    log(
+        f"Job worker: starting poll loop (interval={poll_interval}s, dbs={[l for l, _ in targets]})"
+    )
+    print(
+        f"[status] run_worker_loop: started, poll_interval={poll_interval}s dbs={[l for l, _ in targets]}"
+    )
     cycle = 0
     while True:
         cycle += 1

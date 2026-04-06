@@ -8,7 +8,6 @@ results to PosterMetadata. No file upload endpoint; the frontend
 uploads files to Bunny and creates jobs in the database.
 """
 
-import os
 import threading
 
 import config
@@ -25,6 +24,8 @@ CORS(app)  # Enable CORS for all routes
 # Lock to prevent concurrent model usage (GPU memory is limited)
 # Shared between Flask and the background job worker
 _extraction_lock = threading.Lock()
+_worker_start_lock = threading.Lock()
+_worker_started = False
 
 
 @app.route("/", methods=["GET"])
@@ -91,7 +92,12 @@ def jobs_check():
 
 def _start_worker(db_urls: list):
     """Run the job worker loop in a daemon thread, polling db_urls sequentially."""
-    labels = [l for l, _ in db_urls]
+    global _worker_started
+    with _worker_start_lock:
+        if _worker_started:
+            return
+        _worker_started = True
+    labels = [label for label, _ in db_urls]
     print(f"[status] api: starting background job worker thread (dbs={labels})")
     t = threading.Thread(
         target=run_worker_loop,
@@ -104,6 +110,27 @@ def _start_worker(db_urls: list):
     print(f"[status] api: background job worker thread started (dbs={labels})")
 
 
+def _compute_db_targets() -> list:
+    db_urls = [("staging", None)]
+    if prod_db_url := config.get_env("PRODUCTION_DATABASE_URL"):
+        db_urls.append(("production", prod_db_url))
+        log("Production database polling enabled")
+    return db_urls
+
+
+def init_background_worker() -> None:
+    """Start background worker unless explicitly disabled by env var."""
+    enabled = (config.get_env("ENABLE_BACKGROUND_WORKER") or "true").strip().lower()
+    if enabled in {"0", "false", "no", "off"}:
+        log("Background worker disabled via ENABLE_BACKGROUND_WORKER")
+        return
+    _start_worker(_compute_db_targets())
+
+
+# Start worker on import so WSGI/gunicorn entrypoints also process jobs.
+init_background_worker()
+
+
 if __name__ == "__main__":
     print("[status] api: __main__ starting")
     port = int(config.get_env("PORT") or 8000)
@@ -111,11 +138,7 @@ if __name__ == "__main__":
     print(f"[status] api: host={host} port={port}")
 
     log(f"Starting Poster Extraction API on {host}:{port}")
-    db_urls = [("staging", None)]
-    if prod_db_url := config.get_env("PRODUCTION_DATABASE_URL"):
-        db_urls.append(("production", prod_db_url))
-        log("Production database polling enabled")
-    _start_worker(db_urls)
+    init_background_worker()
     # threaded=False so only one request at a time; worker runs in separate thread
     print(f"[status] api: running Flask app.run(host={host}, port={port})")
     app.run(host=host, port=port, debug=False, threaded=False)

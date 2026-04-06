@@ -103,14 +103,15 @@ def populate_missing_fields(data: dict) -> Tuple[dict, List[str]]:
         Tuple of (complete_data, list_of_filled_field_names)
     """
     defaults = get_empty_field_defaults()
+    complete_data = copy.deepcopy(data)
     filled_fields = []
 
     for field, default_value in defaults.items():
-        if field not in data:
-            data[field] = default_value
+        if field not in complete_data:
+            complete_data[field] = default_value
             filled_fields.append(field)
 
-    return data, filled_fields
+    return complete_data, filled_fields
 
 
 def validate_and_fix_extraction(
