@@ -76,7 +76,8 @@ jobs:
         run: |
           {
             echo "APP_PORT=${{ secrets.APP_PORT }}"
-            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}"
+            echo "STAGING_DATABASE_URL=${{ secrets.STAGING_DATABASE_URL }}"
+            echo "PRODUCTION_DATABASE_URL=${{ secrets.PRODUCTION_DATABASE_URL }}"
             echo "BUNNY_PRIVATE_STORAGE=${{ secrets.BUNNY_PRIVATE_STORAGE }}"
             echo "BUNNY_PRIVATE_STORAGE_KEY=${{ secrets.BUNNY_PRIVATE_STORAGE_KEY }}"
             echo "BUNNY_PUBLIC_STORAGE=${{ secrets.BUNNY_PUBLIC_STORAGE }}"
