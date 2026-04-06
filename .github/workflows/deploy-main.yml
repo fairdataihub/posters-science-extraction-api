@@ -21,6 +21,8 @@ concurrency:
 on:
   push:
     branches: [main]
+  repository_dispatch:
+    types: [poster2json-published]
   workflow_dispatch: # Allows manual triggering from GitHub Actions UI
 
 jobs:
