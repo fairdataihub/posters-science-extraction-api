@@ -112,7 +112,8 @@ jobs:
           docker version
           docker compose version
 
-          docker compose -f docker-compose-prod.yml up -d --build --remove-orphans
+          docker compose -f docker-compose-prod.yml build --no-cache
+          docker compose -f docker-compose-prod.yml up -d --remove-orphans
           EOF
 
       # Health check: verify the application is running and healthy
