@@ -33,6 +33,8 @@ COPY requirements-prod.txt requirements.txt
 RUN pip3 install --upgrade pip && \
     pip3 install --no-cache-dir -r requirements.txt
 
+RUN pip3 install --no-cache-dir --upgrade poster2json
+
 # Copy application code (poster extraction logic comes from poster2json library)
 COPY config.py api.py job_worker.py validation.py poster_extraction_schema.json poster_schema.json ./
 

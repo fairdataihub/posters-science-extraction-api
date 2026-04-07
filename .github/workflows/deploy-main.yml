@@ -90,7 +90,7 @@ jobs:
             echo "STUCK_PROCESSING_MINUTES=${{ secrets.STUCK_PROCESSING_MINUTES }}"
           } > .env.deploy
 
-      # Copy .env to server so docker-compose can substitute variables
+      # Copy .env to server so docker-compose ca,     n substitute variables
       - name: Copy .env to server
         run: |
           REPO_NAME="${GITHUB_REPOSITORY#*/}"
@@ -112,7 +112,6 @@ jobs:
           docker version
           docker compose version
 
-          docker compose -f docker-compose-prod.yml build --no-cache
           docker compose -f docker-compose-prod.yml up -d --remove-orphans
           EOF
 
