@@ -16,7 +16,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 from poster2json.extract import log, load_json_model
-from job_worker import run_worker_loop, run_one_cycle, generate_and_upload_thumbnail
+from job_worker import run_worker_loop, run_one_cycle, generate_and_upload_thumbnail, update_poster_image_url, get_conn
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -85,7 +85,10 @@ def thumbnails_generate():
     Generate and upload a thumbnail for a poster PDF already in Bunny storage.
 
     Body (JSON):
-        { "pdf_path": "posters/<env>/<uid>/filename.pdf" }
+        {
+          "pdf_path":  "posters/<env>/<uid>/filename.pdf",  // required
+          "poster_id": 123                                   // optional — updates Poster.imageUrl
+        }
 
     Returns:
         { "thumbnail_path": "thumbnails/<env>/<uid>/image.jpeg" }
@@ -95,6 +98,8 @@ def thumbnails_generate():
     pdf_path = (body.get("pdf_path") or "").strip()
     if not pdf_path:
         return jsonify({"error": "pdf_path is required"}), 400
+
+    poster_id = body.get("poster_id")
 
     import tempfile
     import os
@@ -117,6 +122,16 @@ def thumbnails_generate():
 
     if not thumbnail_path:
         return jsonify({"error": "Could not derive thumbnail path from pdf_path"}), 400
+
+    if poster_id is not None:
+        try:
+            conn = get_conn()
+            try:
+                update_poster_image_url(conn, int(poster_id), thumbnail_path)
+            finally:
+                conn.close()
+        except Exception as e:
+            print(f"[status] api: imageUrl DB update failed (non-fatal): {e}")
 
     print(f"[status] api: thumbnail generated at {thumbnail_path}")
     return jsonify({"thumbnail_path": thumbnail_path}), 200

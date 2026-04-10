@@ -531,6 +531,23 @@ def update_poster_title_description(conn, poster_id: int, title: str, descriptio
     print(f"[status] update_poster_title_description: poster_id={poster_id}")
 
 
+def update_poster_image_url(conn, poster_id: int, image_url: str) -> None:
+    """
+    Update Poster.imageUrl for the given poster.
+    """
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            UPDATE "Poster"
+            SET "imageUrl" = %s, updated = now()
+            WHERE id = %s
+            """,
+            (image_url, poster_id),
+        )
+        conn.commit()
+    print(f"[status] update_poster_image_url: poster_id={poster_id} imageUrl={image_url}")
+
+
 def save_poster_metadata(conn, poster_id: int, extraction: dict) -> None:
     """
     Upsert PosterMetadata for the given poster from validated extraction result.
@@ -634,6 +651,7 @@ def run_one_cycle(extraction_lock, db_url: Optional[str] = None) -> bool:
                 thumbnail_path = generate_and_upload_thumbnail(tmp_path, file_path)
                 if thumbnail_path:
                     log(f"Job worker: thumbnail uploaded to {thumbnail_path}")
+                    update_poster_image_url(conn, poster_id, thumbnail_path)
             except Exception as e:
                 log(f"Job worker: thumbnail generation failed (non-fatal): {e}")
                 print(f"[status] run_one_cycle: thumbnail generation failed: {e}")
