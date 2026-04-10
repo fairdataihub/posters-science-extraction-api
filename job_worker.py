@@ -105,18 +105,18 @@ def generate_thumbnail_bytes(pdf_path: str) -> bytes:
     doc = pymupdf.open(pdf_path)
     try:
         page = doc[0]
-        # Compute scale so width <= _THUMBNAIL_MAX_WIDTH (height scales proportionally)
+        # Compute scale so width <= THUMBNAIL_MAX_WIDTH (height scales proportionally)
         natural_width = page.rect.width  # points, at 72 dpi
         scale = min(1.0, THUMBNAIL_MAX_WIDTH / natural_width)
         matrix = pymupdf.Matrix(scale, scale)
         pix = page.get_pixmap(matrix=matrix)
         jpeg_bytes = pix.tobytes("jpeg", jpg_quality=THUMBNAIL_JPEG_QUALITY)
+        print(
+            f"[status] generate_thumbnail_bytes: rendered {len(jpeg_bytes)} bytes (scale={scale:.2f}, quality={THUMBNAIL_JPEG_QUALITY})"
+        )
+        return jpeg_bytes
     finally:
         doc.close()
-    print(
-        f"[status] generate_thumbnail_bytes: rendered {len(jpeg_bytes)} bytes (scale={scale:.2f}, quality={THUMBNAIL_JPEG_QUALITY})"
-    )
-    return jpeg_bytes
 
 
 def generate_and_upload_thumbnail(pdf_path: str, file_path: str) -> Optional[str]:
