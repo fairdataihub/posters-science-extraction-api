@@ -42,6 +42,9 @@ POLL_INTERVAL_SECONDS = int(_env("POLL_INTERVAL_SECONDS") or "30")
 STUCK_PROCESSING_MINUTES = int(_env("STUCK_PROCESSING_MINUTES") or "5")
 EXTRACTION_LOCK_TIMEOUT_SECONDS = int(_env("EXTRACTION_LOCK_TIMEOUT_SECONDS") or "300")
 
+THUMBNAIL_MAX_WIDTH = 1200  # px - enough for display, keeps file size small
+THUMBNAIL_JPEG_QUALITY = 75  # 1-100;
+
 
 # --- Bunny: download file ---------------------------------------------------
 
@@ -93,18 +96,26 @@ def upload_to_bunny(file_path: str, data: bytes, content_type: str = "image/jpeg
 
 def generate_thumbnail_bytes(pdf_path: str) -> bytes:
     """
-    Render the first page of a PDF as a JPEG and return the raw bytes.
-    """
+    Render the first page of a PDF as a compressed JPEG and return the raw bytes.
 
+    The pixmap is scaled so the width does not exceed _THUMBNAIL_MAX_WIDTH, then
+    encoded at _THUMBNAIL_JPEG_QUALITY to keep the file size small.
+    """
     print(f"[status] generate_thumbnail_bytes: opening {pdf_path}")
     doc = pymupdf.open(pdf_path)
     try:
         page = doc[0]
-        pix = page.get_pixmap()
-        jpeg_bytes = pix.tobytes("jpeg")
+        # Compute scale so width <= _THUMBNAIL_MAX_WIDTH (height scales proportionally)
+        natural_width = page.rect.width  # points, at 72 dpi
+        scale = min(1.0, THUMBNAIL_MAX_WIDTH / natural_width)
+        matrix = pymupdf.Matrix(scale, scale)
+        pix = page.get_pixmap(matrix=matrix)
+        jpeg_bytes = pix.tobytes("jpeg", jpg_quality=THUMBNAIL_JPEG_QUALITY)
     finally:
         doc.close()
-    print(f"[status] generate_thumbnail_bytes: rendered {len(jpeg_bytes)} bytes")
+    print(
+        f"[status] generate_thumbnail_bytes: rendered {len(jpeg_bytes)} bytes (scale={scale:.2f}, quality={THUMBNAIL_JPEG_QUALITY})"
+    )
     return jpeg_bytes
 
 
