@@ -8,6 +8,7 @@ results to PosterMetadata. No file upload endpoint; the frontend
 uploads files to Bunny and creates jobs in the database.
 """
 
+import re
 import threading
 
 import config
@@ -93,11 +94,21 @@ def thumbnails_generate():
     Returns:
         { "thumbnail_path": "thumbnails/<env>/<uid>/image.jpeg" }
     """
+    # posters/<env>/<uid>/<filename>.pdf
+    # <env>      — lowercase letters only (e.g. "p", "staging", "production")
+    # <uid>      — alphanumeric + hyphens/underscores, 8-40 chars
+    # <filename> — no path traversal; must end in .pdf
+    _PDF_PATH_RE = re.compile(
+        r"^posters/[a-z]+/[a-zA-Z0-9_-]{8,40}/[^/]+\.pdf$"
+    )
+
     print("[status] api: POST /thumbnails/generate")
     body = request.get_json(silent=True) or {}
     pdf_path = (body.get("pdf_path") or "").strip()
     if not pdf_path:
         return jsonify({"error": "pdf_path is required"}), 400
+    if not _PDF_PATH_RE.match(pdf_path):
+        return jsonify({"error": "pdf_path must match posters/<env>/<uid>/<filename>.pdf"}), 400
 
     poster_id = body.get("poster_id")
 
