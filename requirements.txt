@@ -31,6 +31,10 @@ requests>=2.31.0
 jsonschema>=4.20.0
 psycopg2-binary>=2.9.0
 
+# ipynb dependencies (for testing and development)
+ipykernel
+jupyterlab
+
 # Development (optional)
 # black
 # isort

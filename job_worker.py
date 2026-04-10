@@ -13,6 +13,8 @@ import json
 import time
 from pathlib import Path
 from typing import Optional
+import contextlib
+import pymupdf
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -39,6 +41,9 @@ BUNNY_PRIVATE_STORAGE_KEY = _env("BUNNY_PRIVATE_STORAGE_KEY")
 POLL_INTERVAL_SECONDS = int(_env("POLL_INTERVAL_SECONDS") or "30")
 STUCK_PROCESSING_MINUTES = int(_env("STUCK_PROCESSING_MINUTES") or "5")
 EXTRACTION_LOCK_TIMEOUT_SECONDS = int(_env("EXTRACTION_LOCK_TIMEOUT_SECONDS") or "300")
+
+THUMBNAIL_MAX_WIDTH = 1200  # px - enough for display, keeps file size small
+THUMBNAIL_JPEG_QUALITY = 75  # 1-100;
 
 
 # --- Bunny: download file ---------------------------------------------------
@@ -70,7 +75,83 @@ def download_from_bunny(file_path: str, dest_path: str) -> None:
     print(f"[status] download_from_bunny: done, wrote {total_bytes} bytes")
 
 
-# --- DB: claim job, update status, save metadata ----------------------------
+def upload_to_bunny(file_path: str, data: bytes, content_type: str = "image/jpeg") -> None:
+    """
+    Upload bytes to Bunny storage at the given path.
+
+    file_path: Path within the storage zone (e.g. "thumbnails/<env>/abc123/uuid.jpg").
+    data: Raw bytes to upload.
+    """
+    print(f"[status] upload_to_bunny: uploading {len(data)} bytes to {file_path}")
+    path = file_path.lstrip("/")
+    url = f"{BUNNY_PRIVATE_STORAGE}/{path}"
+    headers = {
+        "AccessKey": f"{BUNNY_PRIVATE_STORAGE_KEY}",
+        "Content-Type": content_type,
+    }
+    resp = requests.put(url, headers=headers, data=data, timeout=60)
+    resp.raise_for_status()
+    print(f"[status] upload_to_bunny: done, status={resp.status_code}")
+
+
+def generate_thumbnail_bytes(pdf_path: str) -> bytes:
+    """
+    Render the first page of a PDF as a compressed JPEG and return the raw bytes.
+
+    The pixmap is scaled so the width does not exceed _THUMBNAIL_MAX_WIDTH, then
+    encoded at _THUMBNAIL_JPEG_QUALITY to keep the file size small.
+    """
+    print(f"[status] generate_thumbnail_bytes: opening {pdf_path}")
+    doc = pymupdf.open(pdf_path)
+    try:
+        page = doc[0]
+        # Compute scale so width <= THUMBNAIL_MAX_WIDTH (height scales proportionally)
+        natural_width = page.rect.width  # points, at 72 dpi
+        scale = min(1.0, THUMBNAIL_MAX_WIDTH / natural_width)
+        matrix = pymupdf.Matrix(scale, scale)
+        pix = page.get_pixmap(matrix=matrix)
+        jpeg_bytes = pix.tobytes("jpeg", jpg_quality=THUMBNAIL_JPEG_QUALITY)
+        print(
+            f"[status] generate_thumbnail_bytes: rendered {len(jpeg_bytes)} bytes (scale={scale:.2f}, quality={THUMBNAIL_JPEG_QUALITY})"
+        )
+        return jpeg_bytes
+    finally:
+        doc.close()
+
+
+def generate_and_upload_thumbnail(pdf_path: str, file_path: str) -> Optional[str]:
+    """
+    Generate a JPEG thumbnail from the first page of a PDF and upload it to Bunny.
+
+    Derives the thumbnail storage path from the original file path:
+        posters/<environment>/<uid>/filename.pdf  →  thumbnails/<environment>/<uid>/<uuid>.jpg
+
+    Returns the thumbnail storage path on success, None on failure.
+    """
+    # Strip leading slash and split into parts
+    parts = file_path.lstrip("/").split("/")
+    # Need at least: ["posters", "<environment>", "<uid>", "filename.pdf"]
+    if len(parts) < 4 or parts[0] != "posters":
+        print(
+            f"[status] generate_and_upload_thumbnail: unexpected file_path format '{file_path}', skipping"
+        )
+        return None
+
+    # Take everything between the first segment ("posters") and the filename
+    sub_path = "/".join(parts[1:-1])  # e.g. "<environment>/rpfcack1xzysi9p8yuzrt0ma"
+    thumbnail_path = f"thumbnails/{sub_path}/image.jpeg"
+
+    jpeg_bytes = generate_thumbnail_bytes(pdf_path)
+    upload_to_bunny(thumbnail_path, jpeg_bytes)
+    print(f"[status] generate_and_upload_thumbnail: uploaded thumbnail to {thumbnail_path}")
+
+    full_thumbnail_path = f"{BUNNY_PRIVATE_STORAGE}/{thumbnail_path}"
+    print(f"[status] generate_and_upload_thumbnail: full thumbnail URL {full_thumbnail_path}")
+
+    return full_thumbnail_path
+
+
+# --- DB: claim job, update status, save metadata ---------------------------ß-
 
 
 def get_conn(db_url: Optional[str] = None):
@@ -248,13 +329,11 @@ def _extraction_to_metadata_row(extraction: dict) -> dict:
     # Bug 7 fix: publisher may be {"name": "..."} object — extract plain string
     if isinstance(out.get("publisher"), str):
         # Already a string (possibly json.dumps'd from the generic loop)
-        try:
+        with contextlib.suppress(json.JSONDecodeError, TypeError):
             parsed = json.loads(out["publisher"])
             if isinstance(parsed, dict):
                 name = (parsed.get("name") or "").strip()
                 out["publisher"] = name or None
-        except (json.JSONDecodeError, TypeError):
-            pass
     elif isinstance(extraction.get("publisher"), dict):
         name = (extraction["publisher"].get("name") or "").strip()
         out["publisher"] = name or None
@@ -467,6 +546,23 @@ def update_poster_title_description(conn, poster_id: int, title: str, descriptio
     print(f"[status] update_poster_title_description: poster_id={poster_id}")
 
 
+def update_poster_image_url(conn, poster_id: int, image_url: str) -> None:
+    """
+    Update Poster.imageUrl for the given poster.
+    """
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            UPDATE "Poster"
+            SET "imageUrl" = %s, updated = now()
+            WHERE id = %s
+            """,
+            (image_url, poster_id),
+        )
+        conn.commit()
+    print(f"[status] update_poster_image_url: poster_id={poster_id} imageUrl={image_url}")
+
+
 def save_poster_metadata(conn, poster_id: int, extraction: dict) -> None:
     """
     Upsert PosterMetadata for the given poster from validated extraction result.
@@ -564,6 +660,17 @@ def run_one_cycle(extraction_lock, db_url: Optional[str] = None) -> bool:
             except Exception as e:
                 mark_job_failed(conn, job_id, f"Failed to save metadata: {e}")
                 log(f"Job worker: job {job_id} failed to save metadata: {e}")
+                return True
+
+            try:
+                thumbnail_path = generate_and_upload_thumbnail(tmp_path, file_path)
+                if thumbnail_path:
+                    log(f"Job worker: thumbnail uploaded to {thumbnail_path}")
+                    update_poster_image_url(conn, poster_id, thumbnail_path)
+            except Exception as e:
+                log(f"Job worker: thumbnail generation failed (non-fatal): {e}")
+                print(f"[status] run_one_cycle: thumbnail generation failed: {e}")
+
             return True
 
         except Exception as e:

@@ -4,8 +4,20 @@ Convert scientific posters (PDF/images) into structured JSON metadata using Larg
 
 ## Quick Start
 
+This project uses [mise](https://mise.jdx.dev) to manage tool versions (Python 3.12, uv) and [uv](https://docs.astral.sh/uv/) for dependency management.
+
+### Prerequisites
+
+Install mise by following the [mise installation guide](https://mise.jdx.dev/getting-started.html).
+
+### Install dependencies
+
 ```bash
-pip install -r requirements.txt
+# Install Python 3.12 and uv (as specified in mise.toml)
+mise install
+
+# Install project dependencies
+uv pip install -r requirements.txt
 ```
 
 ### Basic Usage
