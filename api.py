@@ -10,6 +10,8 @@ uploads files to Bunny and creates jobs in the database.
 
 import re
 import threading
+import tempfile
+import os
 
 import config
 import torch
@@ -17,7 +19,14 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 from poster2json.extract import log, load_json_model
-from job_worker import run_worker_loop, run_one_cycle, generate_and_upload_thumbnail, update_poster_image_url, get_conn
+from job_worker import (
+    run_worker_loop,
+    run_one_cycle,
+    generate_and_upload_thumbnail,
+    update_poster_image_url,
+    get_conn,
+    download_from_bunny,
+)
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -98,9 +107,7 @@ def thumbnails_generate():
     # <env>      — lowercase letters only (e.g. "p", "staging", "production")
     # <uid>      — alphanumeric + hyphens/underscores, 8-40 chars
     # <filename> — no path traversal; must end in .pdf
-    _PDF_PATH_RE = re.compile(
-        r"^posters/[a-z]+/[a-zA-Z0-9_-]{8,40}/[^/]+\.pdf$"
-    )
+    _PDF_PATH_RE = re.compile(r"^posters/[a-z]+/[a-zA-Z0-9_-]{8,40}/[^/]+\.pdf$")
 
     print("[status] api: POST /thumbnails/generate")
     body = request.get_json(silent=True) or {}
@@ -111,10 +118,6 @@ def thumbnails_generate():
         return jsonify({"error": "pdf_path must match posters/<env>/<uid>/<filename>.pdf"}), 400
 
     poster_id = body.get("poster_id")
-
-    import tempfile
-    import os
-    from job_worker import download_from_bunny
 
     suffix = os.path.splitext(pdf_path)[-1].lower() or ".pdf"
     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
