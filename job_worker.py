@@ -13,6 +13,8 @@ import json
 import time
 from pathlib import Path
 from typing import Optional
+import contextlib
+import pymupdf
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -70,7 +72,71 @@ def download_from_bunny(file_path: str, dest_path: str) -> None:
     print(f"[status] download_from_bunny: done, wrote {total_bytes} bytes")
 
 
-# --- DB: claim job, update status, save metadata ----------------------------
+def upload_to_bunny(file_path: str, data: bytes, content_type: str = "image/jpeg") -> None:
+    """
+    Upload bytes to Bunny storage at the given path.
+
+    file_path: Path within the storage zone (e.g. "thumbnails/<env>/abc123/uuid.jpg").
+    data: Raw bytes to upload.
+    """
+    print(f"[status] upload_to_bunny: uploading {len(data)} bytes to {file_path}")
+    path = file_path.lstrip("/")
+    url = f"{BUNNY_PRIVATE_STORAGE}/{path}"
+    headers = {
+        "AccessKey": f"{BUNNY_PRIVATE_STORAGE_KEY}",
+        "Content-Type": content_type,
+    }
+    resp = requests.put(url, headers=headers, data=data, timeout=60)
+    resp.raise_for_status()
+    print(f"[status] upload_to_bunny: done, status={resp.status_code}")
+
+
+def generate_thumbnail_bytes(pdf_path: str) -> bytes:
+    """
+    Render the first page of a PDF as a JPEG and return the raw bytes.
+    """
+
+    print(f"[status] generate_thumbnail_bytes: opening {pdf_path}")
+    doc = pymupdf.open(pdf_path)
+    try:
+        page = doc[0]
+        pix = page.get_pixmap()
+        jpeg_bytes = pix.tobytes("jpeg")
+    finally:
+        doc.close()
+    print(f"[status] generate_thumbnail_bytes: rendered {len(jpeg_bytes)} bytes")
+    return jpeg_bytes
+
+
+def generate_and_upload_thumbnail(pdf_path: str, file_path: str) -> Optional[str]:
+    """
+    Generate a JPEG thumbnail from the first page of a PDF and upload it to Bunny.
+
+    Derives the thumbnail storage path from the original file path:
+        posters/<environment>/<uid>/filename.pdf  →  thumbnails/<environment>/<uid>/<uuid>.jpg
+
+    Returns the thumbnail storage path on success, None on failure.
+    """
+    # Strip leading slash and split into parts
+    parts = file_path.lstrip("/").split("/")
+    # Need at least: ["posters", "<environment>", "<uid>", "filename.pdf"]
+    if len(parts) < 4 or parts[0] != "posters":
+        print(
+            f"[status] generate_and_upload_thumbnail: unexpected file_path format '{file_path}', skipping"
+        )
+        return None
+
+    # Take everything between the first segment ("posters") and the filename
+    sub_path = "/".join(parts[1:-1])  # e.g. "<environment>/rpfcack1xzysi9p8yuzrt0ma"
+    thumbnail_path = f"thumbnails/{sub_path}/image.jpeg"
+
+    jpeg_bytes = generate_thumbnail_bytes(pdf_path)
+    upload_to_bunny(thumbnail_path, jpeg_bytes)
+    print(f"[status] generate_and_upload_thumbnail: uploaded thumbnail to {thumbnail_path}")
+    return thumbnail_path
+
+
+# --- DB: claim job, update status, save metadata ---------------------------ß-
 
 
 def get_conn(db_url: Optional[str] = None):
@@ -248,13 +314,11 @@ def _extraction_to_metadata_row(extraction: dict) -> dict:
     # Bug 7 fix: publisher may be {"name": "..."} object — extract plain string
     if isinstance(out.get("publisher"), str):
         # Already a string (possibly json.dumps'd from the generic loop)
-        try:
+        with contextlib.suppress(json.JSONDecodeError, TypeError):
             parsed = json.loads(out["publisher"])
             if isinstance(parsed, dict):
                 name = (parsed.get("name") or "").strip()
                 out["publisher"] = name or None
-        except (json.JSONDecodeError, TypeError):
-            pass
     elif isinstance(extraction.get("publisher"), dict):
         name = (extraction["publisher"].get("name") or "").strip()
         out["publisher"] = name or None
@@ -564,6 +628,16 @@ def run_one_cycle(extraction_lock, db_url: Optional[str] = None) -> bool:
             except Exception as e:
                 mark_job_failed(conn, job_id, f"Failed to save metadata: {e}")
                 log(f"Job worker: job {job_id} failed to save metadata: {e}")
+                return True
+
+            try:
+                thumbnail_path = generate_and_upload_thumbnail(tmp_path, file_path)
+                if thumbnail_path:
+                    log(f"Job worker: thumbnail uploaded to {thumbnail_path}")
+            except Exception as e:
+                log(f"Job worker: thumbnail generation failed (non-fatal): {e}")
+                print(f"[status] run_one_cycle: thumbnail generation failed: {e}")
+
             return True
 
         except Exception as e:

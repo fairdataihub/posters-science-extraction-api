@@ -12,11 +12,11 @@ import threading
 
 import config
 import torch
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 from poster2json.extract import log, load_json_model
-from job_worker import run_worker_loop, run_one_cycle
+from job_worker import run_worker_loop, run_one_cycle, generate_and_upload_thumbnail
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -77,6 +77,49 @@ def health():
         print(f"[status] api: health status=unhealthy error={e}")
 
     return jsonify({"status": status, "checks": checks}), http_status
+
+
+@app.route("/thumbnails/generate", methods=["POST"])
+def thumbnails_generate():
+    """
+    Generate and upload a thumbnail for a poster PDF already in Bunny storage.
+
+    Body (JSON):
+        { "pdf_path": "posters/<env>/<uid>/filename.pdf" }
+
+    Returns:
+        { "thumbnail_path": "thumbnails/<env>/<uid>/image.jpeg" }
+    """
+    print("[status] api: POST /thumbnails/generate")
+    body = request.get_json(silent=True) or {}
+    pdf_path = (body.get("pdf_path") or "").strip()
+    if not pdf_path:
+        return jsonify({"error": "pdf_path is required"}), 400
+
+    import tempfile
+    import os
+    from job_worker import download_from_bunny
+
+    suffix = os.path.splitext(pdf_path)[-1].lower() or ".pdf"
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+    tmp_path = tmp.name
+    tmp.close()
+
+    try:
+        download_from_bunny(pdf_path, tmp_path)
+        thumbnail_path = generate_and_upload_thumbnail(tmp_path, pdf_path)
+    except Exception as e:
+        print(f"[status] api: thumbnail generation error: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
+    if not thumbnail_path:
+        return jsonify({"error": "Could not derive thumbnail path from pdf_path"}), 400
+
+    print(f"[status] api: thumbnail generated at {thumbnail_path}")
+    return jsonify({"thumbnail_path": thumbnail_path}), 200
 
 
 @app.route("/jobs/check", methods=["POST"])
