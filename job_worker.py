@@ -133,7 +133,11 @@ def generate_and_upload_thumbnail(pdf_path: str, file_path: str) -> Optional[str
     jpeg_bytes = generate_thumbnail_bytes(pdf_path)
     upload_to_bunny(thumbnail_path, jpeg_bytes)
     print(f"[status] generate_and_upload_thumbnail: uploaded thumbnail to {thumbnail_path}")
-    return thumbnail_path
+
+    full_thumbnail_path = f"{BUNNY_PRIVATE_STORAGE}/{thumbnail_path}"
+    print(f"[status] generate_and_upload_thumbnail: full thumbnail URL {full_thumbnail_path}")
+
+    return full_thumbnail_path
 
 
 # --- DB: claim job, update status, save metadata ---------------------------ß-
