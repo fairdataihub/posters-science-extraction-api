@@ -16,6 +16,9 @@ Install mise by following the [mise installation guide](https://mise.jdx.dev/get
 # Install Python 3.12 and uv (as specified in mise.toml)
 mise install
 
+# Activate the virtual environment
+uv venv
+
 # Install project dependencies
 uv pip install -r requirements.txt
 ```
@@ -28,6 +31,9 @@ poster2json --annotation-dir "./posters" --output-dir "./output"
 
 # Or run directly
 python poster_extraction.py --annotation-dir "./posters" --output-dir "./output"
+
+# For uv
+uv run poster2json --annotation-dir "./posters" --output-dir "./output"
 ```
 
 ### Docker (Recommended for Windows)
