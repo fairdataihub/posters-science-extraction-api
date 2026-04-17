@@ -36,6 +36,7 @@ ipykernel
 jupyterlab
 
 # Development (optional)
+tqdm
 # black
 # isort
 # flake8
