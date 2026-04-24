@@ -83,9 +83,14 @@ def get_empty_field_defaults() -> dict:
         "conference": {},
         "content": {"sections": []},
         "publicationYear": None,
-        "language": "en",
+        # Do NOT default language to "en" — that's how every Japanese, Spanish,
+        # and German poster ended up tagged English in the dashboard.
+        "language": None,
         "version": "",
-        "researchField": "",
+        # Do NOT default researchField to "" — empty string was rolling up as
+        # "Other" in the dashboard. Let downstream see the actual signal
+        # (None == extractor couldn't determine domain).
+        "researchField": None,
     }
 
 
