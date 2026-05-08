@@ -13,8 +13,10 @@ import json
 import time
 from pathlib import Path
 from typing import Optional
+import io
 import contextlib
 import pymupdf
+from PIL import Image
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -44,6 +46,7 @@ EXTRACTION_LOCK_TIMEOUT_SECONDS = int(_env("EXTRACTION_LOCK_TIMEOUT_SECONDS") or
 
 THUMBNAIL_MAX_WIDTH = 1200  # px - enough for display, keeps file size small
 THUMBNAIL_JPEG_QUALITY = 75  # 1-100;
+_IMAGE_THUMBNAIL_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 
 
 # --- Bunny: download file ---------------------------------------------------
@@ -94,15 +97,15 @@ def upload_to_bunny(file_path: str, data: bytes, content_type: str = "image/jpeg
     print(f"[status] upload_to_bunny: done, status={resp.status_code}")
 
 
-def generate_thumbnail_bytes(pdf_path: str) -> bytes:
+def generate_thumbnail_bytes(local_path: str) -> bytes:
     """
-    Render the first page of a PDF as a compressed JPEG and return the raw bytes.
+    Render the first page of a PDF file as a compressed JPEG and return the raw bytes.
 
-    The pixmap is scaled so the width does not exceed _THUMBNAIL_MAX_WIDTH, then
-    encoded at _THUMBNAIL_JPEG_QUALITY to keep the file size small.
+    The pixmap is scaled so the width does not exceed THUMBNAIL_MAX_WIDTH, then
+    encoded at THUMBNAIL_JPEG_QUALITY to keep the file size small.
     """
-    print(f"[status] generate_thumbnail_bytes: opening {pdf_path}")
-    doc = pymupdf.open(pdf_path)
+    print(f"[status] generate_thumbnail_bytes: opening {local_path}")
+    doc = pymupdf.open(local_path)
     try:
         page = doc[0]
         # Compute scale so width <= THUMBNAIL_MAX_WIDTH (height scales proportionally)
@@ -119,18 +122,38 @@ def generate_thumbnail_bytes(pdf_path: str) -> bytes:
         doc.close()
 
 
-def generate_and_upload_thumbnail(pdf_path: str, file_path: str) -> Optional[str]:
+def generate_image_thumbnail_bytes(local_path: str) -> bytes:
+    """Resize an image poster file to thumbnail dimensions and return JPEG bytes."""
+    print(f"[status] generate_image_thumbnail_bytes: opening {local_path}")
+    with Image.open(local_path) as img:
+        img = img.convert("RGB")
+        w, h = img.size
+        if w > THUMBNAIL_MAX_WIDTH:
+            scale = THUMBNAIL_MAX_WIDTH / w
+            new_h = max(1, int(h * scale))
+            img = img.resize((THUMBNAIL_MAX_WIDTH, new_h), Image.LANCZOS)
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=THUMBNAIL_JPEG_QUALITY, optimize=True)
+        jpeg_bytes = buf.getvalue()
+    print(
+        f"[status] generate_image_thumbnail_bytes: {len(jpeg_bytes)} bytes (quality={THUMBNAIL_JPEG_QUALITY})"
+    )
+    return jpeg_bytes
+
+
+def generate_and_upload_thumbnail(local_path: str, file_path: str) -> Optional[str]:
     """
-    Generate a JPEG thumbnail from the first page of a PDF and upload it to Bunny.
+    Generate a JPEG thumbnail from a poster file (PDF or image) and upload it to Bunny.
 
-    Derives the thumbnail storage path from the original file path:
-        posters/<environment>/<uid>/filename.pdf  →  thumbnails/<environment>/<uid>/<uuid>.jpg
+    local_path: Path to the downloaded temp file (its extension determines which renderer is used).
+    file_path:  Bunny storage path, used to derive the thumbnail destination:
+                    posters/<environment>/<uid>/filename.ext  →  thumbnails/<environment>/<uid>/image.jpeg
 
-    Returns the thumbnail storage path on success, None on failure.
+    Returns the full thumbnail storage URL on success, None on failure.
     """
     # Strip leading slash and split into parts
     parts = file_path.lstrip("/").split("/")
-    # Need at least: ["posters", "<environment>", "<uid>", "filename.pdf"]
+    # Need at least: ["posters", "<environment>", "<uid>", "filename.ext"]
     if len(parts) < 4 or parts[0] != "posters":
         print(
             f"[status] generate_and_upload_thumbnail: unexpected file_path format '{file_path}', skipping"
@@ -141,7 +164,11 @@ def generate_and_upload_thumbnail(pdf_path: str, file_path: str) -> Optional[str
     sub_path = "/".join(parts[1:-1])  # e.g. "<environment>/rpfcack1xzysi9p8yuzrt0ma"
     thumbnail_path = f"thumbnails/{sub_path}/image.jpeg"
 
-    jpeg_bytes = generate_thumbnail_bytes(pdf_path)
+    ext = Path(local_path).suffix.lower()
+    if ext in _IMAGE_THUMBNAIL_EXTENSIONS:
+        jpeg_bytes = generate_image_thumbnail_bytes(local_path)
+    else:
+        jpeg_bytes = generate_thumbnail_bytes(local_path)
     upload_to_bunny(thumbnail_path, jpeg_bytes)
     print(f"[status] generate_and_upload_thumbnail: uploaded thumbnail to {thumbnail_path}")
 

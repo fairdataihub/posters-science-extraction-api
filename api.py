@@ -92,41 +92,43 @@ def health():
 @app.route("/thumbnails/generate", methods=["POST"])
 def thumbnails_generate():
     """
-    Generate and upload a thumbnail for a poster PDF already in Bunny storage.
+    Generate and upload a thumbnail for a poster file (PDF or image) already in Bunny storage.
 
     Body (JSON):
         {
-          "pdf_path":  "posters/<env>/<uid>/filename.pdf",  // required
+          "file_path": "posters/<env>/<uid>/filename.pdf",  // required; also accepts "pdf_path" for backwards compat
           "poster_id": 123                                   // optional — updates Poster.imageUrl
         }
 
     Returns:
         { "thumbnail_path": "thumbnails/<env>/<uid>/image.jpeg" }
     """
-    # posters/<env>/<uid>/<filename>.pdf
+    # posters/<env>/<uid>/<filename>.<ext>
     # <env>      — lowercase letters only (e.g. "p", "staging", "production")
     # <uid>      — alphanumeric + hyphens/underscores, 8-40 chars
-    # <filename> — no path traversal; must end in .pdf
-    _PDF_PATH_RE = re.compile(r"^posters/[a-z]+/[a-zA-Z0-9_-]{8,40}/[^/]+\.pdf$")
+    # <filename> — no path traversal; must end in .pdf, .jpg, .jpeg, or .png
+    _FILE_PATH_RE = re.compile(
+        r"^posters/[a-z]+/[a-zA-Z0-9_-]{8,40}/[^/]+\.(pdf|jpg|jpeg|png)$"
+    )
 
     print("[status] api: POST /thumbnails/generate")
     body = request.get_json(silent=True) or {}
-    pdf_path = (body.get("pdf_path") or "").strip()
-    if not pdf_path:
-        return jsonify({"error": "pdf_path is required"}), 400
-    if not _PDF_PATH_RE.match(pdf_path):
-        return jsonify({"error": "pdf_path must match posters/<env>/<uid>/<filename>.pdf"}), 400
+    file_path = (body.get("file_path") or body.get("pdf_path") or "").strip()
+    if not file_path:
+        return jsonify({"error": "file_path is required"}), 400
+    if not _FILE_PATH_RE.match(file_path):
+        return jsonify({"error": "file_path must match posters/<env>/<uid>/<filename>.(pdf|jpg|jpeg|png)"}), 400
 
     poster_id = body.get("poster_id")
 
-    suffix = os.path.splitext(pdf_path)[-1].lower() or ".pdf"
+    suffix = os.path.splitext(file_path)[-1].lower() or ".bin"
     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
     tmp_path = tmp.name
     tmp.close()
 
     try:
-        download_from_bunny(pdf_path, tmp_path)
-        thumbnail_path = generate_and_upload_thumbnail(tmp_path, pdf_path)
+        download_from_bunny(file_path, tmp_path)
+        thumbnail_path = generate_and_upload_thumbnail(tmp_path, file_path)
     except Exception as e:
         print(f"[status] api: thumbnail generation error: {e}")
         return jsonify({"error": str(e)}), 500
@@ -135,7 +137,7 @@ def thumbnails_generate():
             os.unlink(tmp_path)
 
     if not thumbnail_path:
-        return jsonify({"error": "Could not derive thumbnail path from pdf_path"}), 400
+        return jsonify({"error": "Could not derive thumbnail path from file_path"}), 400
 
     if poster_id is not None:
         try:
