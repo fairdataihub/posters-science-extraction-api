@@ -13,8 +13,10 @@ import json
 import time
 from pathlib import Path
 from typing import Optional
+import io
 import contextlib
 import pymupdf
+from PIL import Image
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -44,6 +46,7 @@ EXTRACTION_LOCK_TIMEOUT_SECONDS = int(_env("EXTRACTION_LOCK_TIMEOUT_SECONDS") or
 
 THUMBNAIL_MAX_WIDTH = 1200  # px - enough for display, keeps file size small
 THUMBNAIL_JPEG_QUALITY = 75  # 1-100;
+_IMAGE_THUMBNAIL_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 
 
 # --- Bunny: download file ---------------------------------------------------
@@ -119,6 +122,24 @@ def generate_thumbnail_bytes(pdf_path: str) -> bytes:
         doc.close()
 
 
+def generate_image_thumbnail_bytes(image_path: str) -> bytes:
+    """Resize an image poster to thumbnail dimensions and return JPEG bytes."""
+    print(f"[status] generate_image_thumbnail_bytes: opening {image_path}")
+    with Image.open(image_path) as img:
+        img = img.convert("RGB")
+        w, h = img.size
+        if w > THUMBNAIL_MAX_WIDTH:
+            scale = THUMBNAIL_MAX_WIDTH / w
+            img = img.resize((THUMBNAIL_MAX_WIDTH, int(h * scale)), Image.LANCZOS)
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=THUMBNAIL_JPEG_QUALITY, optimize=True)
+        jpeg_bytes = buf.getvalue()
+    print(
+        f"[status] generate_image_thumbnail_bytes: {len(jpeg_bytes)} bytes (quality={THUMBNAIL_JPEG_QUALITY})"
+    )
+    return jpeg_bytes
+
+
 def generate_and_upload_thumbnail(pdf_path: str, file_path: str) -> Optional[str]:
     """
     Generate a JPEG thumbnail from the first page of a PDF and upload it to Bunny.
@@ -141,7 +162,11 @@ def generate_and_upload_thumbnail(pdf_path: str, file_path: str) -> Optional[str
     sub_path = "/".join(parts[1:-1])  # e.g. "<environment>/rpfcack1xzysi9p8yuzrt0ma"
     thumbnail_path = f"thumbnails/{sub_path}/image.jpeg"
 
-    jpeg_bytes = generate_thumbnail_bytes(pdf_path)
+    ext = Path(file_path).suffix.lower()
+    if ext in _IMAGE_THUMBNAIL_EXTENSIONS:
+        jpeg_bytes = generate_image_thumbnail_bytes(pdf_path)
+    else:
+        jpeg_bytes = generate_thumbnail_bytes(pdf_path)
     upload_to_bunny(thumbnail_path, jpeg_bytes)
     print(f"[status] generate_and_upload_thumbnail: uploaded thumbnail to {thumbnail_path}")
 
