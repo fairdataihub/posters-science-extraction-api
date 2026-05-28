@@ -78,7 +78,7 @@ def get_empty_field_defaults() -> dict:
         "ethicsApprovals": [],
         "imageCaptions": [],
         "tableCaptions": [],
-        "publisher": {},
+        "publisher": None,
         "types": {},
         "conference": {},
         "content": {"sections": []},

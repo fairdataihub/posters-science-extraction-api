@@ -353,17 +353,8 @@ def _extraction_to_metadata_row(extraction: dict) -> dict:
                 break
     out.pop("rightsList", None)
 
-    # Bug 7 fix: publisher may be {"name": "..."} object — extract plain string
-    if isinstance(out.get("publisher"), str):
-        # Already a string (possibly json.dumps'd from the generic loop)
-        with contextlib.suppress(json.JSONDecodeError, TypeError):
-            parsed = json.loads(out["publisher"])
-            if isinstance(parsed, dict):
-                name = (parsed.get("name") or "").strip()
-                out["publisher"] = name or None
-    elif isinstance(extraction.get("publisher"), dict):
-        name = (extraction["publisher"].get("name") or "").strip()
-        out["publisher"] = name or None
+    # Publisher is auto-set by posters.science — ignore any value from poster2json
+    out["publisher"] = None
 
     # if extraction has sizes or formats, convert to single string for DB
     if "sizes" in extraction and isinstance(extraction["sizes"], list):
