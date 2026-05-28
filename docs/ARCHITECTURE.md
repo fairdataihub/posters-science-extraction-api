@@ -24,7 +24,7 @@ Technical architecture and methodology for poster2json.
 
 **Model**: [fairdataihub/Llama-3.1-8B-Poster-Extraction](https://huggingface.co/fairdataihub/Llama-3.1-8B-Poster-Extraction)
 
-Fine-tuned version of Meta's Llama 3.1 8B Instruct for scientific poster metadata extraction:
+A verbatim mirror of Meta's Llama 3.1 8B Instruct, used for scientific poster metadata extraction:
 
 - 8B parameters
 - 128K context window
