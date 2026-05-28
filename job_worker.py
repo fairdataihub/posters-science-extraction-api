@@ -353,8 +353,8 @@ def _extraction_to_metadata_row(extraction: dict) -> dict:
                 break
     out.pop("rightsList", None)
 
-    # Publisher is auto-set by posters.science — ignore any value from poster2json
-    out["publisher"] = None
+    # Publisher is always Zenodo — ignore any value from poster2json
+    out["publisher"] = "Zenodo"
 
     # if extraction has sizes or formats, convert to single string for DB
     if "sizes" in extraction and isinstance(extraction["sizes"], list):
