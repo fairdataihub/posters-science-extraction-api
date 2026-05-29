@@ -50,7 +50,7 @@ Unsure where to begin? Look for issues labeled:
 3. Create a branch: `git checkout -b my-feature`
 4. Install dependencies: `pip install -e .` or `pip install -r requirements.txt`
 5. Make your changes
-6. Test with the example posters: `python poster_extraction.py --annotation-dir ./example_posters --output-dir ./test_output`
+6. Verify the extraction library imports: `python -c "from poster2json import extract_poster; print('OK')"`
 7. Commit your changes with a clear message
 8. Push to your fork and submit a Pull Request
 

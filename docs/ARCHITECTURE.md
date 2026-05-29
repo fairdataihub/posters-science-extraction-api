@@ -14,8 +14,8 @@ Technical architecture and methodology for poster2json.
                     │                   │    │                 │
                [PDF Files]        [Image Files]    [Transformers]
                     │                   │         Llama 3.1 8B
-               [pdfalto]         [Qwen2-VL-7B]   Section-aware
-               XML Layout        Vision OCR      JSON Generation
+              [pdfplumber]       [Qwen2-VL-7B]   Section-aware
+              XY-cut layout      Vision OCR      JSON Generation
 ```
 
 ## Models
@@ -44,18 +44,18 @@ Vision-language model for image-based poster OCR:
 
 ## Stage 1: Raw Text Extraction
 
-### PDF Processing (pdfalto)
+### PDF Processing (pdfplumber)
 
-For PDF files, the pipeline uses `pdfalto` to:
+For PDF files, the pipeline uses `pdfplumber` to:
 
-1. Convert PDF to ALTO XML format
-2. Preserve layout structure and spatial coordinates
-3. Extract text blocks maintaining reading order
-4. Handle multi-column layouts
+1. Extract characters and words with positional metadata (bounding boxes, font size)
+2. Reconstruct reading order via a recursive XY-cut splitter (`poster2json/xy_cut.py`)
+3. Group words into lines and blocks, preserving multi-column layouts
+4. Fall back to PyMuPDF when a page yields too little text
 
 ```python
 # Simplified extraction flow
-pdf_path → pdfalto → ALTO XML → parse_text_blocks() → raw_text
+pdf_path → pdfplumber chars → xy_cut reading order → _lines_to_blocks() → raw_text
 ```
 
 ### Image Processing (Qwen2-VL)
@@ -150,16 +150,19 @@ Outputs conform to [poster-json-schema](https://github.com/fairdataihub/poster-j
 ## File Structure
 
 ```
-poster2json/
-├── poster_extraction.py    # Main pipeline
-│   ├── get_raw_text()      # Stage 1: Text extraction
-│   ├── extract_json_with_retry()  # Stage 2: JSON structuring
-│   ├── postprocess_json()  # Post-processing
-│   └── calculate_metrics() # Evaluation
-├── api.py                  # Flask REST API
-├── Dockerfile              # Container definition
-└── docker-compose.yml      # Orchestration
+posters-science-extraction-api/
+├── api.py                   # Flask REST API + job worker startup
+├── job_worker.py            # Polls DB, runs extraction via poster2json
+├── validation.py            # Schema validation of LLM output
+├── config.py                # Model IDs and runtime configuration
+├── Dockerfile               # Container definition
+└── docker-compose-prod.yml  # Orchestration
 ```
+
+The extraction pipeline itself — `get_raw_text()` (Stage 1),
+`extract_json_with_retry()` (Stage 2), and `postprocess_json()` — lives in the
+[poster2json](https://github.com/fairdataihub/poster2json) library
+(`poster2json.extract`), which this service imports.
 
 ## Configuration
 
@@ -167,7 +170,6 @@ poster2json/
 
 | Variable | Description |
 |----------|-------------|
-| `PDFALTO_PATH` | Path to pdfalto binary |
 | `CUDA_VISIBLE_DEVICES` | GPU device(s) to use |
 
 ### Model Configuration

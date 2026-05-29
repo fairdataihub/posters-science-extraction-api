@@ -73,7 +73,7 @@ A background thread runs continuously:
 1. **Poll** the database for an `ExtractionJob` with `completed = false` and `status = 'pending'`.
 2. **Claim** the job (set `status = 'processing'`).
 3. **Download** the file from Bunny storage using the job’s `filePath` (and optional `fileName`).
-4. **Extract** using the same pipeline as the CLI (no extraction logic changes).
+4. **Extract** via the [poster2json](https://github.com/fairdataihub/poster2json) library (`extract_poster`).
 5. **Upsert** `PosterMetadata` for the job’s `posterId` with the extracted JSON (creators, titles, posterContent, imageCaption, tableCaption, etc.).
 6. **Complete** the job (`status = 'completed'`, `completed = true`) or **fail** it (`status = 'failed'`, `error` set).
 
@@ -93,7 +93,6 @@ Only one extraction runs at a time (shared lock with any future HTTP-triggered w
 | `PORT` | API server port | 8000 |
 | `HOST` | API server host | 0.0.0.0 |
 | `CUDA_VISIBLE_DEVICES` | GPU device(s) | All available |
-| `PDFALTO_PATH` | Path to pdfalto binary (for PDF processing) | See poster_extraction |
 
 ### Starting with Custom Port
 

@@ -7,7 +7,6 @@ Complete installation instructions for poster2json.
 - [Prerequisites](#prerequisites)
 - [Standard Installation (Linux/macOS)](#standard-installation-linuxmacos)
 - [Windows Installation](#windows-installation)
-- [Installing pdfalto](#installing-pdfalto)
 - [Verifying Installation](#verifying-installation)
 - [Troubleshooting](#troubleshooting)
 
@@ -34,9 +33,11 @@ Complete installation instructions for poster2json.
 pip install git+https://github.com/fairdataihub/posters-science-extraction-api.git
 ```
 
-This installs poster2json and all dependencies. You can then run:
+This installs the API service and all dependencies, including the
+[poster2json](https://github.com/fairdataihub/poster2json) library that provides
+the extraction pipeline. Start the service with:
 ```bash
-poster2json --annotation-dir ./posters --output-dir ./output
+python api.py
 ```
 
 ### Option B: Clone and Install (Development)
@@ -57,11 +58,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 3. Install pdfalto
-
-See [Installing pdfalto](#installing-pdfalto) below.
-
-### 4. Verify Installation
+### Verify Installation
 
 ```bash
 python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}')"
@@ -92,91 +89,27 @@ docker compose up --build
 
 3. Follow the Linux installation steps above inside WSL2.
 
-## Installing pdfalto
+## PDF Text Extraction
 
-`pdfalto` is required for PDF text extraction with layout preservation.
-
-### Option A: Build with Docker (All Platforms)
-
-The easiest cross-platform method. Produces a Linux binary for Docker/WSL2 use.
-
-```bash
-# Clone pdfalto
-git clone --recurse-submodules https://github.com/kermitt2/pdfalto.git
-cd pdfalto
-
-# Create build Dockerfile
-cat > Dockerfile.build << 'EOF'
-FROM ubuntu:22.04
-RUN apt-get update && apt-get install -y build-essential cmake git && rm -rf /var/lib/apt/lists/*
-WORKDIR /pdfalto
-COPY . .
-RUN cmake . && make -j$(nproc)
-EOF
-
-# Build and extract binary
-docker build -f Dockerfile.build -t pdfalto-builder .
-container=$(docker create pdfalto-builder)
-docker cp "${container}":/pdfalto/pdfalto ./pdfalto
-docker rm "${container}"
-
-# Move to posters-science-extraction-api
-mv ./pdfalto /path/to/posters-science-extraction-api/executables/pdfalto
-chmod +x /path/to/posters-science-extraction-api/executables/pdfalto
-```
-
-### Option B: Build from Source (Linux/macOS)
-
-Requires `cmake` and a C++ compiler (gcc/clang).
-
-```bash
-git clone --recurse-submodules https://github.com/kermitt2/pdfalto.git
-cd pdfalto
-cmake .
-make -j$(nproc)
-# Binary at: ./pdfalto
-```
-
-### Option C: Pre-built Binary
-
-Check [pdfalto releases](https://github.com/kermitt2/pdfalto/releases) for pre-built binaries.
-
-### Configure pdfalto Path
-
-The pipeline searches these locations automatically:
-
-1. `PDFALTO_PATH` environment variable (recommended)
-2. `./executables/pdfalto` (in repository)
-3. System PATH (`which pdfalto`)
-4. `/usr/local/bin/pdfalto`
-5. `~/Downloads/pdfalto`
-
-Set the environment variable:
-
-```bash
-export PDFALTO_PATH="/path/to/pdfalto"
-```
-
-Or add to your shell profile (`~/.bashrc`, `~/.zshrc`):
-
-```bash
-echo 'export PDFALTO_PATH="/path/to/pdfalto"' >> ~/.bashrc
-source ~/.bashrc
-```
+No separate binary is required. PDF text extraction is handled by the
+[poster2json](https://github.com/fairdataihub/poster2json) library, which uses
+`pdfplumber` (pure Python, installed automatically with the other dependencies)
+and a recursive XY-cut reading-order reconstruction. When a page yields too
+little text, it falls back to PyMuPDF. Image posters are handled by the Qwen2-VL
+vision model.
 
 ## Verifying Installation
 
-Run the test suite on the included example posters:
+Verify the extraction library imports cleanly, then start the service:
 
 ```bash
-python poster_extraction.py \
-    --annotation-dir ./example_posters \
-    --output-dir ./test_output
+python -c "from poster2json import extract_poster; print('poster2json OK')"
+python api.py   # then, in another shell: curl http://localhost:8000/health
 ```
 
 Expected output:
-- JSON files in `./test_output/`
-- Console shows extraction progress and metrics
+- `poster2json OK` printed with no import errors
+- The API server starts and `/health` returns a success response
 
 ## Troubleshooting
 
@@ -191,17 +124,6 @@ False
 **Solutions:**
 - Verify NVIDIA drivers: `nvidia-smi`
 - Reinstall PyTorch with CUDA: `pip install torch --index-url https://download.pytorch.org/whl/cu118`
-
-### pdfalto Not Found
-
-```
-WARNING: pdfalto not found, falling back to PyMuPDF
-```
-
-**Solutions:**
-- Set `PDFALTO_PATH` environment variable
-- Place binary in `./executables/pdfalto`
-- Verify binary is executable: `chmod +x pdfalto`
 
 ### Out of Memory
 
@@ -228,7 +150,6 @@ OSError: We couldn't connect to huggingface.co
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `PDFALTO_PATH` | Path to pdfalto binary | Auto-detected |
 | `CUDA_VISIBLE_DEVICES` | GPU device(s) to use | All available |
 
 ## Next Steps

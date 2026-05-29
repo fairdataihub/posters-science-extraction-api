@@ -1,4 +1,4 @@
-title: poster2json
+title: posters-science-extraction-api
 authors:
   - given-names: Sanjay
     family-names: Soundarajan
@@ -23,8 +23,8 @@ doi: 10.5281/zenodo.18320010
 abstract: >-
   A tool for extracting structured metadata from scientific posters, converting
   visual poster content into machine-actionable JSON format conforming to the
-  poster-json-schema. Uses Qwen2-VL for image OCR and a fine-tuned Llama 3.1 8B
-  for JSON structuring. Part of the posters.science platform.
+  poster-json-schema. Uses Qwen2-VL for image OCR and a verbatim Llama 3.1 8B
+  mirror for JSON structuring. Part of the posters.science platform.
 keywords:
   - posters
   - machine actionable

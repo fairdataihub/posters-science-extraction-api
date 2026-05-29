@@ -5,9 +5,10 @@ Validates LLM output against the extraction schema.
 Reports warnings for any schema violations.
 
 NOTE: Format normalization (caption structure, creator fields, affiliations)
-is handled by postprocess_json() in poster_extraction.py. This module only
-validates and reports - it does not modify the data (except adding metadata
-and populating missing optional fields with defaults).
+is handled by the poster2json library (poster2json.extract) before this
+module runs. This module only validates and reports - it does not modify the
+data (except adding metadata and populating missing optional fields with
+defaults).
 """
 
 import json
@@ -126,7 +127,7 @@ def validate_and_fix_extraction(
     Validate LLM extraction output and report any schema violations.
 
     NOTE: This function no longer applies auto-fixes. Format normalization
-    is handled upstream by postprocess_json() in poster_extraction.py.
+    is handled upstream by the poster2json library (poster2json.extract).
     The 'strict' parameter is kept for API compatibility but has no effect.
 
     Args:

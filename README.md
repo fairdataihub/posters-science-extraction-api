@@ -25,16 +25,16 @@ uv pip install -r requirements.txt
 
 ### Basic Usage
 
+This repository is an API service — it polls the database for extraction jobs
+rather than exposing a batch CLI. Start the server with:
+
 ```bash
-# If installed via pip
-poster2json --annotation-dir "./posters" --output-dir "./output"
-
-# Or run directly
-python poster_extraction.py --annotation-dir "./posters" --output-dir "./output"
-
-# For uv
-uv run poster2json --annotation-dir "./posters" --output-dir "./output"
+python api.py
 ```
+
+See the [API Server](#api-server) section below for the environment variables it
+expects. For standalone poster→JSON conversion outside this service, use the
+[poster2json](https://github.com/fairdataihub/poster2json) library directly.
 
 ### Docker (Recommended for Windows)
 
@@ -49,13 +49,13 @@ See [Docker Setup](docs/DOCKER.md) for detailed instructions including Windows/W
 ```
 PDF/Image → Raw Text Extraction → LLM JSON Structuring → Structured JSON
                 ↓                         ↓
-           [pdfalto]              [Llama 3.1 8B]
-           [Qwen2-VL]             Fine-tuned for posters
+          [pdfplumber]            [Llama 3.1 8B]
+           [Qwen2-VL]             verbatim Llama mirror
 ```
 
-1. **PDF files** → Processed via `pdfalto` for layout-aware text extraction
+1. **PDF files** → Processed via `pdfplumber` with XY-cut reading order (PyMuPDF fallback) for layout-aware text extraction
 2. **Image files** → Processed via `Qwen2-VL-7B` vision-language model
-3. **All files** → Structured into JSON by [Llama-3.1-8B-Poster-Extraction](https://huggingface.co/fairdataihub/Llama-3.1-8B-Poster-Extraction)
+3. **All files** → Structured into JSON by [Llama-3.1-8B-Poster-Extraction](https://huggingface.co/fairdataihub/Llama-3.1-8B-Poster-Extraction), a verbatim mirror of Meta Llama 3.1 8B Instruct (not fine-tuned)
 
 ## Output Format
 
@@ -125,27 +125,38 @@ See [API Reference](docs/API.md) for full configuration and environment variable
 ## Project Structure
 
 ```
-poster2json/
-├── poster_extraction.py    # Main extraction pipeline
-├── api.py                  # Flask REST API
-├── requirements.txt        # Python dependencies
-├── Dockerfile              # Container build
-├── docker-compose.yml      # Docker orchestration
-├── docs/                   # Documentation
-├── example_posters/        # Sample poster files
-└── test_results/           # Validation outputs
+posters-science-extraction-api/
+├── api.py                   # Flask REST API + job worker startup
+├── job_worker.py            # Polls DB, runs extraction via the poster2json library
+├── validation.py            # Schema validation of LLM output
+├── config.py                # Model IDs and runtime configuration
+├── requirements.txt         # Python dependencies
+├── Dockerfile               # Container build
+├── docker-compose-prod.yml  # Docker orchestration
+├── docs/                    # Documentation
+├── example_posters/         # Sample poster files
+└── test_results/            # Validation outputs
 ```
+
+Poster text extraction and JSON structuring are provided by the
+[poster2json](https://github.com/fairdataihub/poster2json) library, installed as
+a dependency; this repository wraps it in a polling API service.
 
 ## Performance
 
-**Validation Results**: 10/10 (100%) passing on test set
+Extraction runs through the [poster2json](https://github.com/fairdataihub/poster2json)
+library, which is validated against a 20-poster annotated corpus. Latest results:
+**19/20 (95%)** passing.
 
 | Metric           | Score | Threshold |
 | ---------------- | ----- | --------- |
-| Word Capture     | 0.96  | ≥0.75     |
-| ROUGE-L          | 0.89  | ≥0.75     |
-| Number Capture   | 0.93  | ≥0.75     |
-| Field Proportion | 0.99  | 0.50–2.00 |
+| Word Capture     | 0.92  | ≥0.75     |
+| ROUGE-L          | 0.85  | ≥0.75     |
+| Number Capture   | 0.97  | ≥0.75     |
+| Field Proportion | 0.88  | 0.50–1.50 |
+
+See the [poster2json evaluation docs](https://github.com/fairdataihub/poster2json/blob/main/docs/evaluation.md)
+for per-poster results and the methodology behind these metrics.
 
 ## License
 

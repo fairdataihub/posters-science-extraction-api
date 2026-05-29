@@ -3,8 +3,8 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "poster2json"
-version = "1.0.0"
+name = "posters-science-extraction-api"
+version = "1.0.1"
 description = "Convert scientific posters (PDF/images) to structured JSON using LLMs"
 readme = "README.md"
 license = {text = "MIT"}
@@ -66,11 +66,8 @@ Documentation = "https://github.com/fairdataihub/posters-science-extraction-api/
 Repository = "https://github.com/fairdataihub/posters-science-extraction-api"
 Issues = "https://github.com/fairdataihub/posters-science-extraction-api/issues"
 
-[project.scripts]
-poster2json = "poster_extraction:main"
-
 [tool.setuptools]
-py-modules = ["poster_extraction", "api"]
+py-modules = ["api", "job_worker", "config", "validation"]
 include-package-data = true
 
 [tool.setuptools.package-data]

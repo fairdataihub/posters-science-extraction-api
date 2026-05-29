@@ -41,8 +41,9 @@ services:
       - "${API_PORT:-8000}:8000"
     # Mount source code for hot reload - edit locally, restart to apply
     volumes:
-      - ./poster_extraction.py:/app/poster_extraction.py
       - ./api.py:/app/api.py
+      - ./job_worker.py:/app/job_worker.py
+      - ./config.py:/app/config.py
       - ./validation.py:/app/validation.py
       - ./poster_extraction_schema.json:/app/poster_extraction_schema.json
       - ./poster_schema.json:/app/poster_schema.json

@@ -13,16 +13,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     python3.10 \
     python3-pip \
-    libpoppler-dev \
-    libxerces-c-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Create symlink for python
 RUN ln -sf /usr/bin/python3.10 /usr/bin/python
-
-# Copy pdfalto binary from executables folder
-COPY executables/pdfalto /usr/local/bin/pdfalto
-RUN chmod +x /usr/local/bin/pdfalto
 
 # Set working directory
 WORKDIR /app

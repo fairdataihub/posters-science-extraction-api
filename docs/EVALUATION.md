@@ -11,7 +11,7 @@ The pipeline is validated using four complementary metrics:
 | **Word Capture (w)** | Proportion of reference vocabulary in extracted text | ≥0.75 | Measures lexical completeness |
 | **ROUGE-L (r)** | Longest common subsequence similarity | ≥0.75 | Captures sequential text preservation |
 | **Number Capture (n)** | Proportion of numeric values preserved | ≥0.75 | Validates quantitative data integrity |
-| **Field Proportion (f)** | Ratio of extracted to reference JSON elements | 0.50–2.00 | Accommodates layout variability |
+| **Field Proportion (f)** | Ratio of extracted to reference JSON elements | 0.50–1.50 | Accommodates layout variability |
 
 ### Pass Criteria
 
@@ -19,7 +19,7 @@ A poster passes validation if ALL conditions are met:
 - Word Capture ≥ 0.75
 - ROUGE-L ≥ 0.75
 - Number Capture ≥ 0.75
-- Field Proportion between 0.50 and 2.00
+- Field Proportion between 0.50 and 1.50
 
 ## Metric Implementation
 
@@ -72,7 +72,7 @@ reference_fields = count_json_fields(reference_json)
 field_proportion = extracted_fields / reference_fields
 ```
 
-The extended range (0.50–2.00) accommodates:
+The range (0.50–1.50) accommodates:
 - Nested vs flat section structures
 - Variable poster layouts
 - Optional metadata fields
@@ -91,35 +91,33 @@ Before comparison, text is normalized:
 
 ### Current Performance
 
-**Overall**: 10/10 (100%) passing
+**Overall**: 19/20 (95%) passing
 
-| Poster ID | Word | ROUGE-L | Numbers | Fields | Source | Status |
-|-----------|------|---------|---------|--------|--------|--------|
-| 10890106 | 0.98 | 0.85 | 1.00 | 0.89 | pdfalto | ✅ |
-| 15963941 | 0.98 | 0.93 | 1.00 | 0.84 | pdfalto | ✅ |
-| 16083265 | 0.90 | 0.90 | 0.82 | 0.92 | pdfalto | ✅ |
-| 17268692 | 1.00 | 0.83 | 1.00 | 1.70 | pdfalto | ✅ |
-| 42 | 0.99 | 0.88 | 1.00 | 0.85 | pdfalto | ✅ |
-| 4737132 | 0.94 | 0.79 | 0.96 | 1.22 | qwen_vision | ✅ |
-| 5128504 | 0.99 | 1.00 | 1.00 | 1.04 | pdfalto | ✅ |
-| 6724771 | 0.89 | 0.95 | 0.85 | 0.96 | pdfalto | ✅ |
-| 8228476 | 0.94 | 0.87 | 0.89 | 0.91 | pdfalto | ✅ |
-| 8228568 | 0.99 | 0.91 | 0.82 | 0.79 | pdfalto | ✅ |
+Extraction runs through the [poster2json](https://github.com/fairdataihub/poster2json)
+library, validated against a 20-poster annotated corpus using `pdfplumber` (XY-cut
+reading order, PyMuPDF fallback) for PDFs and Qwen2-VL for image posters.
 
 ### Aggregate Metrics
 
 | Metric | Average Score |
 |--------|---------------|
-| Word Capture | 0.96 |
-| ROUGE-L | 0.89 |
-| Number Capture | 0.93 |
-| Field Proportion | 0.99 |
+| Word Capture | 0.92 |
+| ROUGE-L | 0.85 |
+| Number Capture | 0.97 |
+| Field Proportion | 0.88 |
+
+The single failing poster (a dense table/flowchart layout) misses the ROUGE-L
+threshold at 0.71; its text is fully captured, but the annotator's fine-grained
+section segmentation differs from the merged sections the model produces.
+
+Per-poster results and the full methodology live in the authoritative
+[poster2json evaluation docs](https://github.com/fairdataihub/poster2json/blob/main/docs/evaluation.md).
 
 ## Test Set
 
-The validation set includes 10 manually annotated scientific posters:
+The validation set includes 20 manually annotated scientific posters:
 
-- **9 PDF posters**: Processed via pdfalto
+- **19 PDF posters**: Processed via pdfplumber (XY-cut reading order)
 - **1 image poster**: Processed via Qwen2-VL
 
 Posters cover diverse formats:
@@ -130,13 +128,15 @@ Posters cover diverse formats:
 
 ## Running Validation
 
+Validation is run from the
+[poster2json-validation](https://github.com/fairdataihub/poster2json-validation)
+repository, which scores generated JSON against the annotated corpus:
+
 ```bash
-python poster_extraction.py \
-    --annotation-dir ./manual_poster_annotation \
-    --output-dir ./test_results
+python validate_model.py --text-extractor pdfplumber
 ```
 
-Output:
+Output (under `outputs/<timestamp>/`):
 - Individual `{poster_id}_extracted.json` files
 - `results.json` with all metrics
 

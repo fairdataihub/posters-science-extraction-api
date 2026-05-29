@@ -35,11 +35,15 @@ docker compose down
 ### Test the API
 
 ```bash
+# Health / readiness
 curl http://localhost:8000/health
 
-curl -X POST http://localhost:8000/extract \
-  -F "file=@poster.pdf"
+# Trigger one job-worker cycle (process a pending job immediately)
+curl -X POST http://localhost:8000/jobs/check
 ```
+
+The API does not accept file uploads — posters are submitted as database jobs and
+fetched from Bunny storage. See [API Reference](API.md) for the full endpoint list.
 
 ## Windows Setup
 
@@ -58,35 +62,6 @@ curl -X POST http://localhost:8000/extract \
 3. **NVIDIA GPU Support**
    - Install [NVIDIA CUDA on WSL](https://docs.nvidia.com/cuda/wsl-user-guide/index.html)
    - Latest NVIDIA drivers (≥470.x)
-
-### Building pdfalto for Windows/Docker
-
-Since pdfalto doesn't have native Windows binaries, build it via Docker:
-
-```bash
-# Clone pdfalto
-git clone --recurse-submodules https://github.com/kermitt2/pdfalto.git
-cd pdfalto
-
-# Create build Dockerfile
-cat > Dockerfile.build << 'EOF'
-FROM ubuntu:22.04
-RUN apt-get update && apt-get install -y build-essential cmake git && rm -rf /var/lib/apt/lists/*
-WORKDIR /pdfalto
-COPY . .
-RUN cmake . && make -j$(nproc)
-EOF
-
-# Build and extract
-docker build -f Dockerfile.build -t pdfalto-builder .
-container=$(docker create pdfalto-builder)
-docker cp "${container}":/pdfalto/pdfalto ./pdfalto
-docker rm "${container}"
-
-# Move to posters-science-extraction-api executables folder
-mkdir -p ../posters-science-extraction-api/executables
-mv ./pdfalto ../posters-science-extraction-api/executables/
-```
 
 ### Running on Windows
 
@@ -116,7 +91,7 @@ docker compose -f docker-compose.dev.yml down
 
 ### What Dev Mode Provides
 
-- **Volume mounts**: `poster_extraction.py` and `api.py` are mounted as volumes
+- **Volume mounts**: `api.py`, `job_worker.py`, `config.py`, and `validation.py` are mounted as volumes
 - **Model caching**: Models are cached in a named volume (survives rebuilds)
 - **Fast iteration**: Edit code locally, restart container to apply
 
