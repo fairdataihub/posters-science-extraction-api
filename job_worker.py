@@ -8,6 +8,7 @@ to PosterMetadata.
 """
 
 import os
+import re
 import tempfile
 import json
 import time
@@ -289,6 +290,183 @@ def mark_job_completed(conn, job_id: str) -> None:
     print(f"[status] mark_job_completed: job {job_id} marked completed")
 
 
+# ---------------------------------------------------------------------------
+# Schema v0.2 enum constants and normalisation helpers
+# ---------------------------------------------------------------------------
+
+_IDENTIFIER_TYPE_ENUM = {
+    "ARK", "arXiv", "bibcode", "DOI", "EAN13", "EISSN", "Handle",
+    "IGSN", "ISBN", "ISSN", "ISTC", "LISSN", "LSID", "PMID", "RAiD",
+    "PURL", "UPC", "URL", "SWHID", "URN", "w3id", "Other",
+}
+_RELATION_TYPE_ENUM = {
+    "IsCitedBy", "Cites", "IsSupplementTo", "IsSupplementedBy",
+    "IsContinuedBy", "Continues", "IsDescribedBy", "Describes",
+    "HasMetadata", "IsMetadataFor", "HasVersion", "IsVersionOf",
+    "IsNewVersionOf", "IsPreviousVersionOf", "IsPartOf", "HasPart",
+    "IsPublishedIn", "IsReferencedBy", "References", "IsDocumentedBy",
+    "Documents", "IsCompiledBy", "Compiles", "IsVariantFormOf",
+    "IsOriginalFormOf", "IsIdenticalTo", "IsReviewedBy", "Reviews",
+    "IsDerivedFrom", "IsSourceOf", "IsRequiredBy", "Requires",
+    "IsObsoletedBy", "Obsoletes", "IsCollectedBy", "Collects",
+    "IsTranslationOf", "HasTranslation", "Other",
+}
+_NAME_TYPE_ENUM = {"Personal", "Organizational"}
+
+_ID_TYPE_LOOKUP = {v.lower(): v for v in _IDENTIFIER_TYPE_ENUM}
+_RELATION_TYPE_LOOKUP = {v.lower(): v for v in _RELATION_TYPE_ENUM}
+_NAME_TYPE_LOOKUP = {v.lower(): v for v in _NAME_TYPE_ENUM}
+
+_ORCID_BARE_RE = re.compile(r"^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$", re.IGNORECASE)
+
+_SCHEME_CASING = {"orcid": "ORCID", "ror": "ROR", "isni": "ISNI"}
+_SCHEME_PREFIX = {
+    "ORCID": "https://orcid.org/",
+    "ROR": "https://ror.org/",
+    "ISNI": "https://isni.org/",
+}
+_SCHEME_URI = {
+    "ORCID": "https://orcid.org",
+    "ROR": "https://ror.org",
+    "ISNI": "https://isni.org",
+}
+
+
+def _normalize_name_identifier(ni: dict) -> "dict | None":
+    """Normalise a single nameIdentifiers entry. Returns None if un-renderable."""
+    if not isinstance(ni, dict):
+        return None
+    raw_id = ni.get("nameIdentifier") or ""
+    if not raw_id.strip():
+        return None  # nothing to show
+    ni = dict(ni)  # shallow copy — don't mutate caller's data
+
+    raw_scheme = ni.get("nameIdentifierScheme") or ""
+    scheme = _SCHEME_CASING.get(raw_scheme.lower(), raw_scheme) or raw_scheme
+    if scheme:
+        ni["nameIdentifierScheme"] = scheme
+
+    prefix = _SCHEME_PREFIX.get(scheme, "")
+    uri = _SCHEME_URI.get(scheme, "")
+
+    if prefix:
+        # Strip prefix to get bare ID, then validate and reconstruct
+        bare = raw_id[len(prefix):] if raw_id.startswith(prefix) else raw_id
+        if scheme == "ORCID":
+            if _ORCID_BARE_RE.match(bare):
+                ni["nameIdentifier"] = prefix + bare.upper()
+            # else: malformed — leave as-is for the user to fix
+        else:
+            ni["nameIdentifier"] = prefix + bare
+
+    if uri and not (ni.get("schemeURI") or "").strip():
+        ni["schemeURI"] = uri
+
+    return ni
+
+
+def _normalize_affiliation(aff) -> "dict | None":
+    """Normalise an affiliation item to object form. Returns None if un-renderable."""
+    if isinstance(aff, str):
+        if not aff.strip():
+            return None
+        aff = {"name": aff}
+    if not isinstance(aff, dict):
+        return None
+    aff = dict(aff)
+    name = (aff.get("name") or "").strip()
+    if not name:
+        return None
+    aff["name"] = name
+
+    aff_id = (aff.get("affiliationIdentifier") or "").strip()
+    if aff_id and not (aff.get("affiliationIdentifierScheme") or "").strip():
+        # Infer scheme from identifier URL
+        if "ror.org" in aff_id:
+            aff["affiliationIdentifierScheme"] = "ROR"
+            if not (aff.get("schemeURI") or "").strip():
+                aff["schemeURI"] = "https://ror.org"
+        elif "isni.org" in aff_id:
+            aff["affiliationIdentifierScheme"] = "ISNI"
+            if not (aff.get("schemeURI") or "").strip():
+                aff["schemeURI"] = "https://isni.org"
+
+    return aff
+
+
+def _normalize_creators(creators: list) -> list:
+    """Normalise creators array per schema v0.2."""
+    out = []
+    for c in creators:
+        if not isinstance(c, dict):
+            continue
+        c = dict(c)
+
+        raw_nt = c.get("nameType") or ""
+        canonical_nt = _NAME_TYPE_LOOKUP.get(raw_nt.lower())
+        if canonical_nt:
+            c["nameType"] = canonical_nt
+        # else leave as-is — user can fix in UI
+
+        if isinstance(c.get("nameIdentifiers"), list):
+            c["nameIdentifiers"] = [
+                n for n in (_normalize_name_identifier(ni) for ni in c["nameIdentifiers"])
+                if n is not None
+            ]
+
+        if isinstance(c.get("affiliation"), list):
+            c["affiliation"] = [
+                a for a in (_normalize_affiliation(af) for af in c["affiliation"])
+                if a is not None
+            ]
+
+        out.append(c)
+    return out
+
+
+def _normalize_identifiers(identifiers: list) -> list:
+    """Normalise identifiers array per schema v0.2."""
+    out = []
+    for item in identifiers:
+        if not isinstance(item, dict):
+            continue
+        has_id = bool((item.get("identifier") or "").strip())
+        has_type = bool((item.get("identifierType") or "").strip())
+        if not has_id and not has_type:
+            continue  # nothing to show
+        item = dict(item)
+        raw_type = (item.get("identifierType") or "").strip()
+        canonical = _ID_TYPE_LOOKUP.get(raw_type.lower())
+        if canonical:
+            item["identifierType"] = canonical
+        # else leave as-is
+        out.append(item)
+    return out
+
+
+def _normalize_related_identifiers(items: list) -> list:
+    """Normalise relatedIdentifiers array per schema v0.2."""
+    out = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        if not (item.get("relatedIdentifier") or "").strip():
+            continue  # nothing to show
+        item = dict(item)
+        raw_id_type = (item.get("relatedIdentifierType") or "").strip()
+        canonical_id_type = _ID_TYPE_LOOKUP.get(raw_id_type.lower())
+        if canonical_id_type:
+            item["relatedIdentifierType"] = canonical_id_type
+
+        raw_rel_type = (item.get("relationType") or "").strip()
+        canonical_rel_type = _RELATION_TYPE_LOOKUP.get(raw_rel_type.lower())
+        if canonical_rel_type:
+            item["relationType"] = canonical_rel_type
+
+        out.append(item)
+    return out
+
+
 def _extraction_to_metadata_row(extraction: dict) -> dict:
     """
     Map extraction result (and validation defaults) to PosterMetadata columns.
@@ -302,6 +480,14 @@ def _extraction_to_metadata_row(extraction: dict) -> dict:
     # Keys we never persist
     skip = {"_validation", "validation_warnings", "error", "raw"}
     row = {k: v for k, v in extraction.items() if k not in skip and not k.startswith("_")}
+
+    # Normalise creators and identifier fields per schema v0.2
+    if isinstance(row.get("creators"), list):
+        row["creators"] = _normalize_creators(row["creators"])
+    if isinstance(row.get("identifiers"), list):
+        row["identifiers"] = _normalize_identifiers(row["identifiers"])
+    if isinstance(row.get("relatedIdentifiers"), list):
+        row["relatedIdentifiers"] = _normalize_related_identifiers(row["relatedIdentifiers"])
 
     # Ensure JSON-serializable and Prisma-compatible types
     out = {}
