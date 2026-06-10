@@ -539,10 +539,17 @@ def _extraction_to_metadata_row(extraction: dict) -> dict:
                 break
     out.pop("rightsList", None)
 
-    # Publisher is assigned by the platform only at publish time, never at
-    # extraction. Leave it null so extracted-but-unpublished posters are not
-    # stored as "Zenodo" in the DB, which would inflate publisher metrics.
+    # The following are assigned by the platform at publish time, never at
+    # extraction (per the Poster.json field-coverage spec). Null them so the
+    # extraction worker never seeds the DB with placeholder values that skew
+    # metrics or get mistaken for real, user-reviewed data:
+    #   - publisher:       set to "Zenodo" on publish
+    #   - version:         Zenodo deposit version ("1", then auto-incremented);
+    #                      poster2json emits the placeholder "Posters.science automated"
+    #   - publicationYear: set to the current year on publish
     out["publisher"] = None
+    out["version"] = None
+    out["publicationYear"] = None
 
     # if extraction has sizes or formats, convert to single string for DB
     if "sizes" in extraction and isinstance(extraction["sizes"], list):

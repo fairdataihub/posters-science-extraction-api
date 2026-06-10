@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "posters-science-extraction-api"
-version = "1.0.3"
+version = "1.0.4"
 description = "Convert scientific posters (PDF/images) to structured JSON using LLMs"
 readme = "README.md"
 license = {text = "MIT"}
