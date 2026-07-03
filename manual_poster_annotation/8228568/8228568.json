@@ -1,5 +1,5 @@
 {
-  "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
+  "$schema": "https://posters.science/schema/v0.2/poster_schema.json",
   "identifiers": [
     {
       "identifier": "10.5281/zenodo.8228568",
@@ -17,8 +17,6 @@
   "creators": [
     {
       "name": "Ma, Rongqian",
-      "givenName": "Rongqian",
-      "familyName": "Ma",
       "nameType": "Personal",
       "nameIdentifiers": [
         {
@@ -28,7 +26,12 @@
         }
       ],
       "affiliation": [
-        "Indiana University Bloomington"
+        {
+          "name": "Indiana University Bloomington",
+          "affiliationIdentifier": "https://ror.org/02k40bc56",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
       ]
     }
   ],
@@ -105,7 +108,7 @@
   "language": "en",
   "types": {
     "resourceType": "Conference Poster",
-    "resourceTypeGeneral": "Image"
+    "resourceTypeGeneral": "Poster"
   },
   "relatedIdentifiers": [
     {
@@ -152,25 +155,21 @@
       "rightsUri": "https://creativecommons.org/licenses/by/4.0/",
       "rightsIdentifier": "CC-BY-4.0",
       "rightsIdentifierScheme": "SPDX",
-      "schemeUri": "https://spdx.org/licenses/",
-      "language": "en"
+      "schemeUri": "https://spdx.org/licenses/"
     }
   ],
   "descriptions": [
     {
-      "description": "This ongoing study revisits the connotations of 'digital humanists' and explores the reasons why a researcher does or does not self-identify as a digital humanist. Building on semi-structured interview data collected from fourteen researchers and practitioners engaging in digital humanities (DH) projects, this poster illustrates researchers' various understandings of 'digital humanist' as a term and highlights the complexity of 'digital humanists' as a research community. The study provides insights into the collective imaginations of 'digital humanist' as a research community. The research employs qualitative semi-structured interviews to address two main questions: how researchers currently understand the connotations of 'digital humanists' as a research identity, and why researchers do or do not self-identify as a digital humanist. Findings indicate that researchers' self-confidence in technical literacy and the nature of research questions affect their self-identification as a digital humanist.",
-      "descriptionType": "Abstract",
-      "language": "en"
+      "description": "This ongoing study revisits the connotations of \"digital humanists\" and explores the reasons why a researcher does or does not self-identify as a digital humanist. Building on semi-structured interview data collected from fourteen researchers and practitioners engaging in digital humanities (DH) projects, this poster illustrates researchers' various understandings of \"digital humanist\" as a term and highlights the complexity of \"digital humanists\" as a research community. This study provides insights into the collective imaginations of \"digital humanist\" as a research community.",
+      "descriptionType": "Abstract"
     },
     {
       "description": "The study employed qualitative semi-structured interviews with fourteen participants from diverse domains including history, religious studies, English, art history, sociology, information science, mathematics, and anthropology. Participants included Master's students (n=2), PhD candidates (n=5), postdoc (n=1), assistant professors (n=4), associate professors (n=1), and curator (n=1). The inclusive screening criterion was any researcher or practitioner who has been actively engaging in DH projects. Two primary interview questions were asked: (1) Do you self-identify as a digital humanist, depending on your personal understanding of the term? (2) Why or why not? Responses were analyzed to identify patterns in self-identification rationales.",
-      "descriptionType": "Methods",
-      "language": "en"
+      "descriptionType": "Methods"
     },
     {
       "description": "Presented at the Digital Humanities 2023 Conference (DH2023): Collaboration as Opportunity, held July 10-14, 2023, in Graz, Austria.",
-      "descriptionType": "Other",
-      "language": "en"
+      "descriptionType": "Other"
     }
   ],
   "fundingReferences": [
@@ -185,9 +184,10 @@
     "conferenceStartDate": "2023-07-10",
     "conferenceEndDate": "2023-07-14",
     "conferenceAcronym": "DH2023",
-    "conferenceSeries": "ADHO Digital Humanities Conference"
+    "conferenceSeries": "ADHO Digital Humanities Conference",
+    "conferenceYear": 2023
   },
-  "posterContent": {
+  "content": {
     "sections": [
       {
         "sectionTitle": "Abstract",
@@ -195,7 +195,7 @@
       },
       {
         "sectionTitle": "Background: Who is in and who is out? Early deliberations of digital humanists",
-        "sectionContent": "Alvarado (2012): Someone who (1) aims to develop the deep domain knowledge of the traditional humanist, (2) learns a wide variety of technologies and programming languages, and (3) critically situates the technologies as cultural artifacts \"participating in the production of social and cognitive structures.\"\n\nRamsay (2011): A (humanities) scholar who can build something with digital methods.\n\nJänicke (2016): Inclusive conception of digital humanists, advocating for active participation from researchers of various knowledge domains, especially those from scientific fields."
+        "sectionContent": "Alvarado (2012): Someone who (1) aims to develop the deep domain knowledge of the traditional humanist, (2) learns a wide variety of technologies and programming languages, and (3) critically situates the technologies as cultural artifacts \"participating in the production of social and cognitive structures.\n\nRamsay (2011): A (humanities) scholar who can build something with digital methods.\n\nJänicke (2016): Inclusive conception of digital humanists, advocating for active participation from researchers of various knowledge domains, especially those from scientific fields."
       },
       {
         "sectionTitle": "Research Questions",
@@ -203,7 +203,7 @@
       },
       {
         "sectionTitle": "Qualitative Semi-structured Interviews",
-        "sectionContent": "Question 1: Do you self-identify as a digital humanist, depending on your personal understanding of the term?\n\nQuestion 2: Why or why not?"
+        "sectionContent": "1 Do you self-identify as a digital humanist, depending on your personal understanding of the term?\n\n2 Why or why not?"
       },
       {
         "sectionTitle": "Participants (n=14)",
@@ -219,20 +219,16 @@
       }
     ]
   },
-  "domain": "Information Science",
+  "researchField": "Information Science",
+  "imageCaptions": [],
   "tableCaptions": [
     {
-      "captions": [
-        "Table 1. Why do researchers self-identify as digital humanists?",
-        "Shows reasons from 8 participants including competence in digital methods (programming and coding) with examples from P2, P6, P7, P9, P11, and active working, teaching, or supervising students in DH with examples from P4, P10, P14."
-      ]
+      "id": "table1",
+      "caption": "Table 1. Why do researchers self-identify as digital humanists?"
     },
     {
-      "captions": [
-        "Table 2. Why do researchers NOT self-identify as digital humanists?",
-        "Shows reasons from 6 participants including not being a humanist (P12, P13), concerns with technical skills particularly programming (P8), belief that DH does not raise new research questions (P3), and view that digital methods are not necessary (P1, P5)."
-      ]
+      "id": "table2",
+      "caption": "Table 2. Why do researchers NOT self-identify as digital humanists?"
     }
-  ],
-  "imageCaptions": []
+  ]
 }

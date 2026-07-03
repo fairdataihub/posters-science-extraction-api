@@ -1,59 +1,58 @@
 {
-  "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
-  "identifiers": [],
+  "$schema": "https://posters.science/schema/v0.2/poster_schema.json",
   "creators": [
     {
       "name": "Polack, Garrett E.",
-      "givenName": "Garrett E.",
-      "familyName": "Polack",
       "nameType": "Personal",
       "affiliation": [
-        "Georgia State University, Atlanta, GA, USA"
+        {
+          "name": "Georgia State University, Atlanta, GA, USA"
+        }
       ]
     },
     {
       "name": "Crenshaw, D. M.",
-      "givenName": "D. M.",
-      "familyName": "Crenshaw",
       "nameType": "Personal",
       "affiliation": [
-        "Georgia State University, Atlanta, GA, USA"
+        {
+          "name": "Georgia State University, Atlanta, GA, USA"
+        }
       ]
     },
     {
       "name": "Meena, B.",
-      "givenName": "B.",
-      "familyName": "Meena",
       "nameType": "Personal",
       "affiliation": [
-        "Georgia State University, Atlanta, GA, USA"
+        {
+          "name": "Georgia State University, Atlanta, GA, USA"
+        }
       ]
     },
     {
       "name": "Revalski, M.",
-      "givenName": "M.",
-      "familyName": "Revalski",
       "nameType": "Personal",
       "affiliation": [
-        "Space Telescope Science Institute, Baltimore, MD, USA"
+        {
+          "name": "Space Telescope Science Institute, Baltimore, MD, USA"
+        }
       ]
     },
     {
       "name": "Fischer, T. C.",
-      "givenName": "T. C.",
-      "familyName": "Fischer",
       "nameType": "Personal",
       "affiliation": [
-        "Space Telescope Science Institute, Baltimore, MD, USA"
+        {
+          "name": "Space Telescope Science Institute, Baltimore, MD, USA"
+        }
       ]
     },
     {
       "name": "Falcone, J.",
-      "givenName": "J.",
-      "familyName": "Falcone",
       "nameType": "Personal",
       "affiliation": [
-        "Georgia State University, Atlanta, GA, USA"
+        {
+          "name": "Georgia State University, Atlanta, GA, USA"
+        }
       ]
     }
   ],
@@ -62,7 +61,24 @@
       "title": "Isolating Sources of Ionization in Nearby Seyfert Galaxies"
     }
   ],
-  "posterContent": {
+  "subjects": [
+    {
+      "subject": "Seyfert galaxies"
+    },
+    {
+      "subject": "ionization sources"
+    },
+    {
+      "subject": "active galactic nuclei"
+    }
+  ],
+  "descriptions": [
+    {
+      "description": "We present an ongoing research effort to identify ionization sources in nearby AGN using Apache Point Observatory (APO) and the Hubble Space Telescope (HST). We measure emission line ratios along the spatial extents of the narrow line region (NLR) using spectra from APO's Dual Imaging Spectrograph (DIS) and HST's Space Telescope Imaging Spectrograph (STIS). The spectra reveal prominent emission lines of ionized gas that can be primarily attributed to star formation or AGN ionization. We construct BPT diagrams and compare with HST color images to isolate these regions and determine their connection to the kinematics of the outflowing gasses. When combined with our ongoing study of mass outflow rates, these efforts will help further our overall goal of determining the effectiveness of AGN feedback on their host galaxies.",
+      "descriptionType": "Other"
+    }
+  ],
+  "content": {
     "sections": [
       {
         "sectionTitle": "Abstract",
@@ -88,20 +104,24 @@
   },
   "imageCaptions": [
     {
-      "captions": [
-        "Figure 1: An HST color image of NGC 1667 with a distance-based [N II] BPT overlaid on the nucleus. Displays primary regional ionization mechanisms: star formation (blue), AGN ionization (red) and composite (green). (Left): [N II] BPT diagrams for the high flux (large squares) and low flux (small squares) components as a function of distance from the nucleus along the APO DIS long-slit at PA = 55° (top), 108° (middle) and 160° (bottom). Photo courtesy of the Carnegie-Irvine Galaxy Survey."
-      ]
+      "id": "fig1",
+      "caption": "Figure 1: An HST color image of NGC 1667 with a distance-based [N II] BPT overlaid on the nucleus. Displays primary regional ionization mechanisms: star formation (blue), AGN ionization (red) and composite (green). (Left): [N II] BPT diagrams for the high flux (large squares) and low flux (small squares) components as a function of distance from the nucleus along the APO DIS long-slit at PA = 55° (top), 108° (middle) and 160° (bottom). Photo courtesy of the Carnegie-Irvine Galaxy Survey."
     },
     {
-      "captions": [
-        "Figure 2: An HST color image of NGC 4051 with its [N II] BPT overlay. North is pointed toward 18° (Right): [N II] BPT diagrams for the high flux (large squares) and low flux (small squares) components as a function of distance from the nucleus along the APO DIS long-slit at PA = 98° (top), 233° (middle) and 188° (bottom). BPT for the fourth slit position angle 143° is not shown."
-      ]
+      "id": "fig2",
+      "caption": "Figure 2: An HST color image of NGC 4051 with its [N II] BPT overlay. North is pointed toward 18°. (Right): [N II] BPT diagrams for the high flux (large squares) and low flux (small squares) components as a function of distance from the nucleus along the APO DIS long-slit at PA = 98° (top), 233° (middle) and 188° (bottom). BPT for the fourth slit position angle 143° is not shown."
     },
     {
-      "captions": [
-        "Figure 3: Example of a two component Gaussian fit to [O III] emission line with high flux component (blue), low flux component (red), and total fit (magenta)"
-      ]
+      "id": "fig3",
+      "caption": "Figure 3: Example of a two component Gaussian fit to [O III] emission line with high flux component (blue), low flux component (red), and total fit (magenta)"
     }
   ],
-  "tableCaptions": []
+  "tableCaptions": [],
+  "researchField": "Physical Sciences",
+  "language": "en",
+  "publisher": null,
+  "publicationYear": null,
+  "formats": [
+    "application/pdf"
+  ]
 }

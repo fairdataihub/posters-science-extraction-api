@@ -1,5 +1,5 @@
 {
-  "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
+  "$schema": "https://posters.science/schema/v0.2/poster_schema.json",
   "identifiers": [
     {
       "identifier": "PS-2025-AACR-LB108",
@@ -17,44 +17,65 @@
   "creators": [
     {
       "name": "O'Neill, Jamey",
-      "givenName": "Jamey",
-      "familyName": "O'Neill",
       "nameType": "Personal",
       "nameIdentifiers": [
         {
           "nameIdentifier": "https://orcid.org/0009-0001-8532-8405",
           "nameIdentifierScheme": "ORCID",
           "schemeURI": "https://orcid.org"
+        },
+        {
+          "nameIdentifier": "joneilliii@sdsu.edu",
+          "nameIdentifierScheme": "contact"
         }
       ],
       "affiliation": [
-        "Mechanical Engineering Department, San Diego State University",
-        "Department of Bioengineering, University of California San Diego"
+        {
+          "name": "Mechanical Engineering Department, San Diego State University",
+          "affiliationIdentifier": "https://ror.org/01zj77w89",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        },
+        {
+          "name": "Department of Bioengineering, University of California San Diego",
+          "affiliationIdentifier": "https://ror.org/0168r3w48",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
       ]
     },
     {
       "name": "Reddy, Gudur Ashrith",
-      "givenName": "Gudur Ashrith",
-      "familyName": "Reddy",
       "nameType": "Personal",
       "affiliation": [
-        "Mechanical Engineering Department, San Diego State University",
-        "Department of Bioengineering, University of California San Diego"
+        {
+          "name": "Mechanical Engineering Department, San Diego State University",
+          "affiliationIdentifier": "https://ror.org/01zj77w89",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        },
+        {
+          "name": "Department of Bioengineering, University of California San Diego",
+          "affiliationIdentifier": "https://ror.org/0168r3w48",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
       ]
     },
     {
       "name": "Dhillon, Nermeeta",
-      "givenName": "Nermeeta",
-      "familyName": "Dhillon",
       "nameType": "Personal",
       "affiliation": [
-        "Mechanical Engineering Department, San Diego State University"
+        {
+          "name": "Mechanical Engineering Department, San Diego State University",
+          "affiliationIdentifier": "https://ror.org/01zj77w89",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
       ]
     },
     {
       "name": "Tripathi, Osika",
-      "givenName": "Osika",
-      "familyName": "Tripathi",
       "nameType": "Personal",
       "nameIdentifiers": [
         {
@@ -64,13 +85,16 @@
         }
       ],
       "affiliation": [
-        "Herbert Wertheim School of Public Health and Human Longevity Science, University of California San Diego"
+        {
+          "name": "Herbert Wertheim School of Public Health and Human Longevity Science, University of California San Diego",
+          "affiliationIdentifier": "https://ror.org/0168r3w48",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
       ]
     },
     {
       "name": "Alexandrov, Ludmil",
-      "givenName": "Ludmil",
-      "familyName": "Alexandrov",
       "nameType": "Personal",
       "nameIdentifiers": [
         {
@@ -80,15 +104,28 @@
         }
       ],
       "affiliation": [
-        "Department of Bioengineering, University of California San Diego",
-        "Department of Cellular and Molecular Medicine, University of California San Diego",
-        "Moores Cancer Center, University of California San Diego"
+        {
+          "name": "Department of Bioengineering, University of California San Diego",
+          "affiliationIdentifier": "https://ror.org/0168r3w48",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        },
+        {
+          "name": "Department of Cellular and Molecular Medicine, University of California San Diego",
+          "affiliationIdentifier": "https://ror.org/0168r3w48",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        },
+        {
+          "name": "Moores Cancer Center, University of California San Diego",
+          "affiliationIdentifier": "https://ror.org/0168r3w48",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
       ]
     },
     {
       "name": "Katira, Parag",
-      "givenName": "Parag",
-      "familyName": "Katira",
       "nameType": "Personal",
       "nameIdentifiers": [
         {
@@ -98,7 +135,12 @@
         }
       ],
       "affiliation": [
-        "Mechanical Engineering Department, San Diego State University"
+        {
+          "name": "Mechanical Engineering Department, San Diego State University",
+          "affiliationIdentifier": "https://ror.org/01zj77w89",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
       ]
     }
   ],
@@ -158,7 +200,7 @@
   "language": "en",
   "types": {
     "resourceType": "Conference Poster",
-    "resourceTypeGeneral": "Image"
+    "resourceTypeGeneral": "Poster"
   },
   "relatedIdentifiers": [
     {
@@ -185,27 +227,17 @@
     "application/pdf"
   ],
   "version": "v2",
-  "rightsList": [],
+  "rightsList": [
+    {
+      "rights": "Creative Commons Attribution 4.0 International",
+      "rightsIdentifier": "CC-BY-4.0",
+      "rightsUri": "https://creativecommons.org/licenses/by/4.0/"
+    }
+  ],
   "descriptions": [
     {
-      "description": "Carcinogenic Determination via Transformers (CarD-T) is an automated pipeline that combines transformer-based machine learning with probabilistic analysis to identify potential carcinogens from biomedical literature. Only 479 carcinogenic entities are officially recognized as carcinogens across regulatory databases (IARC, NTP, EPA, ECHA, and OSHA). Regulatory agencies rely on manual curation and are burdened by exponential growth of biomedical literature. CarD-T addresses these limitations by using a Named Entity Recognition (NER) ELECTRA LLM trained on carcinogen-specific contexts from PubMed literature to automate literature review of carcinogen curation with probabilistic analysis of likely carcinogenicity. The framework processes accumulating scientific publications, applies a trained NER model to extract potential carcinogenic entities, and uses Probabilistic Carcinogen Denomination (PCarD) to analyze temporal trends in evidence shifts. This approach enables classification of candidates through Bayesian temporal analysis, overcoming limitations of traditional manual literature review methods.",
-      "descriptionType": "Abstract",
-      "language": "en"
-    },
-    {
-      "description": "CarD-T uses a Named Entity Recognition (NER) ELECTRA LLM trained on carcinogen-specific contexts from PubMed literature. Training data consisted of abstracts referencing IARC Group 1 and Group 2A carcinogens. A novel AI-hybridized Context-Derived TF-IDF approach was implemented for noise reduction and synonym consolidation, converting implicating publications into evidence counts. The PCarD module applies Bayesian Negative Binomial Regression to analyze temporal evidence shifts, evaluating potential carcinogens based on changing evidence discourse with respect to time. The framework is designed to run on consumer hardware, democratizing carcinogen surveillance capabilities previously limited to specialized institutions.",
-      "descriptionType": "Methods",
-      "language": "en"
-    },
-    {
-      "description": "Key findings include: CarD-T identifies 100% of IARC carcinogens with just 60% training data; approximately 1,600 potential new carcinogens discovered across diverse categories; superior recall (0.85 vs 0.76) with comparable precision (0.89 vs 0.90) compared to GPT-4; 554 entities with both supporting and opposing evidence analyzed; framework runs on standard hardware in approximately 6 hours; novel nominees include COVID-19, microplastics, and schizophrenia; resolves 76 disputed entities via temporal evidence modeling. The research documented a fundamental 25-year paradigm shift from chemical to biological and environmental carcinogenesis, with chemical compounds decreasing from 45% to 35%, biological agents increasing from 20% to 28%, and environmental factors increasing from 12% to 18%.",
-      "descriptionType": "TechnicalInfo",
-      "language": "en"
-    },
-    {
-      "description": "Presented at the American Association for Cancer Research (AACR) Annual Meeting 2025, held April 25-30, 2025, at McCormick Place Convention Center, Chicago, Illinois. Poster number: LB108.",
-      "descriptionType": "Other",
-      "language": "en"
+      "description": "Carcinogenic Determination via Transformers (or CarD-T) is an automated pipeline that combines transformer-based machine learning with probabilistic analysis to identify potential carcinogens from biomedical literature. The framework processes accumulating scientific publications (left), applies a trained Named Entity Recognition (NER) model to extract potential carcinogenic entities (center), and Probabilistic Carcinogen Denomination (or PCarD) to analyze temporal trends in evidence shifts (right). This approach enables classification of candidates through Bayesian temporal analysis, overcoming limitations of traditional manual literature review methods.",
+      "descriptionType": "Abstract"
     }
   ],
   "fundingReferences": [
@@ -230,9 +262,10 @@
     "conferenceUri": "https://www.aacr.org/meeting/aacr-annual-meeting-2025/",
     "conferenceStartDate": "2025-04-25",
     "conferenceEndDate": "2025-04-30",
-    "conferenceAcronym": "AACR 2025"
+    "conferenceAcronym": "AACR 2025",
+    "conferenceYear": 2025
   },
-  "posterContent": {
+  "content": {
     "sections": [
       {
         "sectionTitle": "Abstract",
@@ -244,11 +277,15 @@
       },
       {
         "sectionTitle": "Methodology",
-        "sectionContent": "CarD-T uses a Named Entity Recognition (NER) ELECTRA LLM and is trained on carcinogen-specific contexts from PubMed literature. Novelty of an NER approach over other LLM methods lies in the ability index identified carcinogens to source documents, circumventing hallucinations. Training data consisted of abstracts referencing IARC Group 1 and Group 2A carcinogens. Additionally, we implemented a novel AI-hybridized Context-Derived TF-IDF approach for noise reduction and synonym consolidation. This allowed us to convert implicating publications into evidence counts.\n\nWorkflow Components:\n1. Biomedical Literature → Time series accumulation\n2. CarD-T framework identifies new potential carcinogenic Entity (or E₁)\n3. Carcinogen literature accumulating → Likelihood E₁ is a carcinogen\n4. Time series analysis → μ₁, μ₂, μ₃, μ₄ distributions"
+        "sectionContent": "CarD-T uses a Named Entity Recognition (NER) ELECTRA LLM and is trained on carcinogen-specific contexts from PubMed literature. Novelty of an NER approach over other LLM methods lies in the ability index identified carcinogens to source documents, circumventing hallucinations. Training data consisted of abstracts referencing IARC Group 1 and Group 2A carcinogens. Additionally, we implemented a novel AI-hybridized Context-Derived TF-IDF approach for noise reduction and synonym consolidation. This allowed us to convert implicating publications into evidence counts."
+      },
+      {
+        "sectionTitle": "Key Findings",
+        "sectionContent": "✓ CarD-T identifies 100% of IARC carcinogens with just 60% training data\n✓ ~1,600 potential new carcinogens discovered across diverse categories\n✓ Superior recall with comparable precision to GPT-4\n✓ 554 entities with both supporting/opposing evidence analyzed\n✓ Framework runs on standard hardware in ~6 hours\n✓ Novel nominees include COVID-19, microplastics, and schizophrenia\n✓ Resolves 76 disputed entities via temporal evidence modeling"
       },
       {
         "sectionTitle": "Results",
-        "sectionContent": "Key Findings:\n✓ CarD-T identifies 100% of IARC carcinogens with just 60% training data\n✓ ~1,600 potential new carcinogens discovered across diverse categories\n✓ Superior recall with comparable precision to GPT-4\n✓ 554 entities with both supporting/opposing evidence analyzed\n✓ Framework runs on standard hardware in ~6 hours\n✓ Novel nominees include COVID-19, microplastics, and schizophrenia\n✓ Resolves 76 disputed entities via temporal evidence modeling\n\nFigure 2. CarD-T Finds New Carcinogens ~20% higher likelihood than GPT-4\n\nPerformance Comparison:\nModel | Precision | Recall | F1\nCarD-T | 0.89 | 0.85 | 0.87\nGPT-4 | 0.90 | 0.76 | 0.82\n\n• CarD-T achieves higher recall (0.85 vs. 0.76) at comparable precision (0.89 vs. 0.90).\n\nFigure 3. Evidence Count Classification for Examples of Disputed Potential Carcinogens\n\nExamples shown:\n- Bright Orange: Entity demonstrating high evidence of Non-Carcinogenicity (IARC)\n- Light Blue: Entity demonstrating high evidence of Carcinogenicity (not in IARC)\n- Multiple bars showing: B1-Evidence, B2-Dispute, B3-Carc, B3'-No Carc\n\nCase studies displayed:\n- Single Oxygen\n- Schizophrenia\n- Curcumin\n- Hemolysis\n- nM-1395\n\n• Bayesian Negative Binomial Regression Model distinguishes between established and emerging carcinogens in probability scoring of likelihood accommodating temporal shifts in evidence\n\nFigure 1. Probabilistic Carcinogen Denomination of Disputed Potential Carcinogens Over Time\n\n• PCarD module applies Bayesian Negative Binomial Regression to analyze temporal evidence shifts, evaluating potential carcinogens based on changing evidence discourse with respect to time.\n  - B1 is Evidence Count\n  - B2 is Evidence of a Dispute with time\n  - B3 and B3' are likelihood of Carcinogen or Non-Carcinogenicity\n\nFigure 4. The Shifting Landscape: Carcinogen Research (2000-2024)\n\nResearch focus trends over time:\n- Chemical Compounds: 35% (+22.2%)\n- Biological Agents: 28% (+40.0%)\n- Environmental Factors: 18% (+50.0%)\n- Radiation: 2% (-60.0%)\n- Occupational Hazards: 2% (-13.3%)\n- Additional Factors: 2% (-57.1%)\n\nKey shift: Chemical compounds ↓45% to 35%; Biological agents ↑20% to 28%; Environmental factors ↑12% to 18%"
+        "sectionContent": "Figure 2. CarD-T Finds New Carcinogens ~20% higher likelihood than GPT-4.\n• CarD-T achieves higher recall (0.85 vs. 0.76) at comparable precision (0.89 vs. 0.90).\n\nFigure 3. Evidence Count Classification for Examples of Disputed Potential Carcinogens.\n• Bayesian Negative Binomial Regression Model distinguishes between established and emerging carcinogens in probability scoring of likelihood accommodating temporal shifts in evidence\n\nFigure 1. Probabilistic Carcinogen Denomination of Disputed Potential Carcinogens Over Time.\n• PCarD module applies Bayesian Negative Binomial Regression to analyze temporal evidence shifts, evaluating potential carcinogens based on changing evidence discourse with respect to time. B1 is Evidence Count, B2 is Evidence of a Dispute with time, B3 and B3’ are likelihood of Carcinogen or Non-Carcinogenicity.\n\nFigure 4. The Shifting Landscape: Carcinogen Research (2000-2024)\n• Chemical compounds ↓45% to 35%; Biological agents ↑20% to 28%; Environmental factors ↑12% to 18%"
       },
       {
         "sectionTitle": "Discussion/Conclusions",
@@ -264,39 +301,24 @@
       }
     ]
   },
-  "domain": "Biomedical Informatics",
+  "researchField": "Biomedical Informatics",
   "imageCaptions": [
     {
-      "captions": [
-        "Figure 1. Probabilistic Carcinogen Denomination of Disputed Potential Carcinogens Over Time",
-        "PCarD module applies Bayesian Negative Binomial Regression to analyze temporal evidence shifts, evaluating potential carcinogens based on changing evidence discourse with respect to time. B1 is Evidence Count, B2 is Evidence of a Dispute with time, B3 and B3' are likelihood of Carcinogen or Non-Carcinogenicity."
-      ]
+      "id": "fig1",
+      "caption": "Figure 1. Probabilistic Carcinogen Denomination of Disputed Potential Carcinogens Over Time. PCarD module applies Bayesian Negative Binomial Regression to analyze temporal evidence shifts, evaluating potential carcinogens based on changing evidence discourse with respect to time. B1 is Evidence Count, B2 is Evidence of a Dispute with time, B3 and B3’ are likelihood of Carcinogen or Non-Carcinogenicity."
     },
     {
-      "captions": [
-        "Figure 2. CarD-T Finds New Carcinogens ~20% higher likelihood than GPT-4",
-        "CarD-T achieves higher recall (0.85 vs. 0.76) at comparable precision (0.89 vs. 0.90) compared to GPT-4 for carcinogen identification."
-      ]
+      "id": "fig2",
+      "caption": "Figure 2. CarD-T Finds New Carcinogens ~20% higher likelihood than GPT-4. CarD-T achieves higher recall (0.85 vs. 0.76) at comparable precision (0.89 vs. 0.90)."
     },
     {
-      "captions": [
-        "Figure 3. Evidence Count Classification for Examples of Disputed Potential Carcinogens",
-        "Bayesian Negative Binomial Regression Model distinguishes between established and emerging carcinogens in probability scoring of likelihood accommodating temporal shifts in evidence. Examples include Single Oxygen, Schizophrenia, Curcumin, Hemolysis, and nM-1395 with B1-Evidence, B2-Dispute, B3-Carc, and B3'-No Carc classifications."
-      ]
+      "id": "fig3",
+      "caption": "Figure 3. Evidence Count Classification for Examples of Disputed Potential Carcinogens. Bayesian Negative Binomial Regression Model distinguishes between established and emerging carcinogens in probability scoring of likelihood accommodating temporal shifts in evidence"
     },
     {
-      "captions": [
-        "Figure 4. The Shifting Landscape: Carcinogen Research (2000-2024)",
-        "Chemical compounds decreased 45% to 35%; Biological agents increased 20% to 28%; Environmental factors increased 12% to 18%. Shows fundamental research paradigm shift from chemical to biological and environmental carcinogenesis over 25 years."
-      ]
+      "id": "fig4",
+      "caption": "Figure 4. The Shifting Landscape: Carcinogen Research (2000-2024) Chemical compounds ↓45% to 35%; Biological agents ↑20% to 28%; Environmental factors ↑12% to 18%"
     }
   ],
-  "tableCaptions": [
-    {
-      "captions": [
-        "Table: Performance Comparison - CarD-T vs GPT-4",
-        "CarD-T: Precision 0.89, Recall 0.85, F1 0.87. GPT-4: Precision 0.90, Recall 0.76, F1 0.82. CarD-T achieves superior recall while maintaining comparable precision."
-      ]
-    }
-  ]
+  "tableCaptions": []
 }

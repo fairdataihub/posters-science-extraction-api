@@ -1,15 +1,19 @@
 {
-  "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
-  "identifiers": [],
+  "$schema": "https://posters.science/schema/v0.2/poster_schema.json",
   "creators": [
     {
       "name": "Ma, Rongqian",
       "givenName": "Rongqian",
       "familyName": "Ma",
-      "nameType": "Personal",
       "affiliation": [
-        "Indiana University Bloomington"
-      ]
+        {
+          "name": "Indiana University Bloomington",
+          "affiliationIdentifier": "https://ror.org/02k40bc56",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org/"
+        }
+      ],
+      "nameType": "Personal"
     }
   ],
   "titles": [
@@ -17,7 +21,27 @@
       "title": "Revisiting Connotations of Digital Humanists: Exploratory Interviews"
     }
   ],
-  "posterContent": {
+  "subjects": [
+    {
+      "subject": "digital humanists"
+    },
+    {
+      "subject": "research identity"
+    },
+    {
+      "subject": "digital humanities"
+    },
+    {
+      "subject": "research community"
+    }
+  ],
+  "descriptions": [
+    {
+      "description": "This ongoing study revisits the connotations of 'digital humanists' and explores the reasons why a researcher does or does not self-identify as a digital humanist. Building on semi-structured interview data collected from fourteen researchers and practitioners engaging in digital humanities (DH) projects, this poster illustrates researchers' various understandings of 'digital humanist' as a term and highlights the complexity of 'digital humanists' as a research community. This study provides insights into the collective imaginations of 'digital humanist' as a research community.",
+      "descriptionType": "Other"
+    }
+  ],
+  "content": {
     "sections": [
       {
         "sectionTitle": "Abstract",
@@ -41,7 +65,7 @@
       },
       {
         "sectionTitle": "Results",
-        "sectionContent": "Researchers' self-confidence in technical literacy and the nature of research questions affect their self-identification as a digital humanist."
+        "sectionContent": "Researchers' self-confidence in technical literacy and the nature of research questions affect their self-identification as a digital humanist.\n\nCompetent in digital methods (programming and coding in particular): P2, P6, P7, P9, P11. \"I have a background in anthropology and museum studies, and I know coding and know how to do data analysis. …\" (P9) \"I can code and I use computational and quantitative methods to study literature.\" (P11)\n\nActive working, teaching, or supervising students in DH: P4, P10, P14. \"I self-identify as a digital humanist in the same way as I self-identify as an information designer, a programmer, and a statistician. I do research in digital humanities, so I guess technically I can say I am a digital humanist.\" (P4)\n\nNot a \"humanist\": P12, P13. \"I wouldn't think I'm a humanist because my research question is not a humanities research question. I approach cultural heritage research from information science and design perspectives…. although I think what I'm doing is digital humanities work.\" (P13)\n\nConcerned with technical skills (programming in particular): P8. \"I just started learning programming and digital methods. Being a digital humanist will be my final goal, but I am not there yet.\" (P8)\n\nDH does not raise new research questions: P3. \"…new constructs such as \"DH\" did not generate fundamentally new questions distinct from those in conventional or analog humanities.\" (P3)\n\nDigital methods are not necessary: P1, P5. \"My research questions are not ultimately bound with digital methods; they can be addressed with digital methods, but not necessarily have to be.\" (P5)"
       },
       {
         "sectionTitle": "References",
@@ -52,14 +76,19 @@
   "imageCaptions": [],
   "tableCaptions": [
     {
-      "captions": [
-        "Table 1. Why do researchers self-identify as digital humanists?"
-      ]
+      "id": "table1",
+      "caption": "Table 1. Why do researchers self-identify as digital humanists?"
     },
     {
-      "captions": [
-        "Table 2. Why do researchers NOT self-identify as digital humanists?"
-      ]
+      "id": "table2",
+      "caption": "Table 2. Why do researchers NOT self-identify as digital humanists?"
     }
+  ],
+  "researchField": "Social Sciences",
+  "language": "en",
+  "publisher": null,
+  "publicationYear": null,
+  "formats": [
+    "application/pdf"
   ]
 }

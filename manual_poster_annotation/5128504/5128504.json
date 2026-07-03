@@ -1,5 +1,5 @@
 {
-  "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
+  "$schema": "https://posters.science/schema/v0.2/poster_schema.json",
   "identifiers": [
     {
       "identifier": "10.5281/zenodo.5128504",
@@ -17,8 +17,6 @@
   "creators": [
     {
       "name": "Polack, Garrett E.",
-      "givenName": "Garrett E.",
-      "familyName": "Polack",
       "nameType": "Personal",
       "nameIdentifiers": [
         {
@@ -28,13 +26,16 @@
         }
       ],
       "affiliation": [
-        "Georgia State University, Atlanta, GA, USA"
+        {
+          "name": "Georgia State University, Atlanta, GA, USA",
+          "affiliationIdentifier": "https://ror.org/03qt6ba18",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
       ]
     },
     {
       "name": "Crenshaw, D. Michael",
-      "givenName": "D. Michael",
-      "familyName": "Crenshaw",
       "nameType": "Personal",
       "nameIdentifiers": [
         {
@@ -44,43 +45,60 @@
         }
       ],
       "affiliation": [
-        "Georgia State University, Atlanta, GA, USA"
+        {
+          "name": "Georgia State University, Atlanta, GA, USA",
+          "affiliationIdentifier": "https://ror.org/03qt6ba18",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
       ]
     },
     {
       "name": "Meena, Beena",
-      "givenName": "Beena",
-      "familyName": "Meena",
       "nameType": "Personal",
       "affiliation": [
-        "Georgia State University, Atlanta, GA, USA"
+        {
+          "name": "Georgia State University, Atlanta, GA, USA",
+          "affiliationIdentifier": "https://ror.org/03qt6ba18",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
       ]
     },
     {
       "name": "Revalski, Mitchell",
-      "givenName": "Mitchell",
-      "familyName": "Revalski",
       "nameType": "Personal",
       "affiliation": [
-        "Space Telescope Science Institute, Baltimore, MD, USA"
+        {
+          "name": "Space Telescope Science Institute, Baltimore, MD, USA",
+          "affiliationIdentifier": "https://ror.org/036f5mx38",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
       ]
     },
     {
       "name": "Fischer, Travis C.",
-      "givenName": "Travis C.",
-      "familyName": "Fischer",
       "nameType": "Personal",
       "affiliation": [
-        "Space Telescope Science Institute, Baltimore, MD, USA"
+        {
+          "name": "Space Telescope Science Institute, Baltimore, MD, USA",
+          "affiliationIdentifier": "https://ror.org/036f5mx38",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
       ]
     },
     {
       "name": "Falcone, Julia",
-      "givenName": "Julia",
-      "familyName": "Falcone",
       "nameType": "Personal",
       "affiliation": [
-        "Georgia State University, Atlanta, GA, USA"
+        {
+          "name": "Georgia State University, Atlanta, GA, USA",
+          "affiliationIdentifier": "https://ror.org/03qt6ba18",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
       ]
     }
   ],
@@ -167,7 +185,7 @@
   "language": "en",
   "types": {
     "resourceType": "Conference Poster",
-    "resourceTypeGeneral": "Image"
+    "resourceTypeGeneral": "Poster"
   },
   "relatedIdentifiers": [
     {
@@ -212,9 +230,10 @@
     "conferenceLocation": "Virtual",
     "conferenceStartDate": "2021-07-26",
     "conferenceEndDate": "2021-07-28",
-    "conferenceAcronym": "APOSS21"
+    "conferenceAcronym": "APOSS21",
+    "conferenceYear": 2021
   },
-  "posterContent": {
+  "content": {
     "sections": [
       {
         "sectionTitle": "Abstract",
@@ -242,25 +261,19 @@
       }
     ]
   },
-  "domain": "Astronomy",
+  "researchField": "Astronomy",
   "imageCaptions": [
     {
-      "captions": [
-        "Figure 1: NGC 1667 HST color image with distance-based [N II] BPT overlay",
-        "An HST color image of NGC 1667 with a distance-based [N II] BPT overlaid on the nucleus. Displays primary regional ionization mechanisms: star formation (blue), AGN ionization (red) and composite (green). Photo courtesy of the Carnegie-Irvine Galaxy Survey. Scale: 0.5\" ≈ 500 pc. Left panels show [N II] BPT diagrams for high flux (large squares) and low flux (small squares) components as function of distance from nucleus along APO DIS long-slit at PA = 55° (top), 108° (middle) and 160° (bottom)."
-      ]
+      "id": "fig1",
+      "caption": "Figure 1: An HST color image of NGC 1667 with a distance-based [N II] BPT overlaid on the nucleus. Displays primary regional ionization mechanisms: star formation (blue), AGN ionization (red) and composite (green). (Left): [N II] BPT diagrams for the high flux (large squares) and low flux (small squares) components as a function of distance from the nucleus along the APO DIS long-slit at PA = 55° (top), 108° (middle) and 160° (bottom). Photo courtesy of the Carnegie-Irvine Galaxy Survey."
     },
     {
-      "captions": [
-        "Figure 2: NGC 4051 HST color image with [N II] BPT overlay",
-        "An HST color image of NGC 4051 with its [N II] BPT overlay. North is pointed toward 18°. Scale: 10\". Right panels show [N II] BPT diagrams for high flux (large squares) and low flux (small squares) components as function of distance from nucleus along APO DIS long-slit at PA = 98° (top), 233° (middle) and 188° (bottom). BPT for fourth slit position angle 143° is not shown."
-      ]
+      "id": "fig2",
+      "caption": "Figure 2: An HST color image of NGC 4051 with its [N II] BPT overlay. North is pointed toward 18°. (Right): [N II] BPT diagrams for the high flux (large squares) and low flux (small squares) components as a function of distance from the nucleus along the APO DIS long-slit at PA = 98° (top), 233° (middle) and 188° (bottom). BPT for the fourth slit position angle 143° is not shown."
     },
     {
-      "captions": [
-        "Figure 3: Example of two component Gaussian fit to [O III] emission line",
-        "Shows high flux component (blue), low flux component (red), and total fit (magenta) demonstrating the multiple component fitting routine used to determine wavelength centroid, width and peak flux."
-      ]
+      "id": "fig3",
+      "caption": "Figure 3: Example of a two component Gaussian fit to [O III] emission line with high flux component (blue), low flux component (red), and total fit (magenta)"
     }
   ],
   "tableCaptions": []

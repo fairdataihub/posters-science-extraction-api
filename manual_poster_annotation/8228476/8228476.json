@@ -1,5 +1,5 @@
 {
-  "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
+  "$schema": "https://posters.science/schema/v0.2/poster_schema.json",
   "identifiers": [
     {
       "identifier": "10.5281/zenodo.8228476",
@@ -17,70 +17,120 @@
   "creators": [
     {
       "name": "Münz-Manor, Ophir",
-      "givenName": "Ophir",
-      "familyName": "Münz-Manor",
       "nameType": "Personal",
       "nameIdentifiers": [
         {
           "nameIdentifier": "https://orcid.org/0000-0001-6333-345X",
           "nameIdentifierScheme": "ORCID",
           "schemeURI": "https://orcid.org"
+        },
+        {
+          "nameIdentifier": "ophirmm@openu.ac.il",
+          "nameIdentifierScheme": "contact"
         }
       ],
       "affiliation": [
-        "The Open University of Israel, Ra'anana, Israel"
+        {
+          "name": "The Open University of Israel, Ra'anana, Israel",
+          "affiliationIdentifier": "https://ror.org/027z64205",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
       ]
     },
     {
       "name": "Toker, Michael",
-      "givenName": "Michael",
-      "familyName": "Toker",
       "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "tok@cs.technion.ac.il",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
       "affiliation": [
-        "Technion – Israel Institute of Technology, Haifa, Israel"
+        {
+          "name": "Technion – Israel Institute of Technology, Haifa, Israel",
+          "affiliationIdentifier": "https://ror.org/03qryx823",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
       ]
     },
     {
       "name": "Mishali, Oren",
-      "givenName": "Oren",
-      "familyName": "Mishali",
       "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "omishali@cs.technion.ac.il",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
       "affiliation": [
-        "Technion – Israel Institute of Technology, Haifa, Israel"
+        {
+          "name": "Technion – Israel Institute of Technology, Haifa, Israel",
+          "affiliationIdentifier": "https://ror.org/03qryx823",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
       ]
     },
     {
-      "name": "Kimmelfeld, Benny",
-      "givenName": "Benny",
-      "familyName": "Kimmelfeld",
+      "name": "Kimelfeld, Benny",
       "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "bennyk@cs.technion.ac.il",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
       "affiliation": [
-        "Technion – Israel Institute of Technology, Haifa, Israel"
+        {
+          "name": "Technion – Israel Institute of Technology, Haifa, Israel",
+          "affiliationIdentifier": "https://ror.org/03qryx823",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
       ]
     },
     {
       "name": "Belinkov, Yonatan",
-      "givenName": "Yonatan",
-      "familyName": "Belinkov",
       "nameType": "Personal",
       "nameIdentifiers": [
         {
           "nameIdentifier": "https://orcid.org/0000-0001-9463-2575",
           "nameIdentifierScheme": "ORCID",
           "schemeURI": "https://orcid.org"
+        },
+        {
+          "nameIdentifier": "belinkov@technion.ac.il",
+          "nameIdentifierScheme": "contact"
         }
       ],
       "affiliation": [
-        "Technion – Israel Institute of Technology, Haifa, Israel"
+        {
+          "name": "Technion – Israel Institute of Technology, Haifa, Israel",
+          "affiliationIdentifier": "https://ror.org/03qryx823",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
       ]
     },
     {
       "name": "Cohen, Adir",
-      "givenName": "Adir",
-      "familyName": "Cohen",
       "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "adircohen@campus.technion.ac.il",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
       "affiliation": [
-        "Technion – Israel Institute of Technology, Haifa, Israel"
+        {
+          "name": "Technion – Israel Institute of Technology, Haifa, Israel",
+          "affiliationIdentifier": "https://ror.org/03qryx823",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
       ]
     }
   ],
@@ -182,7 +232,7 @@
   "language": "en",
   "types": {
     "resourceType": "Conference Poster",
-    "resourceTypeGeneral": "Image"
+    "resourceTypeGeneral": "Poster"
   },
   "relatedIdentifiers": [
     {
@@ -238,77 +288,42 @@
     "conferenceLocation": "Graz, Austria",
     "conferenceStartDate": "2023-07-10",
     "conferenceEndDate": "2023-07-14",
-    "conferenceAcronym": "DH2023"
+    "conferenceAcronym": "DH2023",
+    "conferenceYear": 2023
   },
-  "posterContent": {
+  "content": {
     "sections": [
       {
-        "sectionTitle": "Introduction",
-        "sectionContent": "The corpus of late antique and medieval Hebrew is vast and represents a crucial linguistic and cultural bridge between Biblical and modern Hebrew. Poetry is prominent in texts from these time periods and one of its characteristics is the use of metaphor. Distinguishing figurative and literal words or phrases is a major task for scholars in the Humanities, especially in the fields of literature, linguistics, and hermeneutics. We present a new, challenging dataset of early medieval Hebrew poetry with expert annotations of metaphors with baseline results.\n\nImage: A medieval Hebrew poem from the Worms Prayerbook, Germany, 13th Century, The National Library of Israel, \"Ktiv\" Project"
+        "sectionContent": "The corpus of late antique and medieval Hebrew is vast and represents a crucial linguistic and cultural bridge between Biblical and modern Hebrew. Poetry is prominent in texts from these time periods and one of its characteristics is the use of metaphor. Distinguishing figurative and literal words or phrases is a major task for scholars in the Humanities, especially in the fields of literature, linguistics, and hermeneutics. We present a new, challenging dataset of early medieval Hebrew poetry with expert annotations of metaphors with baseline results."
       },
       {
         "sectionTitle": "The Dataset",
-        "sectionContent": "• Early medieval Hebrew poems.\n• 180 labeled texts, 7,000 sentences, 45,000 words.\n• 15% of the words are metaphors.\n\nExamples of Metaphors\n\n| Hebrew | English | Meaning |\n|--------|---------|----------|\n| טבענו בגזרות, כשטופי ים | We drowned in decrees, like sea washed | There are too many decrees |\n| הצית נשמה ויבער נר | Ignite a soul, fire a candle | Create a soul |\n| עד דור עשירי לא עשו פרי | Until the tenth generation they did not bear fruit | For ten generations, they did no good deeds |\n\nInter Annotator Agreement\n\nInter-annotator agreement evaluates how consistently different annotators label data for NLP research (measured in Cohen's kappa). The score for our dataset is 0.618 (considered substantial)."
+        "sectionContent": "• Early medieval Hebrew poems.\n• 180 labeled texts, 7,000 sentences, 45,000 words.\n• 15% of the words are metaphors.\n\n| Hebrew | English | Meaning |\n|--------|---------|----------|\n| טבענו בגזרות, כשטופי ים | We drowned in decrees, like sea washed | There are too many decrees |\n| הצית נשמה ויבער נר | Ignite a soul, fire a candle | Create a soul |\n| עד דור עשירי לא עשו פרי | Until the tenth generation they did not bear fruit | For ten generations, they did no good deeds |"
+      },
+      {
+        "sectionTitle": "Inter Annotator Agreement",
+        "sectionContent": "Inter-annotator agreement evaluates how consistently different annotators label data for NLP research (measured in Cohen's kappa). The score for our dataset is 0.618 (considered substantial)."
       },
       {
         "sectionTitle": "Methods",
-        "sectionContent": "Fine-tuning for metaphor detection\n\nProcess flow:\n1. Pre-trained/Adapted Language Model\n2. Tokenizer\n3. Classification: Metaphor / Not a Metaphor\n\nExample:\n- Input: עיצבון במשלח ידינו\n- Tokenized: עיצ_ _בון במשלח ידי_ _נו\n- Output: Metaphor / Not a Metaphor labels\n\nLM adaptation\n\nProcess flow:\n1. Pre-trained Language Model\n2. Masked language modeling\n   - Input: עיצבון במשלח ידינו\n   - Masked: עיצ_ <mask> בון <mask> ידי_ _נו\n3. Tokenizer\n4. Output: עיצבון במשלח ידינו\n\nLanguage models (pre-trained & adapted)\n\nTrained on additional prose and poetic medieval texts (Project Ben-Yehuda*) + Piyyut dataset\n\n| Model | Data Size (words) | Data Type |\n|-------|-------------------|------------|\n| BEREL | 220 Million | Medieval |\n| AlephBERT | 2 Billion | Modern |\n| AlephBERT Adapted | 2 Billion + 10 Million | Modern + Medieval |\n\n*Project Ben-Yehuda is a volunteer-based online library of free Hebrew literature."
+        "sectionContent": "Fine-tuning for metaphor detection\n\nPre-trained/Adapted Language Model\nעיצבון במשלח ידינו\nעיצ_ _בון במשלח ידי_ _נו\nTokenizer\nMetaphor / Not a Metaphor\n\nLM adaptation\n\nPre-trained Language Model\nעיצ_ במשלח\n<mask> _בון <mask> ידי_ _נו\nעיצ_ _בון במשלח ידי_ _נו\nTokenizer\nעיצבון במשלח ידינו\n\nLanguage models (pre-trained & adapted)\n\nTrained on additional prose and poetic medieval texts (Project Ben-Yehuda*) + Piyyut dataset\n\n| Model | Data Size (words) | Data Type |\n|-------|-------------------|------------|\n| BEREL | 220 Milion | Medieval |\n| AlephBERT | 2 Bilion | Modern |\n| AlephBERT Adapted | 2 Bilion + 10 Milion | Modern + Medieval |\n\n*Project Ben-Yehuda is a volunteer-based online library of free Hebrew literature."
       },
       {
         "sectionTitle": "Results",
-        "sectionContent": "• AlephBERT is outperformed by AlephBERT Adapted.\n• BEREL, pre-trained on medieval texts, shows the best results.\n\nf1 Score on test set\n\n| Model | f1 Score |\n|-------|----------|\n| AlephBERT | 44.404 |\n| BEREL | 48.3 |\n| AlephBERT - adapted | 46.56 |\n\nChart shows BEREL achieving the highest f1 score of 48.3"
+        "sectionContent": "• AlephBERT is outperformed by AlephBERT Adapted.\n• BEREL, pre-trained on medieval texts, shows the best results.\n\nf1 Score on test set\n\n| Model | f1 Score |\n|-------|----------|\n| AlephBERT | 44.404 |\n| BEREL | 48.3 |\n| AlephBERT - adapted | 46.56 |"
       },
       {
         "sectionTitle": "Error Analysis",
-        "sectionContent": "Example case:\n\nHebrew text: ילד לניחוח חשקתיו\n\nEnglish: (A child for a scent - I have desired)\n\nExpert explanation: The child is a non-metaphorical epithet for Isaac. \"Scent\" is a metonymic term for \"sacrifice\".\n\nModel prediction: Berel (shown in blue box)\n\nThis example illustrates the complexity of metaphor detection in medieval Hebrew poetry, where cultural and religious context is crucial for accurate interpretation."
+        "sectionContent": "ילד לניחוח חשקתיו\n\n(A child for a scent - I have desired)\n\nBerel\n\nילד לניחוח חשקתיו\n\nExpert explanation: The child is a non-metaphorical epithet for Isaac. \"Scent\" is a metonymic term for \"sacrifice\"."
       }
     ]
   },
-  "domain": "Digital Humanities",
+  "researchField": "Digital Humanities",
   "imageCaptions": [
     {
-      "captions": [
-        "Figure 1: A medieval Hebrew poem from the Worms Prayerbook",
-        "Image shows an illuminated manuscript page from the Worms Prayerbook, Germany, 13th Century, from The National Library of Israel 'Ktiv' Project. The page features ornate decorative borders with medieval artwork and Hebrew text in the center."
-      ]
-    },
-    {
-      "captions": [
-        "Figure 2: Methods - Fine-tuning for metaphor detection",
-        "Flowchart showing Pre-trained/Adapted Language Model processing Hebrew text through Tokenizer to classify as Metaphor or Not a Metaphor. Hebrew text examples shown with tokenization process."
-      ]
-    },
-    {
-      "captions": [
-        "Figure 3: Methods - LM adaptation",
-        "Diagram showing Pre-trained Language Model receiving Hebrew text input, processing through Tokenizer, with connection to training on additional prose and poetic medieval texts from Project Ben-Yehuda and Piyyut dataset. Blue oval indicates training corpus."
-      ]
-    },
-    {
-      "captions": [
-        "Figure 4: Results - F1 Score on test set",
-        "Bar chart showing F1 scores for three models: AlephBERT (44.404), BEREL (48.3), and AlephBERT - adapted (46.56). BEREL shows the highest performance."
-      ]
-    },
-    {
-      "captions": [
-        "Figure 5: Error Analysis example",
-        "Shows Hebrew text 'ילד לניחוח חשקתיו' (A child for a scent - I have desired) with Berel classification. Expert explanation provided: The child is a non-metaphorical epithet for Isaac. 'Scent' is a metonymic term for 'sacrifice'."
-      ]
+      "id": "fig1",
+      "caption": "A medieval Hebrew poem from the Worms Prayerbook, Germany, 13th Century, The National Library of Israel, \"Ktiv\" Project"
     }
   ],
-  "tableCaptions": [
-    {
-      "captions": [
-        "Table 1: Dataset examples with metaphors",
-        "Three-column table showing Hebrew text, English translation, and Meaning. Row 1: Hebrew 'טבענו בגזרות, כשטופי ים', English 'We drowned in decrees, like sea washed', Meaning 'There are too many decrees'. Row 2: Hebrew 'הצית נשמה ויבער נר', English 'Ignite a soul, fire a candle', Meaning 'Create a soul'. Row 3: Hebrew 'עד דור עשירי לא עשו פרי', English 'Until the tenth generation they did not bear fruit', Meaning 'For ten generations, they did no good deeds'."
-      ]
-    },
-    {
-      "captions": [
-        "Table 2: Language models (pre-trained & adapted)",
-        "Three-column table showing language model names, data size in words, and data type. BEREL: 220 Million words, Medieval. AlephBERT: 2 Billion words, Modern. AlephBERT Adapted: 2 Billion + 10 Million words, Modern + Medieval. Note indicates trained on additional prose and poetic medieval texts from Project Ben-Yehuda and Piyyut dataset."
-      ]
-    }
-  ]
+  "tableCaptions": []
 }

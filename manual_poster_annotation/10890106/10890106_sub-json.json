@@ -1,87 +1,77 @@
 {
-  "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
-  "identifiers": [
-    {
-      "identifier": "4185",
-      "identifierType": "Abstract number"
-    },
-    {
-      "identifier": "734",
-      "identifierType": "Poster number"
-    }
-  ],
+  "$schema": "https://posters.science/schema/v0.2/poster_schema.json",
   "creators": [
     {
       "name": "van der Zande, Meike",
       "givenName": "Meike",
       "familyName": "van der Zande",
-      "nameType": "Personal",
       "affiliation": [
         "Wageningen Food Safety Research, Wageningen, The Netherlands"
-      ]
+      ],
+      "nameType": "Personal"
     },
     {
       "name": "Duivenvoorde, Loes PM",
       "givenName": "Loes PM",
       "familyName": "Duivenvoorde",
-      "nameType": "Personal",
       "affiliation": [
         "Wageningen Food Safety Research, Wageningen, The Netherlands"
-      ]
+      ],
+      "nameType": "Personal"
     },
     {
       "name": "Jansen Holleboom, Wendy",
       "givenName": "Wendy",
       "familyName": "Jansen Holleboom",
-      "nameType": "Personal",
       "affiliation": [
         "Wageningen Food Safety Research, Wageningen, The Netherlands"
-      ]
+      ],
+      "nameType": "Personal"
     },
     {
       "name": "Fabrizi, Benedetta",
       "givenName": "Benedetta",
       "familyName": "Fabrizi",
-      "nameType": "Personal",
       "affiliation": [
         "Wageningen Food Safety Research, Wageningen, The Netherlands"
-      ]
+      ],
+      "nameType": "Personal"
     },
     {
       "name": "Vos, A Paul",
       "givenName": "A Paul",
       "familyName": "Vos",
-      "nameType": "Personal",
       "affiliation": [
         "Wageningen Food & Biobased Research, Wageningen, The Netherlands"
-      ]
+      ],
+      "nameType": "Personal"
     },
     {
       "name": "Bastiaan-Net, Shanna",
       "givenName": "Shanna",
       "familyName": "Bastiaan-Net",
-      "nameType": "Personal",
       "affiliation": [
         "Wageningen Food & Biobased Research, Wageningen, The Netherlands"
-      ]
+      ],
+      "nameType": "Personal"
     },
     {
       "name": "Tomassen, Monic MM",
       "givenName": "Monic MM",
       "familyName": "Tomassen",
-      "nameType": "Personal",
       "affiliation": [
         "Wageningen Food & Biobased Research, Wageningen, The Netherlands"
-      ]
+      ],
+      "nameType": "Personal"
     },
     {
       "name": "Janssen, Aafke WF",
       "givenName": "Aafke WF",
       "familyName": "Janssen",
-      "nameType": "Personal",
       "affiliation": [
         "Wageningen Food Safety Research, Wageningen, The Netherlands"
-      ]
+      ],
+      "nameType": "Personal"
     }
   ],
   "titles": [
@@ -89,7 +79,27 @@
       "title": "Development and application of an immunocompetent human induced pluripotent stem cell-derived intestinal epithelial cell model for hazard assessment of the oral exposure route"
     }
   ],
-  "posterContent": {
+  "subjects": [
+    {
+      "subject": "human induced pluripotent stem cell-derived intestinal epithelial cell model"
+    },
+    {
+      "subject": "immunocompetence"
+    },
+    {
+      "subject": "oral exposure route"
+    },
+    {
+      "subject": "micro/nanoplastics"
+    }
+  ],
+  "descriptions": [
+    {
+      "description": "Human induced pluripotent stem cell (hiPSC)-derived intestinal epithelial cell (IEC) layers have the potential to provide an increasingly improved alternative to cell lines as they differentiate into multiple intestinal cell types that are also present in vivo. However, these models currently lack immunocompetence, as they do not contain immune cells like for instance dendritic cells (DCs) that play an important role in intestinal immune responses. This study aimed to develop and characterize an immunocompetent hiPSC-derived model, by co-culturing IEC layers with MUTZ-3 derived DCs. The results show that the co-culture model has the capacity to induce pro-inflammatory responses when exposed to a pro-inflammatory stimulus and that the hiPSC-derived IEC layers consist of multiple cell types that are present in the intestine in vivo.",
+      "descriptionType": "Other"
+    }
+  ],
+  "content": {
     "sections": [
       {
         "sectionTitle": "Background",
@@ -113,11 +123,11 @@
       },
       {
         "sectionTitle": "Results: characterization co-culture model",
-        "sectionContent": ""
+        "sectionContent": "CTRL monoculture (IECs or DCs)\nIEC / DC co-culture"
       },
       {
         "sectionTitle": "Results: exposure of iDCs to microplastics",
-        "sectionContent": ""
+        "sectionContent": "Progenitor cells\n-CTRL (iDC)\n+CTRL (mDC)\nPET_c000 (25, 50, 100 μg/ml)\nHDPE296 (25, 50, 100 μg/ml)\nPS394Eu (25, 50, 100 μg/ml)"
       },
       {
         "sectionTitle": "Conclusions",
@@ -128,38 +138,39 @@
         "sectionContent": "This research was supported by the Dutch Ministry of Agriculture, Nature and Food Quality (KB-37-001-019) and received funding from the European Union's Horizon2020 Research and Innovation programme (Grant Agreement number 965367; PlasticsFatE)."
       },
       {
-        "sectionTitle": "Contact",
         "sectionContent": "Wageningen University & Research\nP.O. Box 123, 6700 AB Wageningen\nContact: meike.vanderzande@wur.nl\nhttps://www.wur.nl/en/research-results/research-institutes/food-safety-research.htm"
       }
     ]
   },
   "imageCaptions": [
     {
-      "captions": [
-        "Figure 1. A) Differentiation protocol hiPSC-derived IECs B) Immunohistochemistry showing the presence of multiple IEC types. Immune responsiveness of IECs after stimulation with a proinflammatory cocktail of INFγ, IL1β and TNFα shown as C) expression of genes in the \"cytokine storm pathway\", as D) barrier integrity (TEER and permeability of lucifer yellow), and as E) IL-8 excretion (ELISA) in comparison with Caco-2 cells."
-      ]
+      "id": "fig1",
+      "caption": "Figure 1. A) Differentiation protocol hiPSC-derived IECs B) Immunohistochemistry showing the presence of multiple IEC types. Immune responsiveness of IECs after stimulation with a proinflammatory cocktail of INFγ, IL1β and TNFα shown as C) expression of genes in the \"cytokine storm pathway\", as D) barrier integrity (TEER and permeability of lucifer yellow), and as E) IL-8 excretion (ELISA) in comparison with Caco-2 cells."
     },
     {
-      "captions": [
-        "Figure 2. A) Differentiation protocol of MUTZ-3-derived DCs B) Gene expression of markers for progenitors cells and mature DCs (mDCs) measured at D0, D7 and D9. Expression is relative to the progenitor cells which were set at 1. Expression of progenitor markers decreased whereas expression of mDCs increased in time."
-      ]
+      "id": "fig2",
+      "caption": "Figure 2. A) Differentiation protocol of MUTZ-3-derived DCs B) Gene expression of markers for progenitors cells and mature DCs (mDCs) measured at D0, D7 and D9. Expression is relative to the progenitor cells which were set at 1. Expression of progenitor markers decreased whereas expression of mDCs increased in time."
     },
     {
-      "captions": [
-        "Figure 3. A) hiPSCs and MUTZ-3 cells were differentiated into IECs and mDCs separately and cocultured when fully differentiated. After 24h of co-culture the differentiation status of the IECs and DCs and the expression of cytokines was evaluated and compared to their respective monocultures before co-culture. B) Barrier integrity of the IEC layer. C) Gene expression of various markers for differentiation and cellular composition and cytokine expression in the IEC layer. D) Gene expression of maturation markers and cytokines in mDCs. In general, co-culturing has little effect on cellular composition, but increases cytokine expression."
-      ]
+      "id": "fig3",
+      "caption": "Figure 3. A) hiPSCs and MUTZ-3 cells were differentiated into IECs and mDCs separately and cocultured when fully differentiated. After 24h of co-culture the differentiation status of the IECs and DCs and the expression of cytokines was evaluated and compared to their respective monocultures before co-culture. B) Barrier integrity of the IEC layer. C) Gene expression of various markers for differentiation and cellular composition and cytokine expression in the IEC layer. D) Gene expression of maturation markers and cytokines in mDCs. In general, co-culturing has little effect on cellular composition, but increases cytokine expression."
     },
     {
-      "captions": [
-        "Figure 4. Gene expression in iDCs after 48h exposure to micro/nano plastics at three different concentrations. A) Effects of the micro/nanoplastics on gene expression of markers for maturation of iDCs into mDCs and B) on cytokine expression. No significant effects were observed after 24h exposure to the micro/nanoplastics and no cytotoxicity was observed (data not shown). After 48h exposure to the PS394Eu plastics mild effects on cytokine expression were observed."
-      ]
+      "id": "fig4",
+      "caption": "Figure 4. Gene expression in iDCs after 48h exposure to micro/nano plastics at three different concentrations. A) Effects of the micro/nanoplastics on gene expression of markers for maturation of iDCs into mDCs and B) on cytokine expression. No significant effects were observed after 24h exposure to the micro/nanoplastics and no cytotoxicity was observed (data not shown). After 48h exposure to the PS394Eu plastics mild effects on cytokine expression were observed."
     }
   ],
   "tableCaptions": [
     {
-      "captions": [
-        "Table 1. Physicochemical data of the micro/nanoplastics for the cell exposure experiment."
-      ]
+      "id": "table1",
+      "caption": "Table 1. Physicochemical data of the micro/nanoplastics for the cell exposure experiment."
     }
+  ],
+  "researchField": "Life Sciences",
+  "language": "en",
+  "publisher": null,
+  "publicationYear": null,
+  "formats": [
+    "application/pdf"
   ]
 }

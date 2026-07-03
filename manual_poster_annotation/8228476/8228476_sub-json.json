@@ -1,59 +1,58 @@
 {
-  "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
-  "identifiers": [],
+  "$schema": "https://posters.science/schema/v0.2/poster_schema.json",
   "creators": [
     {
       "name": "Toker, Michael",
-      "givenName": "Michael",
-      "familyName": "Toker",
       "nameType": "Personal",
       "affiliation": [
-        "Technion − Israel Institute of Technology"
+        {
+          "name": "Technion − Israel Institute of Technology"
+        }
       ]
     },
     {
       "name": "Mishali, Oren",
-      "givenName": "Oren",
-      "familyName": "Mishali",
       "nameType": "Personal",
       "affiliation": [
-        "Technion − Israel Institute of Technology"
+        {
+          "name": "Technion − Israel Institute of Technology"
+        }
       ]
     },
     {
       "name": "Cohen, Adir",
-      "givenName": "Adir",
-      "familyName": "Cohen",
       "nameType": "Personal",
       "affiliation": [
-        "Technion − Israel Institute of Technology"
+        {
+          "name": "Technion − Israel Institute of Technology"
+        }
       ]
     },
     {
       "name": "Münz-Manor, Ophir",
-      "givenName": "Ophir",
-      "familyName": "Münz-Manor",
       "nameType": "Personal",
       "affiliation": [
-        "The Open University of Israel"
+        {
+          "name": "The Open University of Israel"
+        }
       ]
     },
     {
       "name": "Kimelfeld, Benny",
-      "givenName": "Benny",
-      "familyName": "Kimelfeld",
       "nameType": "Personal",
       "affiliation": [
-        "Technion − Israel Institute of Technology"
+        {
+          "name": "Technion − Israel Institute of Technology"
+        }
       ]
     },
     {
       "name": "Belinkov, Yonatan",
-      "givenName": "Yonatan",
-      "familyName": "Belinkov",
       "nameType": "Personal",
       "affiliation": [
-        "Technion − Israel Institute of Technology"
+        {
+          "name": "Technion − Israel Institute of Technology"
+        }
       ]
     }
   ],
@@ -62,10 +61,26 @@
       "title": "A Dataset for Metaphor Detection in Early Medieval Hebrew Poetry"
     }
   ],
-  "posterContent": {
+  "subjects": [
+    {
+      "subject": "metaphor detection"
+    },
+    {
+      "subject": "early medieval Hebrew poetry"
+    },
+    {
+      "subject": "natural language processing"
+    }
+  ],
+  "descriptions": [
+    {
+      "description": "This poster presents a new dataset of early medieval Hebrew poetry with expert annotations of metaphors. The dataset consists of 180 labeled texts, 7,000 sentences, and 45,000 words, with 15% of the words being metaphors. The inter-annotator agreement is 0.618, considered substantial. The results show that AlephBERT, a pre-trained language model, outperforms AlephBERT Adapted, and BEREL, pre-trained on medieval texts, shows the best results with an f1 score of 48.3 on the test set.",
+      "descriptionType": "Other"
+    }
+  ],
+  "content": {
     "sections": [
       {
-        "sectionTitle": "Introduction",
         "sectionContent": "The corpus of late antique and medieval Hebrew is vast and represents a crucial linguistic and cultural bridge between Biblical and modern Hebrew. Poetry is prominent in texts from these time periods and one of its characteristics is the use of metaphor. Distinguishing figurative and literal words or phrases is a major task for scholars in the Humanities, especially in the fields of literature, linguistics, and hermeneutics. We present a new, challenging dataset of early medieval Hebrew poetry with expert annotations of metaphors with baseline results."
       },
       {
@@ -78,24 +93,25 @@
       },
       {
         "sectionTitle": "Methods",
-        "sectionContent": "Fine-tuning for metaphor detection\n\nLM adaptation\n\nLanguage models (pre-trained & adapted)\n\nTrained on additional prose and poetic medieval texts (Project Ben-Yehuda*) + Piyyut dataset\n\n*Project Ben-Yehuda is a volunteer-based online library of free Hebrew literature."
+        "sectionContent": "LM adaptation Fine-tuning for metaphor detection\n\nLanguage models (pre-trained & adapted)\n\nTrained on additional prose and poetic medieval texts (Project Ben-Yehuda*) + Piyyut dataset\n\nBEREL 220 Milion Medieval\nAlephBERT 2 Bilion Modern\nAlephBERT Adapted 2 Bilion + 10 Milion Modern + Medieval\n\n*Project Ben-Yehuda is a volunteer-based online library of free Hebrew literature."
       },
       {
         "sectionTitle": "Results",
-        "sectionContent": "• AlephBERT is outperformed by AlephBERT Adapted.\n• BEREL, pre-trained on medieval texts, shows the best results.\n\nf1 Score on test set"
+        "sectionContent": "• AlephBERT is outperformed by AlephBERT Adapted.\n• BEREL, pre-trained on medieval texts, shows the best results.\n\n46.56 48.3 44.404\nAlephBERT BEREL AlephBERT - adapted\nf1 Score on test set"
       },
       {
         "sectionTitle": "Error Analysis",
-        "sectionContent": "ילד לניחוח חשקתיו\n\n(A child for a scent - I have desired)\n\nBerel\n\nExpert explanation: The child is a non-metaphorical epithet for Isaac. \"Scent\" is a metonymic term for \"sacrifice\"."
+        "sectionContent": "(A child for a scent - I have desired)\n\nExpert explanation: The child is a non-metaphorical epithet for Isaac. \"Scent\" is a metonymic term for \"sacrifice\"."
       }
     ]
   },
-  "imageCaptions": [
-    {
-      "captions": [
-        "A medieval Hebrew poem from the Worms Prayerbook, Germany, 13th Century, The National Library of Israel, \"Ktiv\" Project"
-      ]
-    }
-  ],
-  "tableCaptions": []
+  "imageCaptions": [],
+  "tableCaptions": [],
+  "researchField": "Humanities",
+  "language": "en",
+  "publisher": null,
+  "publicationYear": null,
+  "formats": [
+    "application/pdf"
+  ]
 }

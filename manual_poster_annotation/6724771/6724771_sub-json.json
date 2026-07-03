@@ -1,148 +1,179 @@
 {
-  "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
-  "identifiers": [],
+  "$schema": "https://posters.science/schema/v0.2/poster_schema.json",
   "creators": [
     {
       "name": "Timmermans, Michaël",
-      "givenName": "Michaël",
-      "familyName": "Timmermans",
       "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "michael.timmermans@sciensano.be",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
       "affiliation": [
-        "Veterinary Bacteriology, Sciensano, Ixelles Belgium",
-        "Faculté de médecine, Université Libre de Bruxelles, Brussels, Belgium"
+        {
+          "name": "Veterinary Bacteriology, Sciensano, Ixelles Belgium"
+        },
+        {
+          "name": "Faculté de médecine, Université Libre de Bruxelles, Brussels, Belgium"
+        }
       ]
     },
     {
       "name": "Bogaerts, Bert",
-      "givenName": "Bert",
-      "familyName": "Bogaerts",
       "nameType": "Personal",
       "affiliation": [
-        "Transversal Activities in Applied Genomics, Sciensano, Ixelles, Belgium"
+        {
+          "name": "Transversal Activities in Applied Genomics, Sciensano, Ixelles, Belgium"
+        }
       ]
     },
     {
       "name": "Vanneste, Kevin",
-      "givenName": "Kevin",
-      "familyName": "Vanneste",
       "nameType": "Personal",
       "affiliation": [
-        "Transversal Activities in Applied Genomics, Sciensano, Ixelles, Belgium"
+        {
+          "name": "Transversal Activities in Applied Genomics, Sciensano, Ixelles, Belgium"
+        }
       ]
     },
     {
       "name": "De Keersmaecker, Sigrid C. J.",
-      "givenName": "Sigrid C. J.",
-      "familyName": "De Keersmaecker",
       "nameType": "Personal",
       "affiliation": [
-        "Transversal Activities in Applied Genomics, Sciensano, Ixelles, Belgium"
+        {
+          "name": "Transversal Activities in Applied Genomics, Sciensano, Ixelles, Belgium"
+        }
       ]
     },
     {
       "name": "Roosens, Nancy H. C.",
-      "givenName": "Nancy H. C.",
-      "familyName": "Roosens",
       "nameType": "Personal",
       "affiliation": [
-        "Transversal Activities in Applied Genomics, Sciensano, Ixelles, Belgium"
+        {
+          "name": "Transversal Activities in Applied Genomics, Sciensano, Ixelles, Belgium"
+        }
       ]
     },
     {
       "name": "Kowalewicz, Carole",
-      "givenName": "Carole",
-      "familyName": "Kowalewicz",
       "nameType": "Personal",
       "affiliation": [
-        "Veterinary Bacteriology, Sciensano, Ixelles Belgium"
+        {
+          "name": "Veterinary Bacteriology, Sciensano, Ixelles Belgium"
+        }
       ]
     },
     {
       "name": "Simon, Guillaume",
-      "givenName": "Guillaume",
-      "familyName": "Simon",
       "nameType": "Personal",
       "affiliation": [
-        "Veterinary Bacteriology, Sciensano, Ixelles Belgium"
+        {
+          "name": "Veterinary Bacteriology, Sciensano, Ixelles Belgium"
+        }
       ]
     },
     {
       "name": "Argudín, Maria A.",
-      "givenName": "Maria A.",
-      "familyName": "Argudín",
       "nameType": "Personal",
       "affiliation": [
-        "National Reference Centre-Staphylococcus aureus, Department of Microbiology, Hôpital Erasme, Université libre de Bruxelles, Brussels, Belgium"
+        {
+          "name": "National Reference Centre-Staphylococcus aureus, Department of Microbiology, Hôpital Erasme, Université libre de Bruxelles, Brussels, Belgium"
+        }
       ]
     },
     {
       "name": "Deplano, Ariane",
-      "givenName": "Ariane",
-      "familyName": "Deplano",
       "nameType": "Personal",
       "affiliation": [
-        "National Reference Centre-Staphylococcus aureus, Department of Microbiology, Hôpital Erasme, Université libre de Bruxelles, Brussels, Belgium",
-        "Department of Microbiology, LHUB-ULB, Université Libre de Bruxelles, Brussels, Belgium"
+        {
+          "name": "National Reference Centre-Staphylococcus aureus, Department of Microbiology, Hôpital Erasme, Université libre de Bruxelles, Brussels, Belgium"
+        },
+        {
+          "name": "Department of Microbiology, LHUB-ULB, Université Libre de Bruxelles, Brussels, Belgium"
+        }
       ]
     },
     {
       "name": "Hallin, Marie",
-      "givenName": "Marie",
-      "familyName": "Hallin",
       "nameType": "Personal",
       "affiliation": [
-        "National Reference Centre-Staphylococcus aureus, Department of Microbiology, Hôpital Erasme, Université libre de Bruxelles, Brussels, Belgium",
-        "Department of Microbiology, LHUB-ULB, Université Libre de Bruxelles, Brussels, Belgium",
-        "Ecole de Santé Publique, Université Libre de Bruxelles, Brussels, Belgium"
+        {
+          "name": "National Reference Centre-Staphylococcus aureus, Department of Microbiology, Hôpital Erasme, Université libre de Bruxelles, Brussels, Belgium"
+        },
+        {
+          "name": "Department of Microbiology, LHUB-ULB, Université Libre de Bruxelles, Brussels, Belgium"
+        },
+        {
+          "name": "Ecole de Santé Publique, Université Libre de Bruxelles, Brussels, Belgium"
+        }
       ]
     },
     {
       "name": "Wattiau, Pierre",
-      "givenName": "Pierre",
-      "familyName": "Wattiau",
       "nameType": "Personal",
       "affiliation": [
-        "Veterinary Bacteriology, Sciensano, Ixelles Belgium"
+        {
+          "name": "Veterinary Bacteriology, Sciensano, Ixelles Belgium"
+        }
       ]
     },
     {
       "name": "Fretin, David",
-      "givenName": "David",
-      "familyName": "Fretin",
       "nameType": "Personal",
       "affiliation": [
-        "Veterinary Bacteriology, Sciensano, Ixelles Belgium"
+        {
+          "name": "Veterinary Bacteriology, Sciensano, Ixelles Belgium"
+        }
       ]
     },
     {
       "name": "Denis, Olivier",
-      "givenName": "Olivier",
-      "familyName": "Denis",
       "nameType": "Personal",
       "affiliation": [
-        "Ecole de Santé Publique, Université Libre de Bruxelles, Brussels, Belgium",
-        "Laboratory of Clinical Microbiology, National Reference Center for Monitoring Antimicrobial Resistance in Gram-Negative Bacteria, CHU UCL Namur, Yvoir"
+        {
+          "name": "Ecole de Santé Publique, Université Libre de Bruxelles, Brussels, Belgium"
+        },
+        {
+          "name": "Laboratory of Clinical Microbiology, National Reference Center for Monitoring Antimicrobial Resistance in Gram-Negative Bacteria, CHU UCL Namur, Yvoir"
+        }
       ]
     },
     {
       "name": "Boland, Cécile",
-      "givenName": "Cécile",
-      "familyName": "Boland",
       "nameType": "Personal",
       "affiliation": [
-        "Veterinary Bacteriology, Sciensano, Ixelles Belgium"
+        {
+          "name": "Veterinary Bacteriology, Sciensano, Ixelles Belgium"
+        }
       ]
     }
   ],
   "titles": [
     {
-      "title": "LIN-RES project: Genomic analysis of linezolid resistance in strains isolated from healthy animals and human patients."
+      "title": "Genomic analysis of linezolid resistance in strains isolated from healthy animals and human patients"
     }
   ],
-  "posterContent": {
+  "subjects": [
+    {
+      "subject": "linezolid resistance"
+    },
+    {
+      "subject": "genomic analysis"
+    },
+    {
+      "subject": "antimicrobial resistance"
+    }
+  ],
+  "descriptions": [
+    {
+      "description": "The project aims to assess the occurrence of linezolid resistance in enterococci and staphylococci in 2019 in Belgium with a selective culture method. Another endpoint of the project is to investigate the genetic environment associated with the LZD-R phenotype and the relatedness of the isolates. Linezolid resistance is not so rare in animal isolates, revealing a reservoir of plasmid-borne LZD-R genes in the agricultural sector. The majority of the isolates carried also phenicol resistance genes. Several different organisations and sequence types were observed in the isolates collection.",
+      "descriptionType": "Other"
+    }
+  ],
+  "content": {
     "sections": [
       {
-        "sectionTitle": "Introduction",
         "sectionContent": "Linezolid is a critically important antibiotic (AB) to fight human infections caused by multi-resistant Gram-positive bacteria such as MRSA and VRE. Linezolid resistance can be caused by point mutations in the 23SrRNA gene and by plasmid-borne genes : cfr, optrA and poxtA. While linezolid is not licenced for use in food-producing animals, linezolid resistant (LZD-R) isolates were retrieved from food-producing animals in different European countries including Belgium. In this context, the project aims to assess the occurrence of linezolid resistance in enterococci and staphylococci in 2019 in Belgium with a selective culture method. Another endpoint of the project is to investigate the genetic environment associated with the LZD-R phenotype and the relatedness of the isolates."
       },
       {
@@ -158,17 +189,22 @@
         "sectionContent": "Linezolid resistance is not so rare in animal isolates, revealing a reservoir of plasmid-borne LZD-R genes in the agricultural sector. Moreover, the majority of the isolates carried also phenicol resistance genes. Several different organisations and sequence types were observed in the isolates collection. These observations revealed a large diversity of linezolid resistant isolates and a reservoir of bacteria susceptible to share linezolid resistance genes that could be cross-selected by other antibiotics including phenicols. Further investigation of relatedness between the isolates will be done through cgMLST and phylogenomic analysis. Conjugation assays will be done to investigate the transferability of the observed linezolid resistance genes."
       },
       {
-        "sectionTitle": "Funding",
         "sectionContent": "This poster is part of the European Joint Programme One Health EJP. This project has received funding from the European Union's Horizon 2020 research and innovation programme under Grant Agreement No 773830."
       }
     ]
   },
   "imageCaptions": [
     {
-      "captions": [
-        "Figure: most observed organisation of (A) poxtA (n=35/37), (B) cfr (n=7/10) and (C) optrA (n=24/124)"
-      ]
+      "id": "fig1",
+      "caption": "Figure: most observed organisation of (A) poxtA (n=35/37), (B) cfr (n=7/10) and (C) optrA (n=24/124)"
     }
   ],
-  "tableCaptions": []
+  "tableCaptions": [],
+  "researchField": "Health Sciences",
+  "language": "en",
+  "publisher": null,
+  "publicationYear": null,
+  "formats": [
+    "application/pdf"
+  ]
 }

@@ -1,14 +1,13 @@
 {
-  "$schema": "https://posters.science/schema/v0.1/poster_schema.json",
-  "identifiers": [],
+  "$schema": "https://posters.science/schema/v0.2/poster_schema.json",
   "creators": [
     {
       "name": "Arnold, Frederik",
-      "givenName": "Frederik",
-      "familyName": "Arnold",
       "nameType": "Personal",
       "affiliation": [
-        "Institut für Bibliotheks- und Informationswissenschaft"
+        {
+          "name": "Institut für Bibliotheks- und Informationswissenschaft"
+        }
       ]
     }
   ],
@@ -17,7 +16,24 @@
       "title": "Verfahren zur Entdeckung und Charakterisierung von Schlüsselstellen in der Literatur"
     }
   ],
-  "posterContent": {
+  "subjects": [
+    {
+      "subject": "Literatur"
+    },
+    {
+      "subject": "Schlusselstellen"
+    },
+    {
+      "subject": "Textanalyse"
+    }
+  ],
+  "descriptions": [
+    {
+      "description": "Das Poster beschreibt ein Verfahren zur Entdeckung und Charakterisierung von Schlusselstellen in der Literatur. Es wird ein Algorithmus vorgestellt, der die Positionen von Schlusselstellen in Texten identifiziert und diese dann in einem anderen Text wiederfindet. Das Verfahren wird anhand von zwei Beispieltexten demonstriert.",
+      "descriptionType": "Other"
+    }
+  ],
+  "content": {
     "sections": [
       {
         "sectionTitle": "im Projekt",
@@ -33,7 +49,7 @@
       },
       {
         "sectionTitle": "Segmentierung",
-        "sectionContent": "Zitierte Stellen aus Interpretationstexten\n\nLiteratur w1 | w2 | w3 | w4 | w5 w6 w7 | w8 w9 | w10\n\nZitierhäufigkeit 2 | 3 | 4 | 3 | 2 | 3 | 2"
+        "sectionContent": "Zitierte Stellen aus Interpretationstexten\n\nw1 w2 w3 w4 w5 w6 w7 w8 w9 w10\nw3 w4 w5 w6 w7 w8 w9\nw2 w3 w4\nw2 w3\nw8 w9 w10\n\nLiteratur w1 | w2 | w3 | w4 | w5 w6 w7 | w8 w9 | w10\nZitierhäufigkeit 2 | 3 | 4 | 3 | 2 | 3 | 2"
       },
       {
         "sectionTitle": "Comic",
@@ -41,7 +57,7 @@
       },
       {
         "sectionTitle": "Algorithmus",
-        "sectionContent": "1. Positionen in Text 1 erfassen\n\n2. Forward references erstellen\n\n3. Gefundene Matches erweitern\n\n• Ellipsen \"überspringen\"\n• Token zusammenfassen / auslassen"
+        "sectionContent": "1. Positionen in Text 1 erfassen\n\nWortfolge Startpositionen\nw1 w2 w3 [0]\nw2 w3 w4 [1]\n... ... ... ...\nw8 w9 w10 [7]\nw9 w10 w11 [8]\nw10 w11 w12 [9, 35]\nw33 w34 w35 [32]\n\n2. Forward references erstellen\n\nText 1 Startpos. Text 2 Startpos.\n0 []\n1 []\n7 [75, 120]\n8 [121]\n9 [77, 122]\n35 [77, 122]\n32 [145]\n\n3. Gefundene Matches erweitern\n\n• Ellipsen \"überspringen\"\n• Token zusammenfassen / auslassen"
       },
       {
         "sectionTitle": "Weitere Schritte",
@@ -49,11 +65,11 @@
       },
       {
         "sectionTitle": "Auswertung",
-        "sectionContent": "45 Interpretationstexte der Judenbuche\n\nPrecision: 0.80  Recall: 0.91\n\nF-Score: 0.85"
+        "sectionContent": "45 Interpretationstexte der Judenbuche\n\nPrecision: 0.80  Recall: 0.91\nF-Score: 0.85"
       },
       {
         "sectionTitle": "Quellen",
-        "sectionContent": "• \"sim_text\" von Dick Grune¹\n• Similarity texter: A text-comparison web tool based on the \"sim_text\" algorithm von Sofia Kalaidopoulou (2016)²\n• Programmiersprache: Python\n\n¹ https://dickgrune.com/Programs/similarity_tester/ (Stand: 12.03.2021)\n\n² https://people.f4.htw-berlin.de/~weberwu/simtester/522789_Sofia-Kalaidopoulou_bachelor-thesis.pdf (Stand: 12.03.2021)"
+        "sectionContent": "• \"sim_text\" von Dick Grune¹\n• Similarity texter: A text-comparison web tool based on the \"sim_text\" algorithm von Sofia Kalaidopoulou (2016)²\n• Programmiersprache: Python\n\n¹ https://dickgrune.com/Programs/similarity_tester/ (Stand: 12.03.2021)\n² https://people.f4.htw-berlin.de/~weberwu/simtester/522789_Sofia-Kalaidopoulou_bachelor-thesis.pdf (Stand: 12.03.2021)"
       },
       {
         "sectionTitle": "Visualisierungswebseite",
@@ -62,5 +78,12 @@
     ]
   },
   "imageCaptions": [],
-  "tableCaptions": []
+  "tableCaptions": [],
+  "researchField": "Social Sciences",
+  "language": "de",
+  "publisher": null,
+  "publicationYear": null,
+  "formats": [
+    "image/jpeg"
+  ]
 }
