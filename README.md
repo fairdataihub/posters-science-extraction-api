@@ -134,8 +134,7 @@ posters-science-extraction-api/
 ├── Dockerfile               # Container build
 ├── docker-compose-prod.yml  # Docker orchestration
 ├── docs/                    # Documentation
-├── example_posters/         # Sample poster files
-└── test_results/            # Validation outputs
+└── example_posters/         # Sample poster files
 ```
 
 Poster text extraction and JSON structuring are provided by the
