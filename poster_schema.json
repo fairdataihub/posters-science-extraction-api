@@ -258,8 +258,11 @@
       "uniqueItems": true
     },
     "publisher": {
-      "type": "object",
-      "description": "The entity that hosts, archives, publishes, prints, distributes, releases, issues, or produces the resource. This property will be used to formulate the citation, so consider the prominence of the role.",
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "The entity that hosts, archives, publishes, prints, distributes, releases, issues, or produces the resource. This property will be used to formulate the citation, so consider the prominence of the role. May be null as a placeholder when it is filled downstream by the hosting platform.",
       "properties": {
         "name": {
           "type": "string",
@@ -420,63 +423,7 @@
             "minLength": 1
           },
           "dateType": {
-            "type": "string",
-            "description": "The type of date of the item.",
-            "minLength": 1,
-            "oneOf": [
-              {
-                "const": "Accepted",
-                "description": "The date that the publisher accepted the resource into their system."
-              },
-              {
-                "const": "Available",
-                "description": "The date the resource is made publicly available. May be a range."
-              },
-              {
-                "const": "Copyrighted",
-                "description": "The specific, documented date at which the resource receives a copyrighted status, if applicable."
-              },
-              {
-                "const": "Collected",
-                "description": "The date or date range in which the resource content was collected."
-              },
-              {
-                "const": "Coverage",
-                "description": "The date or date range during which the resource is available."
-              },
-              {
-                "const": "Created",
-                "description": "The date the resource itself was put together; this could refer to a timeframe in ancient history, a date range, or a single date for a final component, e.g., the finalised file with all the data."
-              },
-              {
-                "const": "Issued",
-                "description": "The date that the resource is published or distributed, e.g., to a data centre"
-              },
-              {
-                "const": "Submitted",
-                "description": "The date the creator submits the resource to the publisher. This could be different from Accepted if the publisher then applies a selection process."
-              },
-              {
-                "const": "Updated",
-                "description": "The date of the last update to the resource, when the resource is being added to. May be a range."
-              },
-              {
-                "const": "Valid",
-                "description": "The date or date range during which the dataset or resource is accurate."
-              },
-              {
-                "const": "Withdrawn",
-                "description": "The date the resource is removed."
-              },
-              {
-                "const": "Presented",
-                "description": "POSTER-SPECIFIC EXTENSION: The date the resource was presented, such as at a conference. NOTE: For DataCite Metadata Schema compatibility, consider using 'Issued' instead with the dateInformation sub-property to provide context (e.g., 'Presented at [Conference Name]'). This ensures consistent dateTypes across different resource types."
-              },
-              {
-                "const": "Other",
-                "description": "Date type not defined elsewhere."
-              }
-            ]
+            "$ref": "#/definitions/dateType"
           },
           "dateInformation": {
             "type": [
@@ -716,7 +663,7 @@
     },
     "descriptions": {
       "type": "array",
-      "description": "Free text descriptions of the poster content. Typically includes an abstract summarizing the research, methods used, or technical details.",
+      "description": "Free text descriptions of the poster content. Use descriptionType 'Abstract' for user-provided formal abstracts and 'Other' for auto-generated summaries. A poster may have both.",
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -731,34 +678,7 @@
             ]
           },
           "descriptionType": {
-            "type": "string",
-            "description": "The type of the 'description'. Must be from controlled list.",
-            "oneOf": [
-              {
-                "const": "Abstract",
-                "description": "A brief description of the resource and the context in which the resource was created"
-              },
-              {
-                "const": "Methods",
-                "description": "The methodology employed for the study or research."
-              },
-              {
-                "const": "SeriesInformation",
-                "description": "Information about the series to which the resource belongs."
-              },
-              {
-                "const": "TableOfContents",
-                "description": "A table of contents for the resource."
-              },
-              {
-                "const": "TechnicalInfo",
-                "description": "Detailed information that may be associated with design, implementation, operation, use, and/or maintenance of a process or system."
-              },
-              {
-                "const": "Other",
-                "description": "Other description information that does not fit into an existing category."
-              }
-            ]
+            "$ref": "#/definitions/descriptionType"
           }
         },
         "required": [
@@ -815,6 +735,15 @@
               "https://www.crossref.org/services/funder-registry/"
             ]
           },
+          "awardTitle": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The human readable title or name of the award (grant)",
+            "examples": [
+              "The awesome project of XYZ",
+              "Socioenvironmental Monitoring of the Amazon Basin and Xingu"
+            ]
+          },
           "awardNumber": {
             "type": "string",
             "minLength": 1,
@@ -832,15 +761,6 @@
               "https://reporter.nih.gov/search/VtCaq87pxkW1uosvSNPjHg/project-details/10858583",
               "https://www.moore.org/grants/list/GBMF3859.01",
               "https://doi.org/10.35802/221400"
-            ]
-          },
-          "awardTitle": {
-            "type": "string",
-            "minLength": 1,
-            "description": "The human readable title or name of the award (grant)",
-            "examples": [
-              "The awesome project of XYZ",
-              "Socioenvironmental Monitoring of the Amazon Basin and Xingu"
             ]
           }
         },
@@ -1281,6 +1201,94 @@
         {
           "const": "Other",
           "description": "Relationship type not defined elsewhere. Use relationTypeInformation to provide additional context."
+        }
+      ]
+    },
+    "descriptionType": {
+      "type": "string",
+      "description": "The type of the description. Use 'Abstract' for user-provided formal abstracts and 'Other' for auto-generated summaries.",
+      "oneOf": [
+        {
+          "const": "Abstract",
+          "description": "A brief description of the resource and the context in which the resource was created"
+        },
+        {
+          "const": "Methods",
+          "description": "The methodology employed for the study or research."
+        },
+        {
+          "const": "SeriesInformation",
+          "description": "Information about the series to which the resource belongs."
+        },
+        {
+          "const": "TableOfContents",
+          "description": "A table of contents for the resource."
+        },
+        {
+          "const": "TechnicalInfo",
+          "description": "Detailed information that may be associated with design, implementation, operation, use, and/or maintenance of a process or system."
+        },
+        {
+          "const": "Other",
+          "description": "Other description information that does not fit into an existing category, including auto-generated poster summaries."
+        }
+      ]
+    },
+    "dateType": {
+      "type": "string",
+      "description": "The type of date of the item.",
+      "oneOf": [
+        {
+          "const": "Accepted",
+          "description": "The date that the publisher accepted the resource into their system."
+        },
+        {
+          "const": "Available",
+          "description": "The date the resource is made publicly available. May be a range."
+        },
+        {
+          "const": "Copyrighted",
+          "description": "The specific, documented date at which the resource receives a copyrighted status, if applicable."
+        },
+        {
+          "const": "Collected",
+          "description": "The date or date range in which the resource content was collected."
+        },
+        {
+          "const": "Coverage",
+          "description": "The date or date range during which the resource is available."
+        },
+        {
+          "const": "Created",
+          "description": "The date the resource itself was put together; this could refer to a timeframe in ancient history, a date range, or a single date for a final component, e.g., the finalised file with all the data."
+        },
+        {
+          "const": "Issued",
+          "description": "The date that the resource is published or distributed, e.g., to a data centre"
+        },
+        {
+          "const": "Submitted",
+          "description": "The date the creator submits the resource to the publisher. This could be different from Accepted if the publisher then applies a selection process."
+        },
+        {
+          "const": "Updated",
+          "description": "The date of the last update to the resource, when the resource is being added to. May be a range."
+        },
+        {
+          "const": "Valid",
+          "description": "The date or date range during which the dataset or resource is accurate."
+        },
+        {
+          "const": "Withdrawn",
+          "description": "The date the resource is removed."
+        },
+        {
+          "const": "Presented",
+          "description": "POSTER-SPECIFIC EXTENSION: The date the resource was presented, such as at a conference. NOTE: For DataCite Metadata Schema compatibility, consider using 'Issued' instead with the dateInformation sub-property to provide context (e.g., 'Presented at [Conference Name]'). This ensures consistent dateTypes across different resource types."
+        },
+        {
+          "const": "Other",
+          "description": "Date type not defined elsewhere."
         }
       ]
     },

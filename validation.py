@@ -1,8 +1,13 @@
 """
 Poster extraction validation
 
-Validates LLM output against the extraction schema.
+Validates LLM output against the poster schema (v0.2).
 Reports warnings for any schema violations.
+
+Raw extraction is validated against the full poster_schema.json. The
+platform-owned fields (conference, publicationYear) are filled in downstream
+on the website, so they surface here as non-blocking warnings rather than
+errors; validation never rejects an extraction.
 
 NOTE: Format normalization (caption structure, creator fields, affiliations)
 is handled by the poster2json library (poster2json.extract) before this
@@ -22,11 +27,13 @@ from jsonschema import Draft202012Validator
 
 # Schema file path
 SCHEMA_DIR = Path(__file__).parent
-EXTRACTION_SCHEMA_PATH = SCHEMA_DIR / "poster_extraction_schema.json"
+# Validate against the full poster schema (v0.2). The v0.1 extraction schema
+# is retained only as version history and is no longer used at runtime.
 FULL_SCHEMA_PATH = SCHEMA_DIR / "poster_schema.json"
+EXTRACTION_SCHEMA_PATH = SCHEMA_DIR / "poster_extraction_schema.json"  # kept for history
 
 # Schema version for tracking
-SCHEMA_VERSION = "extraction-v0.1"
+SCHEMA_VERSION = "poster-schema-v0.2"
 
 # Cache the schema in memory after first load
 _SCHEMA_CACHE: Optional[dict] = None
@@ -45,11 +52,11 @@ class ValidationWarning:
         return asdict(self)
 
 
-def load_extraction_schema() -> dict:
-    """Load the extraction schema, using cached version if available."""
+def load_schema() -> dict:
+    """Load the full poster schema (v0.2), using the cached copy if available."""
     global _SCHEMA_CACHE
     if _SCHEMA_CACHE is None:
-        with open(EXTRACTION_SCHEMA_PATH) as f:
+        with open(FULL_SCHEMA_PATH) as f:
             _SCHEMA_CACHE = json.load(f)
     return _SCHEMA_CACHE
 
@@ -150,7 +157,7 @@ def validate_and_fix_extraction(
         return result, []
 
     # Schema validation
-    schema = load_extraction_schema()
+    schema = load_schema()
     validator = Draft202012Validator(schema)
 
     # Collect all schema errors as warnings
