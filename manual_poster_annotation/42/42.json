@@ -45,55 +45,6 @@
       ]
     },
     {
-      "name": "Reddy, Gudur Ashrith",
-      "nameType": "Personal",
-      "affiliation": [
-        {
-          "name": "Mechanical Engineering Department, San Diego State University",
-          "affiliationIdentifier": "https://ror.org/01zj77w89",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        },
-        {
-          "name": "Department of Bioengineering, University of California San Diego",
-          "affiliationIdentifier": "https://ror.org/0168r3w48",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
-      ]
-    },
-    {
-      "name": "Dhillon, Nermeeta",
-      "nameType": "Personal",
-      "affiliation": [
-        {
-          "name": "Mechanical Engineering Department, San Diego State University",
-          "affiliationIdentifier": "https://ror.org/01zj77w89",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
-      ]
-    },
-    {
-      "name": "Tripathi, Osika",
-      "nameType": "Personal",
-      "nameIdentifiers": [
-        {
-          "nameIdentifier": "https://orcid.org/0000-0002-8093-1109",
-          "nameIdentifierScheme": "ORCID",
-          "schemeURI": "https://orcid.org"
-        }
-      ],
-      "affiliation": [
-        {
-          "name": "Herbert Wertheim School of Public Health and Human Longevity Science, University of California San Diego",
-          "affiliationIdentifier": "https://ror.org/0168r3w48",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
-      ]
-    },
-    {
       "name": "Alexandrov, Ludmil",
       "nameType": "Personal",
       "nameIdentifiers": [
@@ -106,18 +57,6 @@
       "affiliation": [
         {
           "name": "Department of Bioengineering, University of California San Diego",
-          "affiliationIdentifier": "https://ror.org/0168r3w48",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        },
-        {
-          "name": "Department of Cellular and Molecular Medicine, University of California San Diego",
-          "affiliationIdentifier": "https://ror.org/0168r3w48",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        },
-        {
-          "name": "Moores Cancer Center, University of California San Diego",
           "affiliationIdentifier": "https://ror.org/0168r3w48",
           "affiliationIdentifierScheme": "ROR",
           "schemeURI": "https://ror.org"
