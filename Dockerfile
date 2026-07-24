@@ -8,10 +8,13 @@ ENV DEBIAN_FRONTEND=noninteractive \
     CUDA_VISIBLE_DEVICES=0
 
 # Install runtime deps + python
+# python3.10-dev provides Python.h, which Triton needs at runtime to JIT-compile
+# its cuda_utils extension module on the GPU.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
     python3.10 \
+    python3.10-dev \
     python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
