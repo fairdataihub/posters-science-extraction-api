@@ -1,0 +1,155 @@
+{
+  "$schema": "https://posters.science/schema/v0.2/poster_schema.json",
+  "creators": [
+    {
+      "name": "Gasimova, Aydan",
+      "givenName": "Aydan",
+      "familyName": "Gasimova",
+      "affiliation": [
+        "FAIR Data Innovations Hub, California Medical Innovations Institute, San Diego, CA, USA"
+      ],
+      "nameType": "Personal"
+    },
+    {
+      "name": "Soundarajan, Sanjay",
+      "givenName": "Sanjay",
+      "familyName": "Soundarajan",
+      "affiliation": [
+        "FAIR Data Innovations Hub, California Medical Innovations Institute, San Diego, CA, USA"
+      ],
+      "nameType": "Personal"
+    },
+    {
+      "name": "Gim, Nayoon",
+      "givenName": "Nayoon",
+      "familyName": "Gim",
+      "affiliation": [
+        "Department of Ophthalmology, University of Washington, Seattle, WA, USA",
+        "Department of Bioengineering, University of Washington, Seattle, WA, USA",
+        "The Roger and Angie Karalis Johnson Retina Center, Seattle, WA, USA"
+      ],
+      "nameType": "Personal"
+    },
+    {
+      "name": "Shaffer, Jamie",
+      "givenName": "Jamie",
+      "familyName": "Shaffer",
+      "affiliation": [
+        "John F. Hardesty MD Department of Ophthalmology and Visual Sciences, Washington University, St. Louis, MO, USA"
+      ],
+      "nameType": "Personal"
+    },
+    {
+      "name": "Owen, Julia",
+      "givenName": "Julia",
+      "familyName": "Owen",
+      "affiliation": [
+        "John F. Hardesty MD Department of Ophthalmology and Visual Sciences, Washington University, St. Louis, MO, USA"
+      ],
+      "nameType": "Personal"
+    },
+    {
+      "name": "Lee, Aaron",
+      "givenName": "Aaron",
+      "familyName": "Lee",
+      "affiliation": [
+        "John F. Hardesty MD Department of Ophthalmology and Visual Sciences, Washington University, St. Louis, MO, USA"
+      ],
+      "nameType": "Personal"
+    },
+    {
+      "name": "Patel, Bhavesh",
+      "givenName": "Bhavesh",
+      "familyName": "Patel",
+      "affiliation": [
+        "FAIR Data Innovations Hub, California Medical Innovations Institute, San Diego, CA, USA"
+      ],
+      "nameType": "Personal"
+    }
+  ],
+  "titles": [
+    {
+      "title": "Clinical Dataset Structure: A Universal Framework for Structuring Clinical Research Datasets"
+    }
+  ],
+  "subjects": [
+    {
+      "subject": "Clinical Dataset Structure"
+    },
+    {
+      "subject": "FAIR Principles"
+    },
+    {
+      "subject": "Research data management"
+    },
+    {
+      "subject": "Metadata standards"
+    },
+    {
+      "subject": "AI-READI"
+    },
+    {
+      "subject": "Data reusability"
+    }
+  ],
+  "descriptions": [
+    {
+      "description": "The Clinical Dataset Structure (CDS) is a universal standard for organizing clinical research data and its associated metadata in line with the FAIR (Findable, Accessible, Interoperable, Reusable) Principles. Motivated by the lack of consensus on structuring multimodal clinical data and metadata, the authors reviewed existing dataset standards (e.g., BIDS) and metadata schemas (e.g., DataCite, ClinicalTrials.gov) alongside AI/ML data documentation practices (datasheets, healthsheets) to establish the standard. The CDS organizes data into one folder per datatype, prescribes a subfolder structure, and requires root-level metadata files capturing 80+ metadata fields. It was applied to the AI-READI dataset (an NIH Bridge2AI project), which has been independently reused by over 1,000 researchers, demonstrating that the standard supports reusability.",
+      "descriptionType": "Other"
+    }
+  ],
+  "content": {
+    "sections": [
+      {
+        "sectionTitle": "Background",
+        "sectionContent": "Each year, a rapidly growing volume of datasets is shared across the research community. In clinical studies, many data types are collected per participant, such as surveys, vital signs, eye images, and more. This data is expected to align with the FAIR (Findable, Accessible, Interoperable, Reusable) Principles."
+      },
+      {
+        "sectionTitle": "Problem",
+        "sectionContent": "There is currently no consensus on how to organize multimodal data and include related information known as metadata. Standards like BIDS (Brain Imaging Data Structure) exist but only for structuring individual modalities. As a result, datasets from different studies are:\n1. Not interoperable. The data cannot be directly combined with other datasets, workflows, and tools.\n2. Not reusable. The data cannot be easily used by researchers other than the original creators.\nOriginal researchers. Unorganized data and metadata. New researchers."
+      },
+      {
+        "sectionTitle": "Purpose",
+        "sectionContent": "The purpose of this work was to develop a standard for organizing clinical research data and associated metadata."
+      },
+      {
+        "sectionTitle": "Methods",
+        "sectionContent": "1. Review and analyze existing standards for organizing specific datatypes (e.g. Brain Imaging Data Structure) and popular metadata schemas (e.g. DataCite and ClinicalTrials.gov)\n2. Review and analyze AI/ML-specific data documentation practices (e.g. datasheet and healtsheet)\n3. Combine review findings and our understanding of clinical research data for establishing the standard\n4. Apply the standard to a real world dataset as a test case."
+      },
+      {
+        "sectionTitle": "Results",
+        "sectionContent": "We established the Clinical Dataset Structure (CDS) a standard for organizing clinical research data and metadata.\nThe CDS provides several specifications:\nThe CDS instructs to organize data into one folder per datatype at the root level (Fig. 1). It also prescribes a specific structure within each datatype folder (Fig 2).\nThe CDS requires several metadata files to be included at the root-level that contain essential information for reusing the dataset (Fig. 1).\nCollectively, the metadata files capture 80+ metadata fields including dataset description, study information, license terms, and more.\nThe CDS also provides specification for naming the different folders and files consistently.\nThe full specification is available at cds-specification.readthedocs.io.\nWe are also developing pyfairdatatools, a Python package aimed at making it easier to implement the CDS.\nWe applied the CDS to the AI-READI dataset. AI-READI is one of the data generation projects supported by the NIH Bridge2AI program. The goal of the project is to collect multimodal dataset for studying Type 2 Diabetes and make it AI-ready.\nWhile the dataset is extremely large and complex (Fig. 3), it has been downloaded and reused by over 1,000 researchers independently and led to many outcomes without intervention from the AI-READI team, demonstrating that the standard is supporting reusability."
+      },
+      {
+        "sectionTitle": "Conclusion",
+        "sectionContent": "CDS provides a simple and intuitive way to organize clinical research data and metadata in line with the FAIR Principles.\nOur evaluation on the AI-READI dataset confirmed the CDS aligns with all relevant FAIR Principles elements.\nIndependent reuse of the dataset also shows that the CDS addresses reusability issues.\nInteroperability still needs to be validated by applying the CDS to other datasets and investigating how conveniently they can be combined and reused together.\nOur immediate future effort is to promote the CDS, encourage its adoption, and improve based on external feedback.\nWe are also working on improving our tooling to facilitate implementation of the CDS further."
+      },
+      {
+        "sectionTitle": "Contact",
+        "sectionContent": "This work is funded by NIH Common Fund's Bridge2AI program (1OT2OD032644-01)\nAydan Gasimova, agasimova@calmi2.org, aireadi.org, fairdataihub.org\nBhavesh Patel, bpatel@calmi2.org, aireadi.org, fairdataihub.org\nFind this poster and all related references here: https://bit.ly/CDS-2026"
+      }
+    ]
+  },
+  "imageCaptions": [
+    {
+      "id": "fig1",
+      "caption": "Figure 1. Illustration of the root level of a dataset structured following the CDS. cardiac_ecg, retinal_oct: Folders of the datatypes present in the dataset. README.md, LICENSE.txt, healthsheet.md, CHANGELOG.md: Metadata files containing information about the dataset in a human-friendly format. study_description.json, dataset_description.json, datatype_dictionary.json, participants.tsv, participants.json: Metadata files containing information about the dataset in a machine-friendly format."
+    },
+    {
+      "id": "fig2",
+      "caption": "Figure 2. Illustration of the subfolder structure prescribed by the CDS. datatype folder(s) to modality folder(s) to device folder(s) to participant folder(s)."
+    },
+    {
+      "id": "fig3",
+      "caption": "Figure 3. Overview of the AI-READI dataset V3. Overview of the AI-READI Dataset V3: 1000+ Accesses. 2,280 participants. 350k+ files. 3.8 TB data. 21M heart rate measurements. 950k+ lab measurements and survey responses. 350k+ OCT volumes. 6M+ glucose measurements. 150M+ air pollution and light spectrometer readings. 221k+ hours of sleep recorded. Access the dataset fairhub.io."
+    }
+  ],
+  "tableCaptions": [],
+  "researchField": "Health Sciences",
+  "language": "en",
+  "publisher": null,
+  "publicationYear": null,
+  "formats": [
+    "application/pdf"
+  ]
+}

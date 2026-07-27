@@ -49,7 +49,7 @@
       },
       {
         "sectionTitle": "Segmentierung",
-        "sectionContent": "Zitierte Stellen aus Interpretationstexten\n\nw1 w2 w3 w4 w5 w6 w7 w8 w9 w10\nw3 w4 w5 w6 w7 w8 w9\nw2 w3 w4\nw2 w3\nw8 w9 w10\n\nLiteratur w1 | w2 | w3 | w4 | w5 w6 w7 | w8 w9 | w10\nZitierhäufigkeit 2 | 3 | 4 | 3 | 2 | 3 | 2"
+        "sectionContent": "Zitierte Stellen aus Interpretationstexten"
       },
       {
         "sectionTitle": "Comic",

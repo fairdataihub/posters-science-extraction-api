@@ -85,11 +85,11 @@
       },
       {
         "sectionTitle": "METHODS",
-        "sectionContent": "• An ad hoc custom-built device was used, comprising a pumping module with two syringe pumps and an infusion setup designed to place a Passive Herringbone Mixer (PHBM) chip.\n\nTable 1: Drug loading into NPs and micelles.\n\nType of Syringes | Final Volume (mL) | Total Flow Rate (TFR) (mL/min) | Flow Rate Ratio (FRR) (aqueous/organic phase)\nPLGA NPs | Terumo 5 mL | 2 | 8 | 4:1\n         | Terumo 5 mL | 2 | 8 | 4:1\nPLA/PEG NPs | Terumo 5 mL | 2 | 3 | 3:1\n            | Terumo 5 mL | 2 | 3 | 3:1"
+        "sectionContent": "• An ad hoc custom-built device was used, comprising a pumping module with two syringe pumps and an infusion setup designed to place a Passive Herringbone Mixer (PHBM) chip.\n\nTable 1: Drug loading into NPs and micelles.\n"
       },
       {
         "sectionTitle": "RESULTS",
-        "sectionContent": "1. Physical Properties of NPs\n\n• NPs had uniform size distribution with PDI ≤ 0.2, consistent with TEM observations.\n\nTable 2: Drug loading into NPs and micelles.\n\nEE %\nLoading | PLGA | PLA/PEG\nCurcumin | 61.91 ± 1.86 | 13.74 ± 0.97\n\nPayload (% µg/mg)\n2.81 ± 0.81 | 2.51 ± 0.57\n\nHigher Encapsulation Efficiency (EE%)\n\nSlower Release Rate\n\n2. Release Kinetics of NPs\n\n3. Cytotoxicity & Antimicrobial Activity"
+        "sectionContent": "1. Physical Properties of NPs\n\n• NPs had uniform size distribution with PDI ≤ 0.2, consistent with TEM observations.\n\nTable 2: Drug loading into NPs and micelles.\n\nEE %\n\nPayload (% µg/mg)\n\nHigher Encapsulation Efficiency (EE%)\n\nSlower Release Rate\n\n2. Release Kinetics of NPs\n\n3. Cytotoxicity & Antimicrobial Activity"
       },
       {
         "sectionTitle": "CONCLUSION",

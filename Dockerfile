@@ -10,12 +10,21 @@ ENV DEBIAN_FRONTEND=noninteractive \
 # Install runtime deps + python
 # python3.10-dev provides Python.h, which Triton needs at runtime to JIT-compile
 # its cuda_utils extension module on the GPU.
+# Install runtime deps + python.
+# python3.10-dev (Python.h) and build-essential (gcc/g++/make) are REQUIRED at
+# RUNTIME, not just build: bitsandbytes routes the quantized model through
+# Triton, which JIT-compiles a cuda_utils.c helper on first inference and links
+# -l:libcuda.so.1. Without the Python headers and a compiler that gcc step fails
+# with "returned non-zero exit status 1" and every upload errors out. Keeping the
+# toolchain in the image makes that compile succeed regardless of which
+# bitsandbytes/triton version is resolved.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
     python3.10 \
     python3.10-dev \
     python3-pip \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 # Create symlink for python
