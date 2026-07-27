@@ -7,6 +7,9 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
     CUDA_VISIBLE_DEVICES=0
 
+# Install runtime deps + python
+# python3.10-dev provides Python.h, which Triton needs at runtime to JIT-compile
+# its cuda_utils extension module on the GPU.
 # Install runtime deps + python.
 # python3.10-dev (Python.h) and build-essential (gcc/g++/make) are REQUIRED at
 # RUNTIME, not just build: bitsandbytes routes the quantized model through
