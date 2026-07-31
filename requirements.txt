@@ -2,13 +2,13 @@
 poster2json
 
 # Core dependencies (required by poster2json, included for explicit pinning)
-transformers>=4.40.0
-torch>=2.0.0
-torchvision>=0.15.0
-accelerate>=0.20.0
-bitsandbytes>=0.41.0
-safetensors
-sentencepiece
+transformers==5.14.1
+torch==2.13.0
+torchvision==0.28.0
+accelerate==1.14.0
+bitsandbytes==0.50.0
+safetensors==0.8.0
+sentencepiece==0.2.2
 
 # Flash Attention 2 for faster inference (optional but recommended)
 # Requires CUDA 11.6+ and compatible GPU (Ampere, Ada Lovelace, Hopper)
@@ -16,27 +16,27 @@ sentencepiece
 flash-attn>=2.5.0; platform_system == "Linux"
 
 # Text processing
-rouge-score
-numpy
+rouge-score==0.1.2
+numpy==2.2.6
 
 # Image/PDF processing
-Pillow
-pymupdf
+Pillow==12.3.0
+pymupdf==1.28.0
 
 # API
-python-dotenv>=1.0.0
-flask>=2.3.0
-flask-cors>=4.0.0
-requests>=2.31.0
-jsonschema>=4.20.0
-psycopg2-binary>=2.9.0
+python-dotenv==1.2.2
+flask==3.1.3
+flask-cors==6.0.5
+requests==2.34.2
+jsonschema==4.26.0
+psycopg2-binary==2.9.12
 
 # ipynb dependencies (for testing and development)
 ipykernel
 jupyterlab
 
 # Development (optional)
-tqdm
+tqdm==4.69.1
 # black
 # isort
 # flake8
