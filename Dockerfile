@@ -33,12 +33,15 @@ RUN ln -sf /usr/bin/python3.10 /usr/bin/python
 # Set working directory
 WORKDIR /app
 
-# Copy requirements and install Python dependencies
+# Install the exact, pinned dependency set for reproducible builds.
+# Regenerate requirements-lock.txt from the running container when bumping deps.
 # IMPORTANT: rebuild with `docker build --no-cache` when poster2json has a new release
-COPY requirements-prod.txt requirements.txt
+COPY requirements-lock.txt .
 RUN pip3 install --upgrade pip && \
-    pip3 install --no-cache-dir -r requirements.txt
+    pip3 install --no-cache-dir -r requirements-lock.txt
 
+# Layer the newest poster2json on top of the pinned base (kept intentionally latest).
+# pip's default only-if-needed strategy leaves the rest of the stack at locked versions.
 RUN pip3 install --no-cache-dir --upgrade poster2json
 
 # Copy application code (poster extraction logic comes from poster2json library)

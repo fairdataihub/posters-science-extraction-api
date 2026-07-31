@@ -17,8 +17,8 @@
 # To regenerate after an intentional dependency bump (from the running container):
 #   docker exec poster-extraction pip3 freeze | sort -f > requirements-lock.txt
 #
-# Follow-up (separate change): have the Dockerfile install from this file and
-# drop `pip install --upgrade poster2json`, so the pins actually take effect.
+# The Dockerfile installs the runtime environment from this file; the newest
+# poster2json is then layered on top (kept intentionally latest).
 
 absl-py==2.5.0
 accelerate==1.14.0
