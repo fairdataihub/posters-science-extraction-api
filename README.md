@@ -50,11 +50,11 @@ See [Docker Setup](docs/DOCKER.md) for detailed instructions including Windows/W
 PDF/Image → Raw Text Extraction → LLM JSON Structuring → Structured JSON
                 ↓                         ↓
           [pdfplumber]            [Llama 3.1 8B]
-           [Qwen2-VL]             verbatim Llama mirror
+           [vision OCR]             verbatim Llama mirror
 ```
 
 1. **PDF files** → Processed via `pdfplumber` with XY-cut reading order (PyMuPDF fallback) for layout-aware text extraction
-2. **Image files** → Processed via `Qwen2-VL-7B` vision-language model
+2. **Image files** → Processed via a vision-language model for OCR
 3. **All files** → Structured into JSON by [Llama-3.1-8B-Poster-Extraction](https://huggingface.co/fairdataihub/Llama-3.1-8B-Poster-Extraction), a verbatim mirror of Meta Llama 3.1 8B Instruct (not fine-tuned)
 
 ## Output Format
