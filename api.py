@@ -96,19 +96,22 @@ def thumbnails_generate():
 
     Body (JSON):
         {
-          "file_path": "posters/<env>/<uid>/filename.pdf",  // required; also accepts "pdf_path" for backwards compat
+          "file_path": "posters/<env>/<uid>[/version-<sequence>-<id>]/filename.pdf",
+          // required; also accepts "pdf_path" for backwards compatibility
           "poster_id": 123                                   // optional — updates Poster.imageUrl
         }
 
     Returns:
         { "thumbnail_path": "thumbnails/<env>/<uid>/image.jpeg" }
     """
-    # posters/<env>/<uid>/<filename>.<ext>
+    # posters/<env>/<uid>[/version-<sequence>-<id>]/<filename>.<ext>
     # <env>      — lowercase letters only (e.g. "p", "staging", "production")
     # <uid>      — alphanumeric + hyphens/underscores, 8-40 chars
-    # <filename> — no path traversal; must end in .pdf, .jpg, .jpeg, or .png
+    # <filename> — no path traversal; must use a supported poster extension
     _FILE_PATH_RE = re.compile(
-        r"^posters/[a-z]+/[a-zA-Z0-9_-]{8,40}/[^/]+\.(pdf|jpg|jpeg|png)$"
+        r"^posters/[a-z]+/[a-zA-Z0-9_-]{8,40}/"
+        r"(?:version-\d+-[a-zA-Z0-9_-]{8,40}/)?"
+        r"[^/]+\.(pdf|jpg|jpeg|png)$"
     )
 
     print("[status] api: POST /thumbnails/generate")
@@ -117,7 +120,12 @@ def thumbnails_generate():
     if not file_path:
         return jsonify({"error": "file_path is required"}), 400
     if not _FILE_PATH_RE.match(file_path):
-        return jsonify({"error": "file_path must match posters/<env>/<uid>/<filename>.(pdf|jpg|jpeg|png)"}), 400
+        message = (
+            "file_path must match posters/<env>/<uid>"
+            "[/version-<sequence>-<id>]/<filename>."
+            "(pdf|jpg|jpeg|png)"
+        )
+        return jsonify({"error": message}), 400
 
     poster_id = body.get("poster_id")
 
