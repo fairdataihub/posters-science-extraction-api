@@ -49,6 +49,9 @@ THUMBNAIL_MAX_WIDTH = 1200  # px - enough for display, keeps file size small
 THUMBNAIL_JPEG_QUALITY = 75  # 1-100;
 _IMAGE_THUMBNAIL_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 
+BUNNY_UPLOAD_ATTEMPTS = 3
+BUNNY_UPLOAD_BACKOFF_SECONDS = 2
+
 
 # --- Bunny: download file ---------------------------------------------------
 
@@ -79,23 +82,65 @@ def download_from_bunny(file_path: str, dest_path: str) -> None:
     print(f"[status] download_from_bunny: done, wrote {total_bytes} bytes")
 
 
+def stored_object_bytes(file_path: str) -> Optional[bytes]:
+    """Return the contents of an object in Bunny storage, or None if it is absent."""
+    url = f"{BUNNY_PRIVATE_STORAGE}/{file_path.lstrip('/')}"
+    headers = {"AccessKey": f"{BUNNY_PRIVATE_STORAGE_KEY}"}
+    resp = requests.get(url, headers=headers, timeout=60)
+    if resp.status_code == 404:
+        return None
+    resp.raise_for_status()
+    return resp.content
+
+
 def upload_to_bunny(file_path: str, data: bytes, content_type: str = "image/jpeg") -> None:
     """
     Upload bytes to Bunny storage at the given path.
 
     file_path: Path within the storage zone (e.g. "thumbnails/<env>/abc123/uuid.jpg").
     data: Raw bytes to upload.
+
+    A PUT can fail part way through and still leave the destination directory
+    behind, so each attempt is read back and retried until the stored object
+    matches what was sent. Raises if every attempt fails.
     """
-    print(f"[status] upload_to_bunny: uploading {len(data)} bytes to {file_path}")
     path = file_path.lstrip("/")
     url = f"{BUNNY_PRIVATE_STORAGE}/{path}"
     headers = {
         "AccessKey": f"{BUNNY_PRIVATE_STORAGE_KEY}",
         "Content-Type": content_type,
     }
-    resp = requests.put(url, headers=headers, data=data, timeout=60)
-    resp.raise_for_status()
-    print(f"[status] upload_to_bunny: done, status={resp.status_code}")
+
+    last_error = None
+    for attempt in range(1, BUNNY_UPLOAD_ATTEMPTS + 1):
+        print(
+            f"[status] upload_to_bunny: uploading {len(data)} bytes to {path} "
+            f"(attempt {attempt}/{BUNNY_UPLOAD_ATTEMPTS})"
+        )
+        try:
+            resp = requests.put(url, headers=headers, data=data, timeout=60)
+            resp.raise_for_status()
+            stored = stored_object_bytes(path)
+            if stored == data:
+                print(f"[status] upload_to_bunny: done, status={resp.status_code}")
+                return
+            if stored is None:
+                last_error = RuntimeError("Bunny accepted the PUT but stored no object")
+            else:
+                last_error = RuntimeError(
+                    f"Bunny accepted the PUT but stored {len(stored)} bytes that do not "
+                    f"match the {len(data)} bytes sent"
+                )
+        except Exception as e:
+            last_error = e
+
+        print(f"[status] upload_to_bunny: attempt {attempt} failed: {last_error}")
+        if attempt < BUNNY_UPLOAD_ATTEMPTS:
+            time.sleep(BUNNY_UPLOAD_BACKOFF_SECONDS * attempt)
+
+    raise RuntimeError(
+        f"Upload to Bunny failed for {path} after {BUNNY_UPLOAD_ATTEMPTS} attempts: {last_error}"
+    )
 
 
 def generate_thumbnail_bytes(local_path: str) -> bytes:
@@ -844,6 +889,22 @@ def run_one_cycle(extraction_lock, db_url: Optional[str] = None) -> bool:
             download_from_bunny(file_path, tmp_path)
             log(f"Job worker: downloaded to {tmp_path}")
 
+            # Thumbnail first: it only needs the downloaded file, so a poster whose
+            # extraction fails still gets a preview rather than no image at all.
+            try:
+                thumbnail_path = generate_and_upload_thumbnail(tmp_path, file_path)
+                if thumbnail_path:
+                    log(f"Job worker: thumbnail uploaded to {thumbnail_path}")
+                    update_poster_image_url(conn, poster_id, thumbnail_path)
+            except Exception as e:
+                # A failed UPDATE leaves psycopg2 holding an aborted transaction.
+                # Roll it back so extraction and the job status writes below do
+                # not all fail with InFailedSqlTransaction on this connection.
+                with contextlib.suppress(Exception):
+                    conn.rollback()
+                log(f"Job worker: thumbnail generation failed (non-fatal): {e}")
+                print(f"[status] run_one_cycle: thumbnail generation failed: {e}")
+
             print("[status] run_one_cycle: acquiring extraction lock")
             acquired = extraction_lock.acquire(timeout=EXTRACTION_LOCK_TIMEOUT_SECONDS)
             if not acquired:
@@ -874,15 +935,6 @@ def run_one_cycle(extraction_lock, db_url: Optional[str] = None) -> bool:
                 mark_job_failed(conn, job_id, f"Failed to save metadata: {e}")
                 log(f"Job worker: job {job_id} failed to save metadata: {e}")
                 return True
-
-            try:
-                thumbnail_path = generate_and_upload_thumbnail(tmp_path, file_path)
-                if thumbnail_path:
-                    log(f"Job worker: thumbnail uploaded to {thumbnail_path}")
-                    update_poster_image_url(conn, poster_id, thumbnail_path)
-            except Exception as e:
-                log(f"Job worker: thumbnail generation failed (non-fatal): {e}")
-                print(f"[status] run_one_cycle: thumbnail generation failed: {e}")
 
             return True
 
