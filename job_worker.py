@@ -82,15 +82,15 @@ def download_from_bunny(file_path: str, dest_path: str) -> None:
     print(f"[status] download_from_bunny: done, wrote {total_bytes} bytes")
 
 
-def stored_object_size(file_path: str) -> Optional[int]:
-    """Return the size in bytes of an object in Bunny storage, or None if it is absent."""
+def stored_object_bytes(file_path: str) -> Optional[bytes]:
+    """Return the contents of an object in Bunny storage, or None if it is absent."""
     url = f"{BUNNY_PRIVATE_STORAGE}/{file_path.lstrip('/')}"
     headers = {"AccessKey": f"{BUNNY_PRIVATE_STORAGE_KEY}"}
     resp = requests.get(url, headers=headers, timeout=60)
     if resp.status_code == 404:
         return None
     resp.raise_for_status()
-    return len(resp.content)
+    return resp.content
 
 
 def upload_to_bunny(file_path: str, data: bytes, content_type: str = "image/jpeg") -> None:
@@ -120,13 +120,17 @@ def upload_to_bunny(file_path: str, data: bytes, content_type: str = "image/jpeg
         try:
             resp = requests.put(url, headers=headers, data=data, timeout=60)
             resp.raise_for_status()
-            stored = stored_object_size(path)
-            if stored == len(data):
+            stored = stored_object_bytes(path)
+            if stored == data:
                 print(f"[status] upload_to_bunny: done, status={resp.status_code}")
                 return
-            last_error = RuntimeError(
-                f"Bunny accepted the PUT but stored {stored} bytes, expected {len(data)}"
-            )
+            if stored is None:
+                last_error = RuntimeError("Bunny accepted the PUT but stored no object")
+            else:
+                last_error = RuntimeError(
+                    f"Bunny accepted the PUT but stored {len(stored)} bytes that do not "
+                    f"match the {len(data)} bytes sent"
+                )
         except Exception as e:
             last_error = e
 
@@ -893,6 +897,11 @@ def run_one_cycle(extraction_lock, db_url: Optional[str] = None) -> bool:
                     log(f"Job worker: thumbnail uploaded to {thumbnail_path}")
                     update_poster_image_url(conn, poster_id, thumbnail_path)
             except Exception as e:
+                # A failed UPDATE leaves psycopg2 holding an aborted transaction.
+                # Roll it back so extraction and the job status writes below do
+                # not all fail with InFailedSqlTransaction on this connection.
+                with contextlib.suppress(Exception):
+                    conn.rollback()
                 log(f"Job worker: thumbnail generation failed (non-fatal): {e}")
                 print(f"[status] run_one_cycle: thumbnail generation failed: {e}")
 
