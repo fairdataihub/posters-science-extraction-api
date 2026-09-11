@@ -21,11 +21,9 @@ from flask_cors import CORS
 from poster2json.extract import log, load_json_model
 from job_worker import (
     run_worker_loop,
-    run_one_cycle,
     generate_and_upload_thumbnail,
-    update_poster_image_url,
-    get_conn,
     download_from_bunny,
+    worker_wake_event,
 )
 
 app = Flask(__name__)
@@ -96,13 +94,16 @@ def thumbnails_generate():
 
     Body (JSON):
         {
-          "file_path": "posters/<env>/<uid>[/version-<sequence>-<id>]/filename.pdf",
+          "file_path": "posters/<env>/<uid>[/version-<sequence>-<id>]/filename.pdf"
           // required; also accepts "pdf_path" for backwards compatibility
-          "poster_id": 123                                   // optional — updates Poster.imageUrl
         }
 
     Returns:
         { "thumbnail_path": "thumbnails/<env>/<uid>/image.jpeg" }
+
+    Deliberately touches no database. A poster id on its own cannot say which
+    environment's database it belongs to, and the staging and production id
+    spaces overlap, so the caller writes the returned URL to its own database.
     """
     # posters/<env>/<uid>[/version-<sequence>-<id>]/<filename>.<ext>
     # <env>      — lowercase letters only (e.g. "p", "staging", "production")
@@ -127,8 +128,6 @@ def thumbnails_generate():
         )
         return jsonify({"error": message}), 400
 
-    poster_id = body.get("poster_id")
-
     suffix = os.path.splitext(file_path)[-1].lower() or ".bin"
     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
     tmp_path = tmp.name
@@ -147,16 +146,6 @@ def thumbnails_generate():
     if not thumbnail_path:
         return jsonify({"error": "Could not derive thumbnail path from file_path"}), 400
 
-    if poster_id is not None:
-        try:
-            conn = get_conn()
-            try:
-                update_poster_image_url(conn, int(poster_id), thumbnail_path)
-            finally:
-                conn.close()
-        except Exception as e:
-            print(f"[status] api: imageUrl DB update failed (non-fatal): {e}")
-
     print(f"[status] api: thumbnail generated at {thumbnail_path}")
     return jsonify({"thumbnail_path": thumbnail_path}), 200
 
@@ -164,11 +153,16 @@ def thumbnails_generate():
 @app.route("/jobs/check", methods=["POST"])
 def jobs_check():
     """
-    Trigger one cycle of the job worker: claim and process one uncompleted
-    (pending) job if available. Call after submitting a job to start processing
-    without waiting for the next poll interval.
+    Wake the background job worker so a freshly submitted job is claimed without
+    waiting out the poll interval.
+
+    Returns immediately rather than extracting inline: Flask runs single
+    threaded, so doing the work here blocks every other request (/health
+    included) for the length of an extraction. The worker polls every configured
+    database, so waking it covers all environments.
     """
-    run_one_cycle(_extraction_lock)
+    print("[status] api: POST /jobs/check")
+    worker_wake_event.set()
     return "", 204
 
 
@@ -193,10 +187,13 @@ def _start_worker(db_urls: list):
 
 
 def _compute_db_targets() -> list:
-    db_urls = [("staging", None)]
+    """Databases the worker polls. Both serve real users and are drained
+    round-robin, so the order only decides the first pick of each pass."""
+    db_urls = []
     if prod_db_url := config.get_env("PRODUCTION_DATABASE_URL"):
         db_urls.append(("production", prod_db_url))
         log("Production database polling enabled")
+    db_urls.append(("staging", config.get_env("STAGING_DATABASE_URL")))
     return db_urls
 
 
