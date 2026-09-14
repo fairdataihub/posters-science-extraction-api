@@ -9,6 +9,7 @@ to PosterMetadata.
 
 import os
 import re
+import threading
 import tempfile
 import json
 import time
@@ -51,6 +52,11 @@ _IMAGE_THUMBNAIL_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 
 BUNNY_UPLOAD_ATTEMPTS = 3
 BUNNY_UPLOAD_BACKOFF_SECONDS = 2
+
+# Set by POST /jobs/check so a freshly submitted job is claimed without waiting
+# out the poll interval. The worker polls every configured database, so waking
+# it works for every environment.
+worker_wake_event = threading.Event()
 
 
 # --- Bunny: download file ---------------------------------------------------
@@ -960,7 +966,8 @@ def run_worker_loop(
     extraction_lock, poll_interval: int = POLL_INTERVAL_SECONDS, db_urls: Optional[list] = None
 ) -> None:
     """Run the poll loop forever. Use in a background thread.
-    db_urls is a list of (label, db_url) pairs to poll sequentially each cycle.
+    db_urls is a list of (label, db_url) pairs, polled round-robin so neither
+    environment can starve the other.
     Defaults to [("default", None)] which uses DATABASE_URL.
     """
     targets = db_urls or [("default", None)]
@@ -972,16 +979,29 @@ def run_worker_loop(
     )
     cycle = 0
     while True:
-        cycle += 1
-        for label, db_url in targets:
-            print(f"[status] run_worker_loop: cycle {cycle} db={label}")
-            try:
-                run_one_cycle(extraction_lock, db_url=db_url)
-            except Exception as e:
-                log(f"Job worker: error in cycle (db={label}): {e}")
-                print(f"[status] run_worker_loop: cycle error db={label}: {e}")
-                import traceback
+        # Drain every queue before waiting again. run_one_cycle handles a single
+        # job, so without this a backlog would clear at one job per database per
+        # poll interval. One job per database per pass round-robins them: both
+        # environments serve real users, so a long queue in either must not
+        # starve the other.
+        while True:
+            progressed = False
+            cycle += 1
+            for label, db_url in targets:
+                print(f"[status] run_worker_loop: cycle {cycle} db={label}")
+                try:
+                    if run_one_cycle(extraction_lock, db_url=db_url):
+                        progressed = True
+                except Exception as e:
+                    log(f"Job worker: error in cycle (db={label}): {e}")
+                    print(f"[status] run_worker_loop: cycle error db={label}: {e}")
+                    import traceback
 
-                traceback.print_exc()
-        print(f"[status] run_worker_loop: sleeping {poll_interval}s")
-        time.sleep(poll_interval)
+                    traceback.print_exc()
+            if not progressed:
+                break
+
+        print(f"[status] run_worker_loop: waiting up to {poll_interval}s")
+        # Wake early when /jobs/check signals a new submission.
+        worker_wake_event.wait(timeout=poll_interval)
+        worker_wake_event.clear()
