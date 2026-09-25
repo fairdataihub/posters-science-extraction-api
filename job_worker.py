@@ -833,6 +833,40 @@ def update_poster_image_url(conn, poster_id: int, image_url: str) -> None:
     print(f"[status] update_poster_image_url: poster_id={poster_id} imageUrl={image_url}")
 
 
+def complete_thumbnail_only_job(
+    conn, poster_id: int, job_id: str, image_url: str
+) -> None:
+    """
+    Write the preview URL and close the job in a single transaction.
+
+    For a thumbnail-only job these two writes are the same fact, so they commit
+    together: splitting them lets a failure in between leave a poster holding a
+    good preview while its job reads as failed, which sends the user to a retry
+    for work that already succeeded.
+    """
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            UPDATE "Poster"
+            SET "imageUrl" = %s, updated = now()
+            WHERE id = %s
+            """,
+            (image_url, poster_id),
+        )
+        cur.execute(
+            """
+            UPDATE "ExtractionJob"
+            SET status = 'completed', completed = true, error = NULL, updated = now()
+            WHERE id = %s
+            """,
+            (job_id,),
+        )
+        conn.commit()
+    print(
+        f"[status] complete_thumbnail_only_job: poster_id={poster_id} job_id={job_id} imageUrl={image_url}"
+    )
+
+
 def save_poster_metadata(conn, poster_id: int, extraction: dict) -> None:
     """
     Upsert PosterMetadata for the given poster from validated extraction result.
@@ -909,10 +943,21 @@ def run_one_cycle(extraction_lock, db_url: Optional[str] = None) -> bool:
             # extraction fails still gets a preview rather than no image at all.
             try:
                 thumbnail_path = generate_and_upload_thumbnail(tmp_path, file_path)
-                if not thumbnail_path and thumbnail_only:
-                    raise RuntimeError(
-                        f"Could not derive a thumbnail path from '{file_path}'"
+                if thumbnail_only:
+                    if not thumbnail_path:
+                        raise RuntimeError(
+                            f"Could not derive a thumbnail path from '{file_path}'"
+                        )
+                    # Metadata was written by the caller, so there is nothing to
+                    # extract and no need to queue behind the GPU lock. The
+                    # preview and the job close together in one transaction.
+                    log(f"Job worker: thumbnail uploaded to {thumbnail_path}")
+                    complete_thumbnail_only_job(
+                        conn, poster_id, job_id, thumbnail_path
                     )
+                    log(f"Job worker: thumbnail job {job_id} completed")
+                    print(f"[status] run_one_cycle: thumbnail job {job_id} completed")
+                    return True
                 if thumbnail_path:
                     log(f"Job worker: thumbnail uploaded to {thumbnail_path}")
                     update_poster_image_url(conn, poster_id, thumbnail_path)
@@ -932,14 +977,6 @@ def run_one_cycle(extraction_lock, db_url: Optional[str] = None) -> bool:
                     return True
                 log(f"Job worker: thumbnail generation failed (non-fatal): {e}")
                 print(f"[status] run_one_cycle: thumbnail generation failed: {e}")
-
-            if thumbnail_only:
-                # Metadata was written by the caller, so there is nothing to
-                # extract and no need to queue behind the GPU lock.
-                mark_job_completed(conn, job_id)
-                log(f"Job worker: thumbnail job {job_id} completed")
-                print(f"[status] run_one_cycle: thumbnail job {job_id} completed")
-                return True
 
             print("[status] run_one_cycle: acquiring extraction lock")
             acquired = extraction_lock.acquire(timeout=EXTRACTION_LOCK_TIMEOUT_SECONDS)

@@ -70,14 +70,26 @@ Run one job-worker cycle: if there is an uncompleted (pending) job, it is claime
 
 A background thread runs continuously:
 
-1. **Poll** the database for an `ExtractionJob` with `completed = false` and `status = 'pending'`.
+1. **Poll** the database for an `ExtractionJob` with `completed = false` and `status` in `'pending-extraction'` or `'pending-thumbnail'`.
 2. **Claim** the job (set `status = 'processing'`).
 3. **Download** the file from Bunny storage using the job’s `filePath` (and optional `fileName`).
-4. **Extract** via the [poster2json](https://github.com/fairdataihub/poster2json) library (`extract_poster`).
-5. **Upsert** `PosterMetadata` for the job’s `posterId` with the extracted JSON (creators, titles, posterContent, imageCaption, tableCaption, etc.).
-6. **Complete** the job (`status = 'completed'`, `completed = true`) or **fail** it (`status = 'failed'`, `error` set).
+4. **Render** a JPEG preview from the file and upload it to `thumbnails/<environment>/<uid>[/version-<sequence>-<id>]/image.jpeg`, then write that URL to `Poster.imageUrl`.
+5. **Extract** via the [poster2json](https://github.com/fairdataihub/poster2json) library (`extract_poster`).
+6. **Upsert** `PosterMetadata` for the job’s `posterId` with the extracted JSON (creators, titles, posterContent, imageCaption, tableCaption, etc.).
+7. **Complete** the job (`status = 'completed'`, `completed = true`) or **fail** it (`status = 'failed'`, `error` set).
 
 Only one extraction runs at a time (shared lock with any future HTTP-triggered work).
+
+### Job kinds
+
+| Queued status | Work performed | Failure of the preview |
+|---------------|----------------|------------------------|
+| `pending-extraction` | Steps 3 to 7: preview, extraction, and metadata upsert | Non-fatal; extraction continues and the job can still complete without an image |
+| `pending-thumbnail` | Steps 3 and 4 only, then complete; never takes the extraction lock | Fatal; the job is marked `failed` with the error, because the preview was the whole request |
+
+Queue a `pending-thumbnail` job when `PosterMetadata` is already written and only the preview is missing, for example a poster version that reuses metadata from the version it supersedes. The preview URL and the job completion are written in one transaction, so a poster never holds a preview that its job reports as failed.
+
+Enqueueing through the database rather than `POST /thumbnails/generate` is what makes this work from hosts that cannot open a connection to this service: the worker polls each configured database and dials out, so no inbound reachability is required.
 
 ## Configuration
 
