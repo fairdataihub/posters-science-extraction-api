@@ -248,6 +248,11 @@ def claim_next_job(conn) -> Optional[dict]:
     """
     Claim the next pending ExtractionJob (status -> processing).
     Returns the job row as dict or None if no job available.
+
+    Two kinds of work queue up here. 'pending-extraction' is the full pipeline.
+    'pending-thumbnail' is a poster whose metadata is already saved and only
+    needs a preview rendered; the UI queues those because it cannot reach this
+    service over HTTP.
     """
     print("[status] claim_next_job: querying for pending job")
     job_id = None
@@ -256,9 +261,10 @@ def claim_next_job(conn) -> Optional[dict]:
         # Select one pending job and lock it
         cur.execute(
             """
-            SELECT id, "posterId", "fileName", "filePath"
+            SELECT id, "posterId", "fileName", "filePath", status
             FROM "ExtractionJob"
-            WHERE completed = false AND status = 'pending-extraction'
+            WHERE completed = false
+              AND status IN ('pending-extraction', 'pending-thumbnail')
             ORDER BY created
             LIMIT 1
             FOR UPDATE SKIP LOCKED
@@ -879,10 +885,14 @@ def run_one_cycle(extraction_lock, db_url: Optional[str] = None) -> bool:
         poster_id = job["posterId"]
         file_path = job["filePath"]
         file_name = job["fileName"]
+        thumbnail_only = job.get("status") == "pending-thumbnail"
 
-        log(f"Job worker: claimed job {job_id} (posterId={poster_id}, file={file_name})")
+        kind = "thumbnail" if thumbnail_only else "extraction"
+        log(
+            f"Job worker: claimed {kind} job {job_id} (posterId={poster_id}, file={file_name})"
+        )
         print(
-            f"[status] run_one_cycle: processing job_id={job_id} poster_id={poster_id} file={file_name}"
+            f"[status] run_one_cycle: processing {kind} job_id={job_id} poster_id={poster_id} file={file_name}"
         )
 
         suffix = Path(file_name).suffix.lower() or ".bin"
@@ -899,6 +909,10 @@ def run_one_cycle(extraction_lock, db_url: Optional[str] = None) -> bool:
             # extraction fails still gets a preview rather than no image at all.
             try:
                 thumbnail_path = generate_and_upload_thumbnail(tmp_path, file_path)
+                if not thumbnail_path and thumbnail_only:
+                    raise RuntimeError(
+                        f"Could not derive a thumbnail path from '{file_path}'"
+                    )
                 if thumbnail_path:
                     log(f"Job worker: thumbnail uploaded to {thumbnail_path}")
                     update_poster_image_url(conn, poster_id, thumbnail_path)
@@ -908,8 +922,24 @@ def run_one_cycle(extraction_lock, db_url: Optional[str] = None) -> bool:
                 # not all fail with InFailedSqlTransaction on this connection.
                 with contextlib.suppress(Exception):
                     conn.rollback()
+                # The preview is the whole job for a thumbnail-only request, so
+                # record the failure instead of completing a job that produced
+                # nothing. The UI reads this error and offers a retry.
+                if thumbnail_only:
+                    mark_job_failed(conn, job_id, f"Thumbnail generation failed: {e}")
+                    log(f"Job worker: thumbnail job {job_id} failed: {e}")
+                    print(f"[status] run_one_cycle: thumbnail job failed: {e}")
+                    return True
                 log(f"Job worker: thumbnail generation failed (non-fatal): {e}")
                 print(f"[status] run_one_cycle: thumbnail generation failed: {e}")
+
+            if thumbnail_only:
+                # Metadata was written by the caller, so there is nothing to
+                # extract and no need to queue behind the GPU lock.
+                mark_job_completed(conn, job_id)
+                log(f"Job worker: thumbnail job {job_id} completed")
+                print(f"[status] run_one_cycle: thumbnail job {job_id} completed")
+                return True
 
             print("[status] run_one_cycle: acquiring extraction lock")
             acquired = extraction_lock.acquire(timeout=EXTRACTION_LOCK_TIMEOUT_SECONDS)
@@ -979,6 +1009,13 @@ def run_worker_loop(
     )
     cycle = 0
     while True:
+        # Consume any pending wake signal immediately BEFORE draining, never
+        # after waiting. Everything committed so far is about to be polled, so a
+        # signal lost here costs nothing - whereas clearing just before wait()
+        # would discard a signal that arrived during the drain and strand that
+        # job for a full poll interval.
+        worker_wake_event.clear()
+
         # Drain every queue before waiting again. run_one_cycle handles a single
         # job, so without this a backlog would clear at one job per database per
         # poll interval. One job per database per pass round-robins them: both
@@ -1004,4 +1041,3 @@ def run_worker_loop(
         print(f"[status] run_worker_loop: waiting up to {poll_interval}s")
         # Wake early when /jobs/check signals a new submission.
         worker_wake_event.wait(timeout=poll_interval)
-        worker_wake_event.clear()
