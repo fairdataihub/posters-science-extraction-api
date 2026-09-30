@@ -18,6 +18,12 @@ ENV DEBIAN_FRONTEND=noninteractive \
 # with "returned non-zero exit status 1" and every upload errors out. Keeping the
 # toolchain in the image makes that compile succeed regardless of which
 # bitsandbytes/triton version is resolved.
+#
+# Headless LibreOffice (no GUI): poster2json 0.10.0+ converts PowerPoint, Word,
+# Publisher and OpenDocument uploads to PDF with it before extraction. Without
+# it those uploads fail with CONVERSION_FAILED; PDF and image uploads do not
+# need it. Carlito and Caladea are metric-compatible stand-ins for Calibri and
+# Cambria, so converted layouts match the original. Adds about 360 MB.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
@@ -25,6 +31,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.10-dev \
     python3-pip \
     build-essential \
+    libreoffice-impress-nogui \
+    libreoffice-writer-nogui \
+    libreoffice-draw-nogui \
+    fonts-crosextra-carlito \
+    fonts-crosextra-caladea \
     && rm -rf /var/lib/apt/lists/*
 
 # Create symlink for python
