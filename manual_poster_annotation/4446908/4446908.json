@@ -1,0 +1,226 @@
+{
+  "$schema": "https://posters.science/schema/v0.2/poster_schema.json",
+  "identifiers": [
+    {
+      "identifier": "10.5281/zenodo.4446908",
+      "identifierType": "DOI"
+    },
+    {
+      "identifier": "zenodo_4446908_Hahn_Lemke_altmetrics20_poster.pdf",
+      "identifierType": "Other"
+    }
+  ],
+  "creators": [
+    {
+      "name": "Hahn, Oliver",
+      "nameType": "Personal",
+      "givenName": "Oliver",
+      "familyName": "Hahn",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "o.hahn@zbw.eu",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "ZBW — Leibniz Information Centre for Economics, Kiel, Germany",
+          "affiliationIdentifier": "https://ror.org/03a96gc12",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    },
+    {
+      "name": "Lemke, Steffen",
+      "nameType": "Personal",
+      "givenName": "Steffen",
+      "familyName": "Lemke",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "s.lemke@zbw.eu",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "ZBW — Leibniz Information Centre for Economics, Kiel, Germany",
+          "affiliationIdentifier": "https://ror.org/03a96gc12",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    }
+  ],
+  "titles": [
+    {
+      "title": "An Exploration of Scientific Press Releases in the Context of Altmetrics"
+    }
+  ],
+  "publisher": {
+    "name": "Zenodo",
+    "publisherIdentifier": "https://ror.org/01zzys052",
+    "publisherIdentifierScheme": "ROR",
+    "schemeURI": "https://ror.org"
+  },
+  "publicationYear": 2020,
+  "subjects": [
+    {
+      "subject": "altmetrics"
+    },
+    {
+      "subject": "press releases"
+    },
+    {
+      "subject": "science communication"
+    },
+    {
+      "subject": "EurekAlert!"
+    },
+    {
+      "subject": "IDW-Online"
+    },
+    {
+      "subject": "scientometrics"
+    },
+    {
+      "subject": "content analysis"
+    }
+  ],
+  "dates": [
+    {
+      "date": "2020",
+      "dateType": "Issued"
+    },
+    {
+      "date": "2020-10-14",
+      "dateType": "Presented",
+      "dateInformation": "altmetrics20 – The 2020 Altmetrics Workshop"
+    }
+  ],
+  "language": "en",
+  "types": {
+    "resourceType": "Conference Poster",
+    "resourceTypeGeneral": "Poster"
+  },
+  "relatedIdentifiers": [
+    {
+      "relatedIdentifier": "https://doi.org/10.5281/zenodo.4446908",
+      "relatedIdentifierType": "DOI",
+      "relationType": "IsIdenticalTo",
+      "resourceTypeGeneral": "Image"
+    },
+    {
+      "relatedIdentifier": "https://zenodo.org/record/4446908",
+      "relatedIdentifierType": "URL",
+      "relationType": "IsIdenticalTo",
+      "resourceTypeGeneral": "Image"
+    }
+  ],
+  "sizes": [
+    "A0 portrait",
+    "PDF"
+  ],
+  "formats": [
+    "application/pdf"
+  ],
+  "version": "1.0.0",
+  "rightsList": [
+    {
+      "rights": "Creative Commons Attribution 4.0 International",
+      "rightsUri": "https://creativecommons.org/licenses/by/4.0/",
+      "rightsIdentifier": "CC-BY-4.0",
+      "rightsIdentifierScheme": "SPDX",
+      "schemeUri": "https://spdx.org/licenses/"
+    }
+  ],
+  "descriptions": [
+    {
+      "description": "Press releases are published by organizations to bring attention to achievements they have reached. In the scientific domain, for example research institutions, funders, and academic publishers make use of press releases to advertise newly published papers and particularly promising scientific results. For altmetrics research, which analyzes the presence of scientific objects in various public domains like for instance social media, news, or policy documents, so far press releases have been an almost unregarded albeit promising source of data (Bowman & Hassan, 2019). Also, previous studies have shown a strong association between a journal article receiving promotion in a press release and its later citations and altmetrics (Lemke, 2020), further warranting a precise look at this communication format's characteristics. We set out to explore two large samples of science press releases to gain further insights on their contents, creators, and role in the communication of research.",
+      "descriptionType": "Abstract"
+    }
+  ],
+  "fundingReferences": [
+    {
+      "funderName": "German Federal Ministry of Education and Research",
+      "awardNumber": "01PU17018A",
+      "awardTitle": "MeWiKo"
+    }
+  ],
+  "conference": {
+    "conferenceName": "altmetrics20 – The 2020 Altmetrics Workshop",
+    "conferenceYear": 2020,
+    "conferenceAcronym": "altmetrics20"
+  },
+  "researchField": "Scientometrics",
+  "content": {
+    "sections": [
+      {
+        "sectionTitle": "Introduction",
+        "sectionContent": "Press releases are published by organizations to bring attention to achievements they have reached. In the scientific domain, for example research institutions, funders, and academic publishers make use of press releases to advertise newly published papers and particularly promising scientific results. For altmetrics research, which analyzes the presence of scientific objects in various public domains like for instance social media, news, or policy documents, so far press releases have been an almost unregarded albeit promising source of data (Bowman & Hassan, 2019). Also, previous studies have shown a strong association between a journal article receiving promotion in a press release and its later citations and altmetrics (Lemke, 2020), further warranting a precise look at this communication format's characteristics.\n\nWe set out to explore two large samples of science press releases to gain further insights on their contents, creators, and role in the communication of research."
+      },
+      {
+        "sectionTitle": "EurekAlert! & IDW-Online",
+        "sectionContent": "Portals for publication of science news– and press releases.\n\nEurekAlert!\n• founded in 1996 by the American Association for the Advancement of Sciences\n• 14,000+ registered journalists from 90+ countries (de Vrieze, 2018)\n\nIDW-Online\n• founded in 1995 by a coalition of press officers from German universities\n• 8,000+ registered journalists (likely predominantly German-speaking)"
+      },
+      {
+        "sectionTitle": "Dataset & Methods",
+        "sectionContent": "Our data consists of two samples of press releases published over one year between April 2016 and March 2017.\n\n• 26,358 press releases from EurekAlert!\n• average length of press release: 755 words\n• 1,856 press releases from IDW-Online\n• average length of press release: 724 words\n\nTwo randomly chosen subsamples of 100 press releases each were used for content analysis by two independent raters."
+      },
+      {
+        "sectionTitle": "Subjects",
+        "sectionContent": "Disciplines based on Scopus subjects of 10,483 journal articles promoted in the press releases. Frequent occurrences: Life Sciences (13.95%), Health Sciences (12.79%), Medicine (12.59%), Biochemistry (9.27%), Genetics and Molecular Biology (9.27%), Physical Sciences (7.55%), Agricultural and Biological Sciences (5.20%).\n\nDisciplines assigned to press releases by IDW-Online. Frequent occurrences: Biology (13.67%), Medicine (11.13%), Environment and Ecology (7.76%), Chemistry (6.57%), Physics (incl. Astronomy) (6.35%)."
+      },
+      {
+        "sectionTitle": "Topics",
+        "sectionContent": "The 50 most frequent word stems in the titles of press releases. The Porter Stemming Algorithm was used."
+      },
+      {
+        "sectionTitle": "Content Analysis — Press Release Texts",
+        "sectionContent": "From each dataset, 100 random press releases were examined for mentions of…\n… featured studies' Methods,\n… their Limitations,\n… the findings' immediate practical Implications,\n… other studies, researchers or institutions not directly involved in the featured study (References),\n… or if they did not mention any specific study at all (No Research).\n\nInter-rater reliability as Cohen's kappa k = 0.89 with two raters."
+      },
+      {
+        "sectionTitle": "Content Analysis — Releasing Institutions",
+        "sectionContent": "EurekAlert!: Universities (public and private) account for large shares, with significant Publisher/Journal presence.\nIDW-Online: Universities (public and private) account for large shares, with significant Non-University Research Institute presence.\n\nCategories: University (public), University (private), Non-University Research Institute, Publisher/Journal, Company, Government Agency, Hospital/Medical Center, Other."
+      },
+      {
+        "sectionTitle": "Conclusion & Future Work",
+        "sectionContent": "• Press releases on both EurekAlert! and IDW-Online are dominated by life sciences, followed by physical sciences; other subjects are rare\n• They frequently describe featured studies' methodologies and often also practical implications, descriptions of limitations or references to other research are less typical\n• Structurally, press releases seem to be a comparatively homogeneous format of external science communication, e.g. compared to news articles\n• Regarding the institutions submitting press releases, our analysis suggests substantial differences between both platforms: while universities account for large shares of the submissions to both portals, EurekAlert! seems to be shaped more by publishers and journals, while IDW-Online features many contributions from non-university research institutes\n• In future work, we will apply machine learning to automatically classify larger samples of the collected press releases, as well as combine the datasets described here to datasets of other formats of external science communication, e.g. news articles, to analyze links between different communication channels"
+      },
+      {
+        "sectionTitle": "References",
+        "sectionContent": "• Bowman, T. D., & Hassan, S.-U. (2019). Science News and Altmetrics: Looking at EurekAlert!. Presented at altmetrics19 – The 2019 Altmetrics Workshop, Stirling, Scotland, 11 October 2019. Retrieved from http://altmetrics.org/wp-content/uploads/2019/10/Bowman_altmetrics19_paper_6.pdf.\n• Lemke, S. (2020). The Effect of Press Releases on Promoted Articles' Citations and Altmetrics. Presented at Metrics 2020: ASIS&T Virtual Workshop on Informetrics and Scientometrics Research, Pittsburgh, Pennsylvania, USA, 22-23 October 2020.\n• de Vrieze, J. (2018). EurekAlert! has spoiled science news. Here's how we can fix it. VWN - Vereniging voor Wetenschapsjournalistiek en -communicatie Nederland. Retrieved from https://www.vwn.nu/?p=2225/."
+      },
+      {
+        "sectionTitle": "Acknowledgements",
+        "sectionContent": "We wish to thank the German Federal Ministry of Education and Research for funding our research project MeWiKo (grant number 01PU17018A); EurekAlert! and IDW-Online for granting us access to their press release data; as well as Julian Sakmann for his help in the manual coding."
+      },
+      {
+        "sectionContent": "Oliver Hahn\nE-Mail: o.hahn@zbw.eu\nSteffen Lemke\nE-Mail: s.lemke@zbw.eu\nAddress: Düsternbrooker Weg 120, 24105 Kiel, Germany"
+      }
+    ]
+  },
+  "imageCaptions": [
+    {
+      "id": "fig1",
+      "caption": "Distribution of word lengths (occurrence histograms) for EurekAlert! and IDW-Online press releases."
+    },
+    {
+      "id": "fig2",
+      "caption": "Subject/discipline word clouds for EurekAlert! (Scopus-based) and IDW-Online (assigned categories)."
+    },
+    {
+      "id": "fig3",
+      "caption": "Topic word clouds showing the 50 most frequent word stems in press release titles (Porter Stemming Algorithm) for EurekAlert! and IDW-Online."
+    },
+    {
+      "id": "fig4",
+      "caption": "Content analysis bar chart: occurrences of Methods, Limitations, Implications, References, and No Research mentions across EurekAlert! and IDW-Online samples."
+    },
+    {
+      "id": "fig5",
+      "caption": "Pie charts showing releasing institution types for EurekAlert! and IDW-Online (University public/private, Non-University Research Institute, Publisher/Journal, Company, Government Agency, Hospital/Medical Center, Other)."
+    }
+  ],
+  "tableCaptions": []
+}

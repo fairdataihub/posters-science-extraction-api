@@ -1,0 +1,215 @@
+{
+  "$schema": "https://posters.science/schema/v0.2/poster_schema.json",
+  "identifiers": [
+    {
+      "identifier": "10.5281/zenodo.4448680",
+      "identifierType": "DOI"
+    },
+    {
+      "identifier": "zenodo_4448680_Poster_qSOFC_INNOSOFC_20180626.pdf",
+      "identifierType": "Other"
+    }
+  ],
+  "creators": [
+    {
+      "name": "Rautanen, Markus",
+      "nameType": "Personal",
+      "givenName": "Markus",
+      "familyName": "Rautanen",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "Markus.Rautanen@vtt.fi",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "VTT Technical Research Centre of Finland Ltd",
+          "affiliationIdentifier": "https://ror.org/04b181w54",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    },
+    {
+      "name": "Himanen, Olli",
+      "nameType": "Personal",
+      "givenName": "Olli",
+      "familyName": "Himanen",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "Olli.Himanen@vtt.fi",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "VTT Technical Research Centre of Finland Ltd",
+          "affiliationIdentifier": "https://ror.org/04b181w54",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    }
+  ],
+  "titles": [
+    {
+      "title": "Mass-manufacturing and quality assurance solutions in SOFC value chain in FCH JU projects qSOFC and INNO-SOFC"
+    }
+  ],
+  "publisher": {
+    "name": "Zenodo",
+    "publisherIdentifier": "https://ror.org/01zzys052",
+    "publisherIdentifierScheme": "ROR",
+    "schemeURI": "https://ror.org"
+  },
+  "publicationYear": 2018,
+  "subjects": [
+    {
+      "subject": "Solid Oxide Fuel Cells"
+    },
+    {
+      "subject": "SOFC"
+    },
+    {
+      "subject": "Manufacturing"
+    },
+    {
+      "subject": "Quality Assurance"
+    },
+    {
+      "subject": "Fuel Cells"
+    },
+    {
+      "subject": "Hydrogen"
+    },
+    {
+      "subject": "FCH JU"
+    },
+    {
+      "subject": "Machine Vision"
+    },
+    {
+      "subject": "Energy Technology"
+    }
+  ],
+  "dates": [
+    {
+      "date": "2018-06-26",
+      "dateType": "Presented",
+      "dateInformation": "FCH JU project dissemination event"
+    }
+  ],
+  "language": "en",
+  "types": {
+    "resourceType": "Conference Poster",
+    "resourceTypeGeneral": "Poster"
+  },
+  "relatedIdentifiers": [
+    {
+      "relatedIdentifier": "https://www.qsofc.eu",
+      "relatedIdentifierType": "URL",
+      "relationType": "IsSupplementedBy",
+      "resourceTypeGeneral": "Other"
+    },
+    {
+      "relatedIdentifier": "https://www.innosofc.eu",
+      "relatedIdentifierType": "URL",
+      "relationType": "IsSupplementedBy",
+      "resourceTypeGeneral": "Other"
+    }
+  ],
+  "sizes": [
+    "A0 landscape",
+    "PDF"
+  ],
+  "formats": [
+    "application/pdf"
+  ],
+  "version": "1.0.0",
+  "rightsList": [
+    {
+      "rights": "Creative Commons Attribution 4.0 International",
+      "rightsUri": "https://creativecommons.org/licenses/by/4.0/",
+      "rightsIdentifier": "CC-BY-4.0",
+      "rightsIdentifierScheme": "SPDX",
+      "schemeUri": "https://spdx.org/licenses/"
+    }
+  ],
+  "descriptions": [
+    {
+      "description": "The poster presents mass-manufacturing and quality assurance solutions in the SOFC value chain for FCH JU projects qSOFC and INNO-SOFC. The targets include reducing cell manufacturing cost to 400 €/kW at a production volume of 10 MW/year and increasing production yield in all parts of the stack manufacturing value chain to above 95% by automation and quality assurance. The methods employed include automated machine vision inspection systems, optimization of cell manufacturing for high-speed manufacturing, and development and validation of relevant quality assurance procedures in the interconnect manufacturing process. The results achieved include higher and more homogeneous cell quality, higher yield, and lower scrap rate throughout production.",
+      "descriptionType": "Other"
+    }
+  ],
+  "fundingReferences": [
+    {
+      "funderName": "Fuel Cells and Hydrogen Joint Undertaking (FCH JU)",
+      "funderIdentifier": "https://ror.org/04yvx7t08",
+      "funderIdentifierType": "ROR"
+    }
+  ],
+  "conference": {
+    "conferenceName": "Unknown Conference",
+    "conferenceYear": 2018
+  },
+  "researchField": "Energy Engineering",
+  "content": {
+    "sections": [
+      {
+        "sectionTitle": "Cells",
+        "sectionContent": "Targets\n• Reduce cell manufacturing cost to 400 €/kW at production volume of 10 MW/year\n• Increase production yield in all parts of stack manufacturing value chain to above 95% by automation and quality assurance\nMethods\n• Automated machine vision inspection system to detect faults during cell manufacturing\n• Optimization of the cell manufacturing for high-speed manufacturing\nResults\n• Higher and more homogeneous cell quality\n• Higher yield and lower scrap rate throughout production"
+      },
+      {
+        "sectionTitle": "Interconnects",
+        "sectionContent": "Targets\n• Interconnect manufacturing yield of 95%\n• Development and validation of relevant quality assurance procedures in the interconnect manufacturing process\nMethods\n• Failure mode and effect analysis (FMEA) of interconnect manufacturing process\n• Automated laser-scanning of interconnect geometries\n• Integrated leak tightness measurement system to check interconnect welds/brazes\nResults\n• Improved quality of interconnects\n• Reduced scrap rate"
+      },
+      {
+        "sectionTitle": "Stacks",
+        "sectionContent": "Targets\n• Streamline stack manufacturing process and cut cost by increasing yield and lowering OPEX and CAPEX related to manufacturing infrastructure\n• Manufacture stacks for 60 kW INNO-SOFC system\nMethods\n• Testing and analysis of three different manufacturing and conditioning procedures using 30 stacks\n• Statistical analysis of data\nResults\n• Optimized stack assembly and conditioning processes identified\n• Potential cost-reductions corresponding to each process identified"
+      },
+      {
+        "sectionTitle": "Systems",
+        "sectionContent": "Targets\n• System electrical efficiency 60%\n• System total efficiency 85%\n• High emphasis on cost reduction, 4000 € / kW system cost\nMethods\n• Effective collaboration throughout the value chain enables optimization of the whole system and its components. Key components are specifically designed and optimized for this system.\nResults\n• System conceptual design ready, exceeds project targets\n• System design enables significant reduction in parts count and assembly time"
+      },
+      {
+        "sectionContent": "www.qSOFC.eu\nwww.innosofc.eu\nMarkus Rautanen +358 40 538 7552 Markus.Rautanen@vtt.fi\nOlli Himanen +358 40 352 6298 Olli.Himanen@vtt.fi"
+      }
+    ]
+  },
+  "imageCaptions": [
+    {
+      "id": "fig1",
+      "caption": "Example of a 3D defect detection and classification by the automated machine vision system in qSOFC"
+    },
+    {
+      "id": "fig2",
+      "caption": "Machine vision rig developed by HaikuTech"
+    },
+    {
+      "id": "fig3",
+      "caption": "Example of stack assembly robot"
+    },
+    {
+      "id": "fig4",
+      "caption": "Example of fully automated assembly and testing line"
+    },
+    {
+      "id": "fig5",
+      "caption": "Manufacturing process at Elcogen"
+    },
+    {
+      "id": "fig6",
+      "caption": "INNO-SOFC stack"
+    },
+    {
+      "id": "fig7",
+      "caption": "Convion system"
+    },
+    {
+      "id": "fig8",
+      "caption": "Use cases of Convion C50 SOFC"
+    }
+  ],
+  "tableCaptions": []
+}

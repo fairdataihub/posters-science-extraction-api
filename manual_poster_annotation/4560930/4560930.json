@@ -1,0 +1,232 @@
+{
+  "$schema": "https://posters.science/schema/v0.2/poster_schema.json",
+  "identifiers": [
+    {
+      "identifier": "10.5281/zenodo.4560930",
+      "identifierType": "DOI"
+    },
+    {
+      "identifier": "zenodo_4560930_AAC_Poster_Final.pdf",
+      "identifierType": "Other"
+    }
+  ],
+  "creators": [
+    {
+      "name": "Couperus, Andrew A.",
+      "nameType": "Personal",
+      "givenName": "Andrew A.",
+      "familyName": "Couperus",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "andcoup@astro.gsu.edu",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "Georgia State University, Atlanta, GA",
+          "affiliationIdentifier": "https://ror.org/03qt6ba18",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        },
+        {
+          "name": "RECONS Institute, Chambersburg, PA"
+        }
+      ]
+    },
+    {
+      "name": "Henry, Todd J.",
+      "nameType": "Personal",
+      "givenName": "Todd J.",
+      "familyName": "Henry",
+      "affiliation": [
+        {
+          "name": "RECONS Institute, Chambersburg, PA"
+        }
+      ]
+    },
+    {
+      "name": "Osten, Rachel A.",
+      "nameType": "Personal",
+      "givenName": "Rachel A.",
+      "familyName": "Osten",
+      "affiliation": [
+        {
+          "name": "Space Telescope Science Institute (STScI), Baltimore, MD",
+          "affiliationIdentifier": "https://ror.org/036f5mx38",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    },
+    {
+      "name": "Jao, Wei-Chun",
+      "nameType": "Personal",
+      "givenName": "Wei-Chun",
+      "familyName": "Jao",
+      "affiliation": [
+        {
+          "name": "Georgia State University, Atlanta, GA"
+        }
+      ]
+    },
+    {
+      "name": "Vrijmoet, Eliot H.",
+      "nameType": "Personal",
+      "givenName": "Eliot H.",
+      "familyName": "Vrijmoet",
+      "affiliation": [
+        {
+          "name": "Georgia State University, Atlanta, GA"
+        },
+        {
+          "name": "RECONS Institute, Chambersburg, PA"
+        }
+      ]
+    },
+    {
+      "name": "the RECONS Team",
+      "nameType": "Organizational"
+    }
+  ],
+  "titles": [
+    {
+      "title": "Twinkle Twinkle Little Star: ET Wonders How You Are"
+    }
+  ],
+  "publisher": {
+    "name": "Zenodo",
+    "publisherIdentifier": "https://ror.org/01zzys052",
+    "publisherIdentifierScheme": "ROR",
+    "schemeURI": "https://ror.org"
+  },
+  "publicationYear": 2021,
+  "subjects": [
+    {
+      "subject": "M Dwarf Stars"
+    },
+    {
+      "subject": "Stellar Activity Cycles"
+    },
+    {
+      "subject": "Binary Stars"
+    },
+    {
+      "subject": "Magnetic Dynamos"
+    },
+    {
+      "subject": "Photometry"
+    },
+    {
+      "subject": "Stellar Astrophysics"
+    },
+    {
+      "subject": "RECONS"
+    },
+    {
+      "subject": "Gaussian Process"
+    },
+    {
+      "subject": "Lomb-Scargle Periodogram"
+    },
+    {
+      "subject": "Gaia"
+    }
+  ],
+  "dates": [
+    {
+      "date": "2021-02-25",
+      "dateType": "Issued"
+    }
+  ],
+  "language": "en",
+  "types": {
+    "resourceType": "Conference Poster",
+    "resourceTypeGeneral": "Poster"
+  },
+  "relatedIdentifiers": [
+    {
+      "relatedIdentifier": "https://www.recons.org",
+      "relatedIdentifierType": "URL",
+      "relationType": "IsDocumentedBy",
+      "resourceTypeGeneral": "Other"
+    },
+    {
+      "relatedIdentifier": "https://www.astro.gsu.edu/~andcoup/",
+      "relatedIdentifierType": "URL",
+      "relationType": "IsSupplementedBy",
+      "resourceTypeGeneral": "Other"
+    }
+  ],
+  "sizes": [
+    "A0 landscape",
+    "PDF"
+  ],
+  "formats": [
+    "application/pdf"
+  ],
+  "version": "1.0.0",
+  "rightsList": [
+    {
+      "rights": "Creative Commons Attribution 4.0 International",
+      "rightsUri": "https://creativecommons.org/licenses/by/4.0/",
+      "rightsIdentifier": "CC-BY-4.0",
+      "rightsIdentifierScheme": "SPDX",
+      "schemeUri": "https://spdx.org/licenses/"
+    }
+  ],
+  "descriptions": [
+    {
+      "description": "This poster presents two complementary studies of M dwarf magnetic activity from the REsearch Consortium On Nearby Stars (RECONS). The SURVEY component studies long-term stellar activity cycles in a volume-complete sample of 463 M dwarfs within 16.7 parsecs, uncovering ~20 confident stellar cycles in fully convective stars using 20+ years of differential VRI photometry from the SMARTS 0.9m at CTIO. The TWINS component studies magnetic activity differences between 36 pairs of nearly identical M dwarf wide binary companions compiled from Gaia DR2, using multi-wavelength observations (photometry, Hα spectroscopy via CHIRON, speckle imaging at SOAR, Chandra X-ray) to test assumptions of magnetic predictability in stars with identical masses and ages.",
+      "descriptionType": "Abstract"
+    },
+    {
+      "description": "SURVEY: Differential VRI photometry with SMARTS 0.9m at CTIO (~7 mmag precision, 4-6 observations/year, >20 year baseline). Stellar cycle detection via Gaussian Process model (combining rotational modulation + long-term cycles) and Lomb-Scargle periodogram. TWINS: 36 M dwarf binary pairs from Gaia DR2 with photometric similarity <0.1 mag across BP, RP, J, H, Ks; mass difference <3%. Multi-wavelength activity tracers: SMARTS 0.9m photometry, CHIRON Hα spectroscopy, SOAR 4.1m speckle imaging, Chandra X-ray.",
+      "descriptionType": "Methods"
+    },
+    {
+      "description": "Presented at the American Astronomical Society meeting. File labeled AAC (AAS Conference) poster.",
+      "descriptionType": "Other"
+    }
+  ],
+  "conference": {
+    "conferenceName": "American Astronomical Society Meeting",
+    "conferenceAcronym": "AAS",
+    "conferenceYear": 2021
+  },
+  "researchField": "Astrophysics",
+  "content": {
+    "sections": [
+      {
+        "sectionTitle": "The RECONS Program",
+        "sectionContent": "M dwarfs comprise three-quarters of all stars (Henry et al. 2006; 2018), and host a plethora of exoplanets that are presently being revealed. In order to inform the overall solar neighborhood, and to explore the viability of these common targets as habitable exoplanet hosts, the REsearch Consortium On Nearby Stars (RECONS: www.recons.org) has spent over two decades studying nearby red dwarfs.\nThe RECONS work presented here focuses on the poorly studied long-term M Dwarf spot activity cycles (SURVEY) — analogous to the 11-year solar cycle — as well as the magnetic activity behavior of 36 M dwarf “twin” binaries hosting nearly identical component stars (TWINS). Both aspects of this work provide critically valuable results to expand our understanding of M dwarf magnetic dynamos, particularly in fully convective stars.\nSMARTS time is available on the 0.9m for $600/night.\nThe RECONS program obtains differential VRI photometry and astrometry observations using the SMARTS 0.9m at the Cerro Tololo Inter-American Observatory. We routinely acquire new data 4–6 times per year and typically reach a photometric precision limit of about 7 millimagnitudes (mmag). Our ongoing coverage currently spans more than 20 years, offering a unique and growing long-term dataset for examining red dwarfs.\nRef: T. J. Henry et al. 2006, AJ, 132, 2360; 2018, AJ, 155, 265."
+      },
+      {
+        "sectionTitle": "A Tale of Two Samples",
+        "sectionContent": "SURVEY — Our stellar cycle efforts study an effectively volume-complete “Survey” sample of 463 stars all within 16.7 parsecs and south of 0° declination on the sky. This comprises a robust and statistically representative set of stars, adding significant value and reliability to our results.\nTWINS — Our second sample consists of 36 common proper motion M dwarf twin wide binaries — 72 total stars — compiled from Gaia DR2. Components in each pair have BP, RP, J, H, and Kₛ all differing by less than 0.1mag. Estimated masses differ by <3% in all cases. Red lines connect each binary pair, and grey points show the Gaia background."
+      },
+      {
+        "sectionTitle": "M Dwarf Stellar Cycles - SURVEY",
+        "sectionContent": "Our efforts have so far uncovered about 20 confident stellar cycles in fully convective M dwarfs, the largest such collection, which significantly expands the known cycles in this regime. These results are pending final analysis and publication, including a discussion of their implications for dynamo theory in fully convective stars (Couperus et al. in prep). Several dozen more candidate cycles have also been identified and are being analyzed, containing stars spanning the entire M dwarf sequence.\nWe show 4 of our detected cycles here as examples. GJ1061 and GJ234AB demonstrate fits produced via a novel Gaussian Process based effective model that combines components for both short-term rotational modulation and long-term stellar cycles. For comparison, WT460AB and GJ358 demonstrate cycle period estimates based on a more traditional Lomb-Scargle periodogram analysis."
+      },
+      {
+        "sectionTitle": "M Dwarf Twin Binaries - TWINS",
+        "sectionContent": "Our twin binary components have similar estimated masses and photometry, and are presumably of the same age and metallicity. Evolutionary models and conventional thinking might suggest that such twin stars should evolve similarly, resulting in similar overall magnetic properties. We are testing this assumption of magnetic predictability by examining magnetically relevant tracers in each of our twin pairs to determine if they show similar or rather different behaviors.\nWe are targeting our twin systems for long-term variability and rotation rates at the CTIO/SMARTS 0.9m, checking Hα activity with CHIRON at the CTIO/SMARTS 1.5m, obtaining speckle imaging at the SOAR 4.1m to check for unresolved companions, and awaiting Chandra X-ray observations scheduled for 4 pairs."
+      },
+      {
+        "sectionContent": "andcoup@astro.gsu.edu | www.astro.gsu.edu/~andcoup/"
+      }
+    ]
+  },
+  "imageCaptions": [
+    {
+      "id": "fig1",
+      "caption": "Black points represent nightly means of observations. Gray shaded regions indicate the noise range of reference stars in the field — the exact value is given in gray in the upper right. Red lines show various fits to the variability trends, as described above. Cycle period estimates from the fits are given in the bottom left, and peak-to-peak amplitudes are given in the bottom right."
+    },
+    {
+      "id": "fig2",
+      "caption": "These figures show observed magnetic activity differences in 4 of our twin binaries. (Top) — Hα line strength comparisons, showcasing significant differences. (Bottom Left) — Photometric activity differences for a twin pair, sustained over 7 years. (Bottom Right) — Chandra X-ray data supporting roughly a factor of 3 difference in X-ray flux for the pair. These “misbehaving” twins will offer excellent testing grounds to examine and constrain dynamo theory."
+    }
+  ],
+  "tableCaptions": []
+}

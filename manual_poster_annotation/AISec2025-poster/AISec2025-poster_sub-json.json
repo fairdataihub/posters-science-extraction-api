@@ -1,0 +1,145 @@
+{
+  "$schema": "https://posters.science/schema/v0.2/poster_schema.json",
+  "creators": [
+    {
+      "name": "ElZemity, Adel",
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "https://orcid.org/0000-0002-5402-7837",
+          "nameIdentifierScheme": "ORCID",
+          "schemeURI": "https://orcid.org"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "University of Kent"
+        }
+      ]
+    },
+    {
+      "name": "Arief, Budi",
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "https://orcid.org/0000-0002-1830-1587",
+          "nameIdentifierScheme": "ORCID",
+          "schemeURI": "https://orcid.org"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "University of Kent"
+        }
+      ]
+    },
+    {
+      "name": "Li, Shujun",
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "https://orcid.org/0000-0001-5628-7328",
+          "nameIdentifierScheme": "ORCID",
+          "schemeURI": "https://orcid.org"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "University of Kent"
+        }
+      ]
+    }
+  ],
+  "titles": [
+    {
+      "title": "CyberLLMInstruct: A Pseudo-malicious Dataset Revealing Safety-performance Trade-offs in Cyber Security LLM Fine-tuning"
+    }
+  ],
+  "subjects": [
+    {
+      "subject": "cyber security"
+    },
+    {
+      "subject": "large language models"
+    },
+    {
+      "subject": "fine-tuning"
+    }
+  ],
+  "descriptions": [
+    {
+      "description": "Our research introduces CyberLLMInstruct, a dataset of 54,928 pseudo-malicious instruction-response pairs. We found that fine-tuning Large Language Models (LLMs) on this dataset dramatically improves cyber security task performance but severely compromises their safety resilience against attacks like prompt injection.",
+      "descriptionType": "Abstract"
+    }
+  ],
+  "content": {
+    "sections": [
+      {
+        "sectionTitle": "Introduction",
+        "sectionContent": "Our research introduces CyberLLMInstruct, a dataset of 54,928 pseudo-malicious instruction-response pairs. We found that fine-tuning Large Language Models (LLMs) on this dataset dramatically improves cyber security task performance but severely compromises their safety resilience against attacks like prompt injection.\n\nProblem Statement: LLMs are being integrated into cyber security for tasks like malware analysis and threat detection. However, fine-tuning them for these specific tasks may introduce critical safety vulnerabilities.\n\nResearch Gap: There is a lack of comprehensive datasets and evaluations that expose the trade-off between task performance and safety resilience in LLMs fine-tuned for cyber security (see Table 1).\n\nObjective: To introduce the CyberLLMInstruct dataset and evaluate how fine-tuning impacts both the performance and safety of LLMs in a cyber security context (see Table 2)."
+      },
+      {
+        "sectionTitle": "Methodology",
+        "sectionContent": "Dataset Creation: compiled from diverse sources, including Capture the Flag (CTF) challenges, academic papers, industry reports, and Common Vulnerabilities and Exposures (CVE) databases, covering a wide range of cyber security tasks (see Figure 1)\n\nEvaluation: comprehensive evaluation using seven open-source LLMs, measuring performance with CyberMetric and safety with DeepEval"
+      },
+      {
+        "sectionTitle": "Dataset Utility",
+        "sectionContent": "Table 2: Accuracy results (%) for different base (before arrow) and fine-tuned (after arrow) LLMs on the CyberMetric benchmark"
+      },
+      {
+        "sectionTitle": "Conclusion",
+        "sectionContent": "There is a clear, quantifiable trade-off between performance and safety.\n• Significant performance gains, with models achieving up to 92.50% accuracy on the CyberMetric benchmark (see Table 2).\n• Fine-tuning an LLM to be highly proficient in cyber security tasks consistently led to decreased security scores across all vulnerability categories. For example, Llama 3.1 8B's security score dropped from 0.95 to 0.15 against prompt injection (see Figure 4).\n• Fine-tuning also reduced the inference efficiency for all models (see Figure 5).\nModel size and architecture affect safety resilience following fine-tuning using the CyberLLMInstruct dataset, with the effect varying across attack categories (see Figure 6).\n\nFuture Work:\n• Develop new fine-tuning methodologies that can effectively balance performance gains with the preservation of safety and resilience.\n• Ablation analysis on different categories of cyber security data to understand how specific types of content, such as malware-related or social engineering data, affect model safety."
+      },
+      {
+        "sectionTitle": "Selected papers citing CyberLLMInstruct",
+        "sectionContent": "(as of 30 September 2025)\n\nAlmorjan, A., Basheri, M., & Almasre, M. (2025). Large Language Models for Synthetic Dataset Generation of Cyber Security Indicators of Compromise. Sensors, 25(9), 2825. https://doi.org/10.3390/s25092825\n\nElZemity, A., Arief, B., & Li, S. (2025). Analysing Safety Risks in LLMs Fine-Tuned With Pseudo-Malicious Cyber Security Data. Proceedings of the 2025 International Workshop on Security and Artificial Intelligence (SECAI 2025), 25–26 September 2025. arXiv preprint arXiv:2505.09974. https://doi.org/10.48550/arXiv.2505.09974\n\nGungor, O., Sood, R., Wang, H., & Rosing, T. (2025). AQUA-LLM: Evaluating Accuracy, Quantization, and Adversarial Robustness Trade-Offs in LLMs for Cyber Security Question Answering. arXiv preprint arXiv:2509.13514. https://doi.org/10.48550/arXiv.2509.13514\n\nMohsin, A., Janicke, H., Ibrahim, A., Sarker, I. H., & Camtepe, S. (2025). A Unified Framework for Human–AI Collaboration in Security Operations Centers With Trusted Autonomy. arXiv preprint arXiv:2505.23397. https://doi.org/10.48550/arXiv.2505.23397"
+      },
+      {
+        "sectionContent": "CyberLLMInstruct GitHub Repository\ngithub.com/adelsamir01/CyberLLMInstruct\n\nCyberLLMInstruct arXiv Preprint\narxiv.org/abs/2503.09334\n\nNote: All figure and table numbers in the poster match those in the paper."
+      }
+    ]
+  },
+  "imageCaptions": [
+    {
+      "id": "fig1",
+      "caption": "Figure 1: Security categories in CyberLLMInstruct dataset"
+    },
+    {
+      "id": "fig2",
+      "caption": "Figure 2: A high-level overview of the dataset creation process"
+    },
+    {
+      "id": "fig3",
+      "caption": "Figure 3: Abstraction of dual impacts of LLMs in cyber security"
+    },
+    {
+      "id": "fig4",
+      "caption": "Figure 4: Performance of base (green) and fine-tuned (red) LLMs against OWASP Top 10 vulnerabilities"
+    },
+    {
+      "id": "fig5",
+      "caption": "Figure 5: Execution times for base and fine-tuned LLMs"
+    },
+    {
+      "id": "fig6",
+      "caption": "Figure 6: Absolute difference before and after fine-tuning"
+    }
+  ],
+  "tableCaptions": [
+    {
+      "id": "table1",
+      "caption": "Table 1: Comparison of CyberLLMInstruct with other cyber security datasets"
+    },
+    {
+      "id": "table2",
+      "caption": "Table 2: Accuracy results (%) for different base (before arrow) and fine-tuned (after arrow) LLMs on the CyberMetric benchmark"
+    }
+  ],
+  "researchField": "Computer Science",
+  "language": "en",
+  "publisher": null,
+  "publicationYear": null,
+  "formats": [
+    "application/pdf"
+  ]
+}

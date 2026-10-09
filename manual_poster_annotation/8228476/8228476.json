@@ -16,29 +16,6 @@
   ],
   "creators": [
     {
-      "name": "Münz-Manor, Ophir",
-      "nameType": "Personal",
-      "nameIdentifiers": [
-        {
-          "nameIdentifier": "https://orcid.org/0000-0001-6333-345X",
-          "nameIdentifierScheme": "ORCID",
-          "schemeURI": "https://orcid.org"
-        },
-        {
-          "nameIdentifier": "ophirmm@openu.ac.il",
-          "nameIdentifierScheme": "contact"
-        }
-      ],
-      "affiliation": [
-        {
-          "name": "The Open University of Israel, Ra'anana, Israel",
-          "affiliationIdentifier": "https://ror.org/027z64205",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
-      ]
-    },
-    {
       "name": "Toker, Michael",
       "nameType": "Personal",
       "nameIdentifiers": [
@@ -75,6 +52,47 @@
       ]
     },
     {
+      "name": "Cohen, Adir",
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "adircohen@campus.technion.ac.il",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "Technion – Israel Institute of Technology, Haifa, Israel",
+          "affiliationIdentifier": "https://ror.org/03qryx823",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    },
+    {
+      "name": "Münz-Manor, Ophir",
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "https://orcid.org/0000-0001-6333-345X",
+          "nameIdentifierScheme": "ORCID",
+          "schemeURI": "https://orcid.org"
+        },
+        {
+          "nameIdentifier": "ophirmm@openu.ac.il",
+          "nameIdentifierScheme": "contact"
+        }
+      ],
+      "affiliation": [
+        {
+          "name": "The Open University of Israel, Ra'anana, Israel",
+          "affiliationIdentifier": "https://ror.org/027z64205",
+          "affiliationIdentifierScheme": "ROR",
+          "schemeURI": "https://ror.org"
+        }
+      ]
+    },
+    {
       "name": "Kimelfeld, Benny",
       "nameType": "Personal",
       "nameIdentifiers": [
@@ -97,30 +115,7 @@
       "nameType": "Personal",
       "nameIdentifiers": [
         {
-          "nameIdentifier": "https://orcid.org/0000-0001-9463-2575",
-          "nameIdentifierScheme": "ORCID",
-          "schemeURI": "https://orcid.org"
-        },
-        {
           "nameIdentifier": "belinkov@technion.ac.il",
-          "nameIdentifierScheme": "contact"
-        }
-      ],
-      "affiliation": [
-        {
-          "name": "Technion – Israel Institute of Technology, Haifa, Israel",
-          "affiliationIdentifier": "https://ror.org/03qryx823",
-          "affiliationIdentifierScheme": "ROR",
-          "schemeURI": "https://ror.org"
-        }
-      ]
-    },
-    {
-      "name": "Cohen, Adir",
-      "nameType": "Personal",
-      "nameIdentifiers": [
-        {
-          "nameIdentifier": "adircohen@campus.technion.ac.il",
           "nameIdentifierScheme": "contact"
         }
       ],

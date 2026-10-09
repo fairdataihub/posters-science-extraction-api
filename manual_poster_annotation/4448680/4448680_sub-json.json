@@ -1,0 +1,107 @@
+{
+  "$schema": "https://posters.science/schema/v0.2/poster_schema.json",
+  "creators": [
+    {
+      "name": "Rautanen, Markus",
+      "givenName": "Markus",
+      "familyName": "Rautanen",
+      "affiliation": [
+        "VTT"
+      ],
+      "nameType": "Personal",
+      "nameIdentifiers": [
+        {
+          "nameIdentifier": "https://orcid.org/0000-0003-2372-3765"
+        }
+      ]
+    },
+    {
+      "name": "Himanen, Olli",
+      "givenName": "Olli",
+      "familyName": "Himanen",
+      "affiliation": [
+        "VTT"
+      ],
+      "nameType": "Personal"
+    }
+  ],
+  "titles": [
+    {
+      "title": "Mass-Manufacturing and Quality Assurance Solutions in SOFC Value Chain in FCH JU Projects qSOFC and INNO-SOFC"
+    }
+  ],
+  "subjects": [
+    {
+      "subject": "Fuel Cells"
+    },
+    {
+      "subject": "Manufacturing"
+    },
+    {
+      "subject": "Quality Assurance"
+    }
+  ],
+  "descriptions": [
+    {
+      "description": "The poster presents mass-manufacturing and quality assurance solutions in the SOFC value chain for FCH JU projects qSOFC and INNO-SOFC. The targets include reducing cell manufacturing cost to 400 €/kW at a production volume of 10 MW/year and increasing production yield in all parts of the stack manufacturing value chain to above 95% by automation and quality assurance. The methods employed include automated machine vision inspection systems, optimization of cell manufacturing for high-speed manufacturing, and development and validation of relevant quality assurance procedures in the interconnect manufacturing process. The results achieved include higher and more homogeneous cell quality, higher yield, and lower scrap rate throughout production.",
+      "descriptionType": "Other"
+    }
+  ],
+  "content": {
+    "sections": [
+      {
+        "sectionTitle": "Cells",
+        "sectionContent": "Targets\n• Reduce cell manufacturing cost to 400 €/kW at production volume of 10 MW/year\n• Increase production yield in all parts of stack manufacturing value chain to above 95% by automation and quality assurance\nMethods\n• Automated machine vision inspection system to detect faults during cell manufacturing\n• Optimization of the cell manufacturing for high-speed manufacturing\nResults\n• Higher and more homogeneous cell quality\n• Higher yield and lower scrap rate throughout production"
+      },
+      {
+        "sectionTitle": "Interconnects",
+        "sectionContent": "Targets\n• Interconnect manufacturing yield of 95%\n• Development and validation of relevant quality assurance procedures in the interconnect manufacturing process\nMethods\n• Failure mode and effect analysis (FMEA) of interconnect manufacturing process\n• Automated laser-scanning of interconnect geometries\n• Integrated leak tightness measurement system to check interconnect welds/brazes\nResults\n• Improved quality of interconnects\n• Reduced scrap rate"
+      },
+      {
+        "sectionTitle": "Stacks",
+        "sectionContent": "Targets\n• Streamline stack manufacturing process and cut cost by increasing yield and lowering OPEX and CAPEX related to manufacturing infrastructure\n• Manufacture stacks for 60 kW INNO-SOFC system\nMethods\n• Testing and analysis of three different manufacturing and conditioning procedures using 30 stacks\n• Statistical analysis of data\nResults\n• Optimized stack assembly and conditioning processes identified\n• Potential cost-reductions corresponding to each process identified"
+      },
+      {
+        "sectionTitle": "Systems",
+        "sectionContent": "Targets\n• System electrical efficiency 60%\n• System total efficiency 85%\n• High emphasis on cost reduction, 4000 € / kW system cost\nMethods\n• Effective collaboration throughout the value chain enables optimization of the whole system and its components. Key components are specifically designed and optimized for this system.\nResults\n• System conceptual design ready, exceeds project targets\n• System design enables significant reduction in parts count and assembly time\n\nUse cases of Convion C50 SOFC"
+      },
+      {
+        "sectionContent": "www.qSOFC.eu\nwww.innosofc.eu\nMarkus Rautanen +358 40 538 7552 Markus.Rautanen@vtt.fi\nOlli Himanen +358 40 352 6298 Olli.Himanen@vtt.fi"
+      }
+    ]
+  },
+  "imageCaptions": [
+    {
+      "id": "",
+      "caption": "Example of a 3D defect detection and classification by the automated machine vision system in qSOFC"
+    },
+    {
+      "id": "",
+      "caption": "Machine vision rig developed by HaikuTech"
+    },
+    {
+      "id": "",
+      "caption": "Example of stack assembly robot"
+    },
+    {
+      "id": "",
+      "caption": "Example of fully automated assembly and testing line"
+    },
+    {
+      "id": "",
+      "caption": "Manufacturing process at Elcogen INNO-SOFC stack"
+    },
+    {
+      "id": "",
+      "caption": "Convion system"
+    }
+  ],
+  "tableCaptions": [],
+  "researchField": "Physical Sciences",
+  "language": "en",
+  "publisher": null,
+  "publicationYear": null,
+  "formats": [
+    "application/pdf"
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "$schema": "https://posters.science/schema/v0.2/poster_schema.json",
+  "creators": [
+    {
+      "name": "Stoyanov, Ivan Y.",
+      "givenName": "Ivan Y.",
+      "familyName": "Stoyanov",
+      "affiliation": [
+        "Section of Genetics, Department of Developmental Biology, Plovdiv University „Paisii Hilendarski'"
+      ],
+      "nameType": "Personal"
+    },
+    {
+      "name": "Staykova, Teodora A.",
+      "givenName": "Teodora A.",
+      "familyName": "Staykova",
+      "affiliation": [
+        "Section of Genetics, Department of Developmental Biology, Plovdiv University „Paisii Hilendarski'"
+      ],
+      "nameType": "Personal"
+    },
+    {
+      "name": "Vasileva, Penka L.",
+      "givenName": "Penka L.",
+      "familyName": "Vasileva",
+      "affiliation": [
+        "Section of Genetics, Department of Developmental Biology, Plovdiv University „Paisii Hilendarski'"
+      ],
+      "nameType": "Personal"
+    },
+    {
+      "name": "Ivanova, Evgeniya N.",
+      "givenName": "Evgeniya N.",
+      "familyName": "Ivanova",
+      "affiliation": [
+        "Section of Genetics, Department of Developmental Biology, Plovdiv University „Paisii Hilendarski'"
+      ],
+      "nameType": "Personal"
+    }
+  ],
+  "titles": [
+    {
+      "title": "Biochemical-genetic analysis of the effects of Chlorpyrifos and Cypermethrin insecticides on zebra mussels (Dressena polymorpha Pallas, 1771)"
+    }
+  ],
+  "subjects": [
+    {
+      "subject": "Biochemical-genetic analysis"
+    },
+    {
+      "subject": "Chlorpyrifos"
+    },
+    {
+      "subject": "Cypermethrin"
+    },
+    {
+      "subject": "Zebra mussels"
+    }
+  ],
+  "descriptions": [
+    {
+      "description": "Electrophoretic studies of genetically determined biochemical polymorphism of proteins are used to study the relationship between the level of protein variability and the peculiarities of habitat conditions. Isoenzymes are indicators of gene expression and reveal the characteristic features of gene regulation. The study of isoenzyme variability allows the study of genome regulation and contributes to determining the genetic basis of adaptation. In the present study, a biochemical-genetic analysis was performed to determine the relationship between isoenzyme polymorphism and the zebra mussel Dressena polymorpha body's response to the harmful effects of the pesticides Cypermethrin and Chlopyrifos.",
+      "descriptionType": "Other"
+    }
+  ],
+  "content": {
+    "sections": [
+      {
+        "sectionTitle": "Introduction",
+        "sectionContent": "Electrophoretic studies of genetically determined biochemical polymorphism of proteins are used to study the relationship between the level of protein variability and the peculiarities of habitat conditions. Isoenzymes are indicators of gene expression and reveal the characteristic features of gene regulation. The study of isoenzyme variability allows the study of genome regulation and contributes to determining the genetic basis of adaptation. In the present study, a biochemical-genetic analysis was performed to determine the relationship between isoenzyme polymorphism and the zebra mussel Dressena polymorpha body's response to the harmful effects of the pesticides Cypermethrin and Chlopyrifos."
+      },
+      {
+        "sectionTitle": "Materials",
+        "sectionContent": "In the present study, individuals of the species Dressena polymorpha were examined by biochemical-genetic analysis. They are exposed to short-term (96 hours) and long-term (30 days) exposure with different concentrations of the broad-spectrum insecticides Cypermethrin and Chlopyrifos. The MRLs of the two pesticides are tested according to Directive 2013/39/EU, as well as 50% and 30% of the MRLs, in order to establish the effect of lower concentrations of pesticides."
+      },
+      {
+        "sectionTitle": "Electrophoresis analysis",
+        "sectionContent": "The samples are examined by electrophoresis in polyacrylamide gel by the method of Maurer (1971), with modifications according to Ivanova (1996). Soluble proteins (SP), malate dehydrogenases (MDH), malate enzymes (ME) and superoxide dismutases (SOD) were studied."
+      },
+      {
+        "sectionTitle": "Results",
+        "sectionContent": "Malate dehydrogenase (ЕС 1.1.1.37)\nIn the spectra of malate dehydrogenases in zebra mussels, a total of four fractions with different electrophoretic mobility were visualized. Their nature of expression gives grounds to assume that the genetic control of these isoenzymes is carried out by three loci – Mdh-1, Mdh-2 and Mdh-3 (Fig.1). There are differences in the intensity of expression of MDH fractions. Weaker expression of the Mdh-1 locus product was observed in the 96-hour sample treated with 30% Chlorpyrifos compared to higher pesticide concentrations, for which samples were found to have a more intense and diffuse fraction.\n\nMalate enzyme (ЕС 1.1.1.40)\nThe nature of the expression of multiple molecular forms of the malate enzyme in the spectrum of the studied individuals suggests a probable gene control of two polymorphic loci: Мe-1, with the presence of the alleles Me-1 100 and Me-1 90 and locus Мe-2, with the presence of the two codominant alleles – Мe-2 100 and Мe-2 72 (Fig. 2).\n\nSuperoxide dismutase (ЕС 1.6.4.3 SOD)\nThe pronounced active electrophoretic variants are divided into four zones (Fig. 3). The expression and combination of the fractions from the four zones suggests that the genetic control of superoxide dismutases is carried out by four loci: Sod-1, Sod-2, Sod-3 and Sod-4. Two-allele polymorphism at Sod-1, Sod-2, Sod-3 loci is reported.\n\nSoluble proteins (SP)\nSix zones (SP-1, SP-2, SP-3, SP-4, SP-5 and SP-6) were found in the protein spectrum of the total extract. The results obtained in the present study give grounds to assume that the synthesis of proteins from these zones is controlled by (at least) six loci: Sp-1, Sp-2, Sp-3, Sp-4, Sp-5 and Sp-6. Polymorphism was found in three of these loci: Sp-3, Sp-4 and Sp-5."
+      },
+      {
+        "sectionTitle": "Discussion",
+        "sectionContent": "The probable genetic control of four enzyme and protein groups - malate dehydrogenase, malate enzyme, superoxide dismutase and soluble proteins - was determined by the isoenzyme analysis conducted. Nine variable loci have been identified, based on which the degree of genetic heterogeneity in zebra mussel populations can be characterized. Different intensity of expression of allelic products has been reported in individuals exposed to short- and long-term exposure to the pesticides Cypermethrin and Chlorpyrifos. The observed variability in the expression of superoxide dismutases, malate dehydrogenases and soluble proteins in control and experimental samples gives us reason to accept these enzyme and protein systems as markers for reporting the negative impact of the tested pesticides on the zebra mussel. Allelic products with altered expression are probably related to the protection of the body from harmful effects, which suggests that the increased levels of expression in experimental compared to control samples are associated with anthropogenic stress."
+      }
+    ]
+  },
+  "imageCaptions": [
+    {
+      "id": "fig1",
+      "caption": "Fig. 1. Spectrum of MDH in Dressena polymorpha."
+    },
+    {
+      "id": "fig2",
+      "caption": "Fig. 2. Spectrum of ME in Dressena polymorpha."
+    },
+    {
+      "id": "fig3",
+      "caption": "Fig. 3. Spectrum of SOD in Dressena polymorpha."
+    },
+    {
+      "id": "fig4",
+      "caption": "Fig. 4. Spectrum of soluble proteins in Dressena polymorpha."
+    }
+  ],
+  "tableCaptions": [],
+  "researchField": "Life Sciences",
+  "language": "en",
+  "publisher": null,
+  "publicationYear": null,
+  "formats": [
+    "application/pdf"
+  ]
+}

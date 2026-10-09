@@ -1,0 +1,83 @@
+{
+  "$schema": "https://posters.science/schema/v0.2/poster_schema.json",
+  "creators": [
+    {
+      "name": "Portage Network",
+      "nameType": "Organizational",
+      "affiliation": [
+        {
+          "name": "Canadian Association of Research Libraries (CARL)"
+        }
+      ]
+    }
+  ],
+  "titles": [
+    {
+      "title": "Portage: Shared Stewardship of Research Data"
+    }
+  ],
+  "subjects": [
+    {
+      "subject": "Research Data Management"
+    },
+    {
+      "subject": "Data Lifecycle"
+    },
+    {
+      "subject": "Research Infrastructure"
+    }
+  ],
+  "descriptions": [
+    {
+      "description": "Portage is a national research data management (RDM) initiative to assist researchers and other stakeholders through a library-based network of expertise, and develop national platforms and services for planning, preserving, and discovering research data. Portage is managed by the Canadian Association of Research Libraries.",
+      "descriptionType": "Abstract"
+    }
+  ],
+  "content": {
+    "sections": [
+      {
+        "sectionTitle": "What is Portage?",
+        "sectionContent": "Portage is a national research data management (RDM) initiative to assist researchers and other stakeholders through a library-based network of expertise, and develop national platforms and services for planning, preserving, and discovering research data. Portage is managed by the Canadian Association of Research Libraries."
+      },
+      {
+        "sectionTitle": "What is Research Data Management (RDM)?",
+        "sectionContent": "Practices applied throughout the lifecycle of a research project to guide the collection, documentation, storage, sharing, and preservation of research data. These processes are integral to conducting responsible research and help researchers save resources and adhere to institutional and funding agency guidelines.\n\nThe Research Data Lifecycle\nPlan, Create, Process, Analyze, Disseminate, Preserve, Reuse"
+      },
+      {
+        "sectionTitle": "Network of Experts",
+        "sectionContent": "The Portage Network of Experts develops resources, expert advice, and practical help to assist with the management of research data at any stage throughout the data lifecycle. This expertise is provided in both English and French to anyone working in a Canadian university or research institution wanting to plan, manage, store, protect, share, and preserve digital research data.\n\nAreas of Expertise\n• Data Management Planning\n• Data Discovery\n• Curation\n• Preservation\n• Training\n• Research Intelligence\n• Institutional Planning\n• RDM Ethics\n\nPan-Canadian Representation"
+      },
+      {
+        "sectionTitle": "DMP Assistant",
+        "sectionContent": "The DMP Assistant is an online, bilingual, data management planning tool that will help you create your own data management plan by answering questions related to:\n• Data Collection\n• Documentation and Metadata\n• Storage and Backup\n• Preservation\n• Sharing and Reuse\n• Responsibilities and Resources\n• Ethics and Legal Compliance\nwww.assistant.portagenetwork.ca"
+      },
+      {
+        "sectionTitle": "Federated Research Data Repository",
+        "sectionContent": "A scalable, federated platform for digital RDM and the discovery of Canadian research data.\n\nNational Data Discovery\n• Indexes Canadian data repositories making data discoverable from a single platform\n\nStorage and Preservation\n• A place for Canadian researchers to deposit large data sets\n• Curation and preservation processes to ensure long-term data usability\nwww.frdr.ca"
+      },
+      {
+        "sectionTitle": "Dataverse North",
+        "sectionContent": "A community of practice for libraries using or interested in using the Dataverse repository platform for research data in Canada."
+      },
+      {
+        "sectionTitle": "On-Demand Training",
+        "sectionContent": "On-demand assistance is available to those organizing RDM training on Canadian academic campuses, and who would like help developing and delivering training and guidance materials in all areas of RDM."
+      },
+      {
+        "sectionTitle": "Online Training Resources",
+        "sectionContent": "Portage is developing online training modules in French and English to instruct researchers and other stakeholders about RDM in the Canadian context. A growing library of external training resources is also available on the Portage website."
+      },
+      {
+        "sectionContent": "Sponsored by the Canadian Association of Research Libraries"
+      }
+    ]
+  },
+  "imageCaptions": [],
+  "tableCaptions": [],
+  "language": "en",
+  "publisher": null,
+  "publicationYear": null,
+  "formats": [
+    "application/pdf"
+  ]
+}
