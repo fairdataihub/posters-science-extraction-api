@@ -19,6 +19,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 from poster2json.extract import log, load_json_model
+from feature_flags import features_for_environment
 from job_worker import (
     run_worker_loop,
     generate_and_upload_thumbnail,
@@ -62,15 +63,23 @@ def health():
 
         # Try loading the JSON model (will be cached after first load)
         try:
-            load_json_model()
-            checks["json_model"] = "ok"
-            print("[status] api: health check json_model=ok")
+            # Health checks must not load a second model while image OCR or
+            # extraction owns the GPU. Busy is a healthy worker state.
+            if _extraction_lock.acquire(blocking=False):
+                try:
+                    load_json_model()
+                    checks["json_model"] = "ok"
+                finally:
+                    _extraction_lock.release()
+            else:
+                checks["json_model"] = "busy"
+            print(f"[status] api: health check json_model={checks['json_model']}")
         except Exception as e:
             checks["json_model"] = f"error: {str(e)}"
             print(f"[status] api: health check json_model error: {e}")
 
         # Determine overall status
-        if checks.get("cuda") == "ok" and checks.get("json_model") == "ok":
+        if checks.get("cuda") == "ok" and checks.get("json_model") in {"ok", "busy"}:
             status = "healthy"
             http_status = 200
             print("[status] api: health status=healthy")
@@ -187,13 +196,17 @@ def _start_worker(db_urls: list):
 
 
 def _compute_db_targets() -> list:
-    """Databases the worker polls. Both serve real users and are drained
-    round-robin, so the order only decides the first pick of each pass."""
+    """Bind databases to trusted environments; validate flags before starting."""
     db_urls = []
     if prod_db_url := config.get_env("PRODUCTION_DATABASE_URL"):
         db_urls.append(("production", prod_db_url))
         log("Production database polling enabled")
-    db_urls.append(("staging", config.get_env("STAGING_DATABASE_URL")))
+    if staging_db_url := config.get_env("STAGING_DATABASE_URL"):
+        db_urls.append(("staging", staging_db_url))
+    if len({url for _, url in db_urls}) != len(db_urls):
+        raise ValueError("Staging and production must use distinct database targets")
+    for environment, _ in db_urls:
+        features_for_environment(environment)
     return db_urls
 
 
@@ -203,6 +216,8 @@ def init_background_worker() -> None:
     if enabled in {"0", "false", "no", "off"}:
         log("Background worker disabled via ENABLE_BACKGROUND_WORKER")
         return
+    if int(config.get_env("SINGLE_JOBS_PER_BULK") or "3") < 1:
+        raise ValueError("SINGLE_JOBS_PER_BULK must be at least 1")
     _start_worker(_compute_db_targets())
 
 
