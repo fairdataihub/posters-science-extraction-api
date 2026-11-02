@@ -37,12 +37,18 @@ services:
       - BUNNY_PUBLIC_STORAGE_KEY=${BUNNY_PUBLIC_STORAGE_KEY:-}
       - POLL_INTERVAL_SECONDS=${POLL_INTERVAL_SECONDS:-30}
       - STUCK_PROCESSING_MINUTES=${STUCK_PROCESSING_MINUTES:-5}
+      - SINGLE_JOBS_PER_BULK=${SINGLE_JOBS_PER_BULK:-3}
+      - STAGING_FEATURES=${STAGING_FEATURES:-bulk_extraction}
+      - PRODUCTION_FEATURES=${PRODUCTION_FEATURES:-}
     ports:
       - "${API_PORT:-8000}:8000"
     # Mount source code for hot reload - edit locally, restart to apply
     volumes:
       - ./api.py:/app/api.py
       - ./job_worker.py:/app/job_worker.py
+      - ./job_queue.py:/app/job_queue.py
+      - ./scheduler.py:/app/scheduler.py
+      - ./feature_flags.py:/app/feature_flags.py
       - ./config.py:/app/config.py
       - ./validation.py:/app/validation.py
       - ./poster_extraction_schema.json:/app/poster_extraction_schema.json
