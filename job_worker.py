@@ -26,7 +26,7 @@ import requests
 
 import config
 from poster2json import extract_poster
-from poster2json.extract import log
+from poster2json.extract import free_gpu, log, unload_json_model, unload_vision_model
 from validation import validate_and_fix_extraction
 
 
@@ -48,6 +48,41 @@ EXTRACTION_LOCK_TIMEOUT_SECONDS = int(_env("EXTRACTION_LOCK_TIMEOUT_SECONDS") or
 
 THUMBNAIL_MAX_WIDTH = 1200  # px - enough for display, keeps file size small
 THUMBNAIL_JPEG_QUALITY = 75  # 1-100;
+
+
+def _is_cuda_driver_error(exc: BaseException) -> bool:
+    msg = str(exc).lower()
+    name = type(exc).__name__.lower()
+    return (
+        "cuda" in msg
+        or "cudnn" in msg
+        or "out of memory" in msg
+        or "acceleratorerror" in name
+    )
+
+
+def _cuda_recovery_hint() -> str:
+    return (
+        " The NVIDIA GPU is likely in a bad state (often after OOM). "
+        "Restart the stack: docker compose -f docker-compose.dev.yml down && up. "
+        "If errors continue, restart Docker Desktop. An 8GB GPU cannot reliably run "
+        "full bulk extraction; use the remote extraction server for heavy posters."
+    )
+
+
+def _release_extraction_gpu() -> None:
+    """Unload poster2json models between jobs so VRAM is free for the next extraction."""
+    print("[status] release_extraction_gpu: starting")
+    for label, action in (
+        ("vision", unload_vision_model),
+        ("json", unload_json_model),
+        ("cuda_cache", free_gpu),
+    ):
+        try:
+            action()
+        except Exception as exc:
+            print(f"[status] release_extraction_gpu: {label} failed (non-fatal): {exc}")
+    print("[status] release_extraction_gpu: done")
 _IMAGE_THUMBNAIL_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 
 BUNNY_UPLOAD_ATTEMPTS = 3
@@ -193,28 +228,49 @@ def generate_image_thumbnail_bytes(local_path: str) -> bytes:
     return jpeg_bytes
 
 
+def thumbnail_path_for_poster_file(file_path: str) -> Optional[str]:
+    """
+    Map a poster object key in Bunny storage to its thumbnail object key.
+
+    Supported layouts:
+      posters/<env>/<uid>/file.ext
+        → thumbnails/<env>/<uid>/image.jpeg
+      bulk-imports/<env>/<batch-id>/posters/<uid>/file.ext
+        → thumbnails/bulk-imports/<env>/<batch-id>/posters/<uid>/image.jpeg
+    """
+    parts = [p for p in file_path.lstrip("/").split("/") if p]
+    if len(parts) < 2:
+        return None
+    filename = parts[-1]
+    if "." not in filename:
+        return None
+
+    if parts[0] == "posters" and len(parts) >= 4:
+        sub_path = "/".join(parts[1:-1])
+        return f"thumbnails/{sub_path}/image.jpeg"
+
+    if parts[0] == "bulk-imports" and len(parts) >= 6 and parts[3] == "posters":
+        sub_path = "/".join(parts[:-1])
+        return f"thumbnails/{sub_path}/image.jpeg"
+
+    return None
+
+
 def generate_and_upload_thumbnail(local_path: str, file_path: str) -> Optional[str]:
     """
     Generate a JPEG thumbnail from a poster file (PDF or image) and upload it to Bunny.
 
     local_path: Path to the downloaded temp file (its extension determines which renderer is used).
-    file_path:  Bunny storage path, used to derive the thumbnail destination:
-                    posters/<environment>/<uid>/filename.ext  →  thumbnails/<environment>/<uid>/image.jpeg
+    file_path:  Bunny storage path; see thumbnail_path_for_poster_file().
 
     Returns the full thumbnail storage URL on success, None on failure.
     """
-    # Strip leading slash and split into parts
-    parts = file_path.lstrip("/").split("/")
-    # Need at least: ["posters", "<environment>", "<uid>", "filename.ext"]
-    if len(parts) < 4 or parts[0] != "posters":
+    thumbnail_path = thumbnail_path_for_poster_file(file_path)
+    if not thumbnail_path:
         print(
             f"[status] generate_and_upload_thumbnail: unexpected file_path format '{file_path}', skipping"
         )
         return None
-
-    # Take everything between the first segment ("posters") and the filename
-    sub_path = "/".join(parts[1:-1])  # e.g. "<environment>/rpfcack1xzysi9p8yuzrt0ma"
-    thumbnail_path = f"thumbnails/{sub_path}/image.jpeg"
 
     ext = Path(local_path).suffix.lower()
     if ext in _IMAGE_THUMBNAIL_EXTENSIONS:
@@ -253,6 +309,9 @@ def claim_next_job(conn) -> Optional[dict]:
     'pending-thumbnail' is a poster whose metadata is already saved and only
     needs a preview rendered; the UI queues those because it cannot reach this
     service over HTTP.
+
+    Bulk/batch uploads (Bunny path bulk-imports/...) are deprioritized so
+    single-poster submissions are extracted first within each poll cycle.
     """
     print("[status] claim_next_job: querying for pending job")
     job_id = None
@@ -265,7 +324,9 @@ def claim_next_job(conn) -> Optional[dict]:
             FROM "ExtractionJob"
             WHERE completed = false
               AND status IN ('pending-extraction', 'pending-thumbnail')
-            ORDER BY created
+            ORDER BY
+              CASE WHEN "filePath" LIKE 'bulk-imports/%' THEN 1 ELSE 0 END,
+              created
             LIMIT 1
             FOR UPDATE SKIP LOCKED
         """
@@ -522,6 +583,96 @@ def _normalize_related_identifiers(items: list) -> list:
 
         out.append(item)
     return out
+
+
+def _person_display_name(person: dict) -> str:
+    given = (person.get("givenName") or "").strip()
+    family = (person.get("familyName") or "").strip()
+    if family or given:
+        return f"{family}, {given}".strip(", ")
+    return (person.get("name") or "unknown").strip() or "unknown"
+
+
+def _orcid_identifiers(person: dict) -> list[str]:
+    found: list[str] = []
+    for ni in person.get("nameIdentifiers") or []:
+        if not isinstance(ni, dict):
+            continue
+        ident = (ni.get("nameIdentifier") or "").strip()
+        if not ident:
+            continue
+        scheme = (ni.get("nameIdentifierScheme") or "").upper()
+        if scheme == "ORCID" or "orcid.org" in ident.lower():
+            found.append(ident)
+    return found
+
+
+def _affiliation_ror_label(aff) -> str:
+    if isinstance(aff, str):
+        return f"{aff!r} (no ROR)"
+    if not isinstance(aff, dict):
+        return repr(aff)
+    name = (aff.get("name") or "").strip() or "(unnamed)"
+    ident = (aff.get("affiliationIdentifier") or "").strip()
+    scheme = (aff.get("affiliationIdentifierScheme") or "").upper()
+    if ident and (scheme == "ROR" or "ror.org" in ident.lower()):
+        return f"{name!r} -> {ident}"
+    return f"{name!r} (no ROR)"
+
+
+def _log_orcid_ror_enrichment(extraction: dict, poster_id) -> None:
+    """
+    Log ORCID/ROR outcomes after extract_poster().
+
+    Lookup runs inside poster2json during _postprocess_json (ROR API for
+    affiliations, ORCID API for creators missing ORCID). This function only
+    reports what came back on the result dict.
+    """
+    if "error" in extraction:
+        return
+    print(
+        f"[status] orcid_ror: poster_id={poster_id} "
+        "(enrichment ran inside poster2json _postprocess_json during extract_poster)"
+    )
+    log(
+        "ORCID/ROR enrichment summary "
+        "(resolved inside poster2json _postprocess_json during extract_poster)"
+    )
+    for persons_key in ("creators", "contributors"):
+        persons = extraction.get(persons_key)
+        if not isinstance(persons, list) or not persons:
+            continue
+        for idx, person in enumerate(persons):
+            if not isinstance(person, dict):
+                continue
+            name = _person_display_name(person)
+            orcids = _orcid_identifiers(person)
+            orcid_status = orcids if orcids else ["(none)"]
+            aff_labels = [
+                _affiliation_ror_label(aff) for aff in (person.get("affiliation") or [])
+            ]
+            print(
+                f"[status] orcid_ror: {persons_key}[{idx}] name={name} "
+                f"orcid={orcids if orcids else 'none'}"
+            )
+            log(f"  {persons_key}[{idx}] {name}: ORCID={orcid_status}")
+            for aff_line in aff_labels:
+                print(f"[status] orcid_ror:   {persons_key}[{idx}] {aff_line}")
+                log(f"    affiliation: {aff_line}")
+    funding = extraction.get("fundingReferences")
+    if isinstance(funding, list):
+        for idx, fund in enumerate(funding):
+            if not isinstance(fund, dict):
+                continue
+            funder = (fund.get("funderName") or "").strip() or "(unnamed funder)"
+            fid = (fund.get("funderIdentifier") or "").strip()
+            ftype = (fund.get("funderIdentifierType") or "").upper()
+            if fid and (ftype == "ROR" or "ror.org" in fid.lower()):
+                print(f"[status] orcid_ror: funding[{idx}] {funder} -> {fid}")
+                log(f"  funding[{idx}] {funder} -> ROR {fid}")
+            else:
+                print(f"[status] orcid_ror: funding[{idx}] {funder} (no ROR)")
+                log(f"  funding[{idx}] {funder}: no ROR")
 
 
 def _extraction_to_metadata_row(extraction: dict) -> dict:
@@ -984,17 +1135,21 @@ def run_one_cycle(extraction_lock, db_url: Optional[str] = None) -> bool:
                 mark_job_failed(conn, job_id, "Could not acquire extraction lock")
                 return True
 
+            result = None
             try:
                 print(f"[status] run_one_cycle: calling extract_poster({tmp_path})")
                 result = extract_poster(tmp_path)
                 print("[status] run_one_cycle: extract_poster returned")
+                _log_orcid_ror_enrichment(result, poster_id)
             finally:
                 extraction_lock.release()
                 print("[status] run_one_cycle: released extraction lock")
+                _release_extraction_gpu()
 
-            if "error" in result:
-                mark_job_failed(conn, job_id, result["error"])
-                log(f"Job worker: job {job_id} failed: {result['error']}")
+            if not result or "error" in result:
+                err = (result or {}).get("error") or "Extraction returned no result"
+                mark_job_failed(conn, job_id, err)
+                log(f"Job worker: job {job_id} failed: {err}")
                 return True
 
             print("[status] run_one_cycle: validating extraction")
@@ -1013,7 +1168,10 @@ def run_one_cycle(extraction_lock, db_url: Optional[str] = None) -> bool:
 
         except Exception as e:
             print(f"[status] run_one_cycle: exception {e}")
-            mark_job_failed(conn, job_id, str(e))
+            err = str(e)
+            if _is_cuda_driver_error(e):
+                err += _cuda_recovery_hint()
+            mark_job_failed(conn, job_id, err)
             log(f"Job worker: job {job_id} failed: {e}")
             import traceback
 

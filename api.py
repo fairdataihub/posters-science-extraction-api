@@ -22,6 +22,7 @@ from poster2json.extract import log, load_json_model
 from job_worker import (
     run_worker_loop,
     generate_and_upload_thumbnail,
+    thumbnail_path_for_poster_file,
     download_from_bunny,
     worker_wake_event,
 )
@@ -60,17 +61,22 @@ def health():
             checks["cuda"] = "unavailable"
             print("[status] api: health check cuda=unavailable")
 
-        # Try loading the JSON model (will be cached after first load)
-        try:
-            load_json_model()
-            checks["json_model"] = "ok"
-            print("[status] api: health check json_model=ok")
-        except Exception as e:
-            checks["json_model"] = f"error: {str(e)}"
-            print(f"[status] api: health check json_model error: {e}")
+        # Optional full model load (uses several GB VRAM; disable on 8GB dev GPUs).
+        load_model = (config.get_env("HEALTH_CHECK_LOAD_JSON_MODEL") or "true").strip().lower()
+        if load_model in {"0", "false", "no", "off"}:
+            checks["json_model"] = "skipped"
+            print("[status] api: health check json_model=skipped (HEALTH_CHECK_LOAD_JSON_MODEL)")
+        else:
+            try:
+                load_json_model()
+                checks["json_model"] = "ok"
+                print("[status] api: health check json_model=ok")
+            except Exception as e:
+                checks["json_model"] = f"error: {str(e)}"
+                print(f"[status] api: health check json_model error: {e}")
 
-        # Determine overall status
-        if checks.get("cuda") == "ok" and checks.get("json_model") == "ok":
+        json_ok = checks.get("json_model") in {"ok", "skipped"}
+        if checks.get("cuda") == "ok" and json_ok:
             status = "healthy"
             http_status = 200
             print("[status] api: health status=healthy")
@@ -95,23 +101,26 @@ def thumbnails_generate():
     Body (JSON):
         {
           "file_path": "posters/<env>/<uid>[/version-<sequence>-<id>]/filename.pdf"
+          // or bulk-imports/<env>/<batch-id>/posters/<uid>/filename.pdf
           // required; also accepts "pdf_path" for backwards compatibility
         }
 
     Returns:
-        { "thumbnail_path": "thumbnails/<env>/<uid>/image.jpeg" }
+        { "thumbnail_path": "thumbnails/.../image.jpeg" }
 
     Deliberately touches no database. A poster id on its own cannot say which
     environment's database it belongs to, and the staging and production id
     spaces overlap, so the caller writes the returned URL to its own database.
     """
     # posters/<env>/<uid>[/version-<sequence>-<id>]/<filename>.<ext>
-    # <env>      — lowercase letters only (e.g. "p", "staging", "production")
-    # <uid>      — alphanumeric + hyphens/underscores, 8-40 chars
-    # <filename> — no path traversal; must use a supported poster extension
+    # bulk-imports/<env>/<batch-id>/posters/<uid>/<filename>.<ext>
     _FILE_PATH_RE = re.compile(
         r"^posters/[a-z]+/[a-zA-Z0-9_-]{8,40}/"
         r"(?:version-\d+-[a-zA-Z0-9_-]{8,40}/)?"
+        r"[^/]+\.(pdf|jpg|jpeg|png)$"
+    )
+    _BULK_FILE_PATH_RE = re.compile(
+        r"^bulk-imports/[a-z]+/[a-zA-Z0-9_-]{8,40}/posters/[a-zA-Z0-9_-]{8,40}/"
         r"[^/]+\.(pdf|jpg|jpeg|png)$"
     )
 
@@ -120,11 +129,15 @@ def thumbnails_generate():
     file_path = (body.get("file_path") or body.get("pdf_path") or "").strip()
     if not file_path:
         return jsonify({"error": "file_path is required"}), 400
-    if not _FILE_PATH_RE.match(file_path):
+    if not (
+        _FILE_PATH_RE.match(file_path)
+        or _BULK_FILE_PATH_RE.match(file_path)
+        or thumbnail_path_for_poster_file(file_path)
+    ):
         message = (
             "file_path must match posters/<env>/<uid>"
-            "[/version-<sequence>-<id>]/<filename>."
-            "(pdf|jpg|jpeg|png)"
+            "[/version-<sequence>-<id>]/<filename>.(pdf|jpg|jpeg|png) or "
+            "bulk-imports/<env>/<batch-id>/posters/<uid>/<filename>.(pdf|jpg|jpeg|png)"
         )
         return jsonify({"error": message}), 400
 
