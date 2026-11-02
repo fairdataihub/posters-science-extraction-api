@@ -112,6 +112,9 @@ curl http://localhost:8000/health
 
 See [API Reference](docs/API.md) for full configuration and environment variables.
 
+See [Environment features and extraction batches](docs/FEATURES_AND_BATCHES.md)
+for staging-first feature flags, queue priorities, and deployment order.
+
 ## Documentation
 
 | Document                                   | Description                         |
