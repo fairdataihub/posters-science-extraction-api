@@ -8,6 +8,7 @@ results to PosterMetadata. No file upload endpoint; the frontend
 uploads files to Bunny and creates jobs in the database.
 """
 
+import json
 import re
 import threading
 import tempfile
@@ -20,6 +21,7 @@ from flask_cors import CORS
 
 from poster2json.extract import log, load_json_model
 from feature_flags import features_for_environment
+from sheet_mapper import map_sheet
 from job_worker import (
     run_worker_loop,
     generate_and_upload_thumbnail,
@@ -157,6 +159,58 @@ def thumbnails_generate():
 
     print(f"[status] api: thumbnail generated at {thumbnail_path}")
     return jsonify({"thumbnail_path": thumbnail_path}), 200
+
+
+# Organizer sheets are small; anything bigger is not a poster list.
+_SHEET_MAX_BYTES = 10 * 1024 * 1024
+_SHEET_EXTENSIONS = (".xlsx", ".xlsm", ".xls", ".csv", ".tsv")
+
+
+@app.route("/sheets/map", methods=["POST"])
+def sheets_map():
+    """
+    Map an organizer's poster spreadsheet onto our bulk metadata format.
+
+    multipart/form-data:
+        sheet       the spreadsheet (.xlsx, .xls, .csv, .tsv)
+        file_names  JSON array of the poster file names uploaded to the batch
+        mapping     optional JSON object {column header: field or null}, the
+                    user's confirmed choices from the confirm screen
+
+    Returns the detected template, the column mapping, the file column, the
+    rows in our format (sheet name -> rows keyed by fillKey, linked by
+    file_name), unmatched rows and files, and warnings. See docs/SHEET_MAPPING.md.
+
+    Touches no database and no GPU model, like /thumbnails/generate.
+    """
+    print("[status] api: POST /sheets/map")
+    upload = request.files.get("sheet")
+    if upload is None or not upload.filename:
+        return jsonify({"error": "sheet is required"}), 400
+    if not upload.filename.lower().endswith(_SHEET_EXTENSIONS):
+        return jsonify({"error": "sheet must be .xlsx, .xls, .csv or .tsv"}), 400
+    data = upload.read(_SHEET_MAX_BYTES + 1)
+    if len(data) > _SHEET_MAX_BYTES:
+        return jsonify({"error": "sheet is larger than 10 MB"}), 413
+
+    try:
+        file_names = json.loads(request.form.get("file_names") or "[]")
+        overrides = json.loads(request.form.get("mapping") or "null")
+    except json.JSONDecodeError:
+        return jsonify({"error": "file_names and mapping must be JSON"}), 400
+    if not isinstance(file_names, list) or not all(isinstance(n, str) for n in file_names):
+        return jsonify({"error": "file_names must be a JSON array of strings"}), 400
+    if overrides is not None and not isinstance(overrides, dict):
+        return jsonify({"error": "mapping must be a JSON object"}), 400
+
+    try:
+        result = map_sheet(data, upload.filename, file_names, overrides)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 422
+    except Exception as e:
+        print(f"[status] api: sheet mapping error: {e}")
+        return jsonify({"error": "Could not read this spreadsheet"}), 422
+    return jsonify(result), 200
 
 
 @app.route("/jobs/check", methods=["POST"])

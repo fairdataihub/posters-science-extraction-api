@@ -66,6 +66,12 @@ Run one job-worker cycle: if there is an uncompleted (pending) job, it is claime
 
 **Response:** `204 No Content` (no body).
 
+### Map a poster spreadsheet
+
+#### `POST /sheets/map`
+
+Converts an organizer's poster sheet (Curious, EasyChair, our own, .xlsx/.xls/.csv/.tsv) into the bulk metadata grid format. Requires a column that links each row to an uploaded poster file. No database or GPU. See [SHEET_MAPPING.md](SHEET_MAPPING.md).
+
 ## Job Worker
 
 A background thread runs continuously:
@@ -105,6 +111,7 @@ Enqueueing through the database rather than `POST /thumbnails/generate` is what 
 | `PORT` | API server port | 8000 |
 | `HOST` | API server host | 0.0.0.0 |
 | `CUDA_VISIBLE_DEVICES` | GPU device(s) | All available |
+| `SHEET_MAPPER_LLM_URL` | Optional OpenAI-compatible server for the sheet mapper's LLM tier ([SHEET_MAPPING.md](SHEET_MAPPING.md)) | unset |
 
 ### Starting with Custom Port
 
