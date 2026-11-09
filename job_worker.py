@@ -21,13 +21,15 @@ import pymupdf
 from PIL import Image
 
 import psycopg2
-from psycopg2.extras import RealDictCursor
 import requests
 
 import config
 from poster2json import extract_poster
 from poster2json.extract import log
 from validation import validate_and_fix_extraction
+from job_queue import claim_next_job, has_batch_columns, fail_interrupted_uploads
+from scheduler import QueueScheduler
+from feature_flags import FeatureContext, features_for_environment
 
 
 # --- Config from config.py --------------------------------------------------
@@ -45,8 +47,6 @@ BUNNY_PRIVATE_STORAGE_KEY = _env("BUNNY_PRIVATE_STORAGE_KEY")
 POLL_INTERVAL_SECONDS = int(_env("POLL_INTERVAL_SECONDS") or "30")
 STUCK_PROCESSING_MINUTES = int(_env("STUCK_PROCESSING_MINUTES") or "5")
 EXTRACTION_LOCK_TIMEOUT_SECONDS = int(_env("EXTRACTION_LOCK_TIMEOUT_SECONDS") or "300")
-# While both are waiting, run this many single posters per bulk poster (min 1).
-SINGLE_JOBS_PER_BULK = max(1, int(_env("SINGLE_JOBS_PER_BULK") or "3"))
 
 THUMBNAIL_MAX_WIDTH = 1200  # px - enough for display, keeps file size small
 THUMBNAIL_JPEG_QUALITY = 75  # 1-100;
@@ -185,7 +185,7 @@ def generate_image_thumbnail_bytes(local_path: str) -> bytes:
         if w > THUMBNAIL_MAX_WIDTH:
             scale = THUMBNAIL_MAX_WIDTH / w
             new_h = max(1, int(h * scale))
-            img = img.resize((THUMBNAIL_MAX_WIDTH, new_h), Image.LANCZOS)
+            img = img.resize((THUMBNAIL_MAX_WIDTH, new_h), Image.Resampling.LANCZOS)
         buf = io.BytesIO()
         img.save(buf, format="JPEG", quality=THUMBNAIL_JPEG_QUALITY, optimize=True)
         jpeg_bytes = buf.getvalue()
@@ -241,130 +241,9 @@ def get_conn(db_url: Optional[str] = None):
     print("[status] get_conn: opening database connection")
     if not url:
         raise RuntimeError("DATABASE_URL is not set")
-    conn = psycopg2.connect(url)
+    conn = psycopg2.connect(url, connect_timeout=10)
     print("[status] get_conn: connected")
     return conn
-
-
-# Queue order: single posters first (oldest first), except that after every
-# SINGLE_JOBS_PER_BULK singles one bulk poster goes first, so bulk work is never
-# starved while both are waiting (an empty queue never wastes a turn). Bulk
-# posters go round-robin across batches: a bulk job's "turn" is its place in
-# its own batch, finished jobs included, so batches alternate A1, B1, A2, B2,
-# ... and a new batch joins at turn 1 instead of waiting for older batches.
-# Ties go to the oldest job.
-#
-# Each pair is the (batch, position) SQL for one kind of database:
-# - The website's batch columns. Only bulk jobs have a batchId (enforced by a
-#   database constraint), so singles have no batch.
-# - A database without those columns falls back to the batch id in the storage
-#   path: posters/<env>/b/<batch>/... or older bulk-imports/<env>/<batch>/....
-#   Single uploads are posters/<env>/<uid>/... with a uid of 8+ characters, so
-#   the one-letter "b" segment never matches one.
-_BATCH_FROM_COLUMNS = ('"batchId"', '"batchIndex"')
-_BATCH_FROM_PATH = (
-    """CASE
-        WHEN "filePath" LIKE 'posters/_/b/%' THEN split_part("filePath", '/', 4)
-        WHEN "filePath" LIKE 'bulk-imports/%' THEN split_part("filePath", '/', 3)
-    END""",
-    "NULL::integer",
-)
-
-
-def _has_batch_columns(cur) -> bool:
-    """True when ExtractionJob has the website's batchId and batchIndex columns."""
-    cur.execute(
-        """
-        SELECT count(*) AS found
-        FROM information_schema.columns
-        WHERE table_schema = current_schema()
-          AND table_name = 'ExtractionJob'
-          AND column_name IN ('batchId', 'batchIndex')
-        """
-    )
-    return cur.fetchone()["found"] == 2
-
-
-# Singles claimed since the last bulk poster (in memory; resets on restart).
-_singles_since_bulk = 0
-
-
-def _claim_sql(batch: str, position: str, bulk_first: bool) -> str:
-    """Claim query for one (batch, position) pair above; never job input."""
-    group_order = "queue.batch IS NULL" if bulk_first else "queue.batch IS NOT NULL"
-    return f"""
-        WITH jobs AS (
-            SELECT id, created, {batch} AS batch, {position} AS position,
-                   NOT completed
-                     AND status IN ('pending-extraction', 'pending-thumbnail') AS pending
-            FROM "ExtractionJob"
-        ),
-        queue AS (
-            SELECT id, batch, created, pending,
-                   ROW_NUMBER() OVER (
-                       PARTITION BY batch ORDER BY position, created, id
-                   ) AS turn
-            FROM jobs
-            WHERE (batch IS NULL AND pending)
-               OR batch IN (SELECT batch FROM jobs WHERE pending)
-        )
-        SELECT job.id, job."posterId", job."fileName", job."filePath", job.status,
-               queue.batch IS NOT NULL AS is_bulk
-        FROM queue
-        JOIN "ExtractionJob" job USING (id)
-        WHERE queue.pending
-        ORDER BY {group_order}, queue.turn, queue.created
-        LIMIT 1
-        FOR UPDATE OF job SKIP LOCKED
-    """
-
-
-def claim_next_job(conn) -> Optional[dict]:
-    """
-    Claim the next pending ExtractionJob (status -> processing).
-    Returns the job row as dict or None if no job available.
-
-    Two kinds of work queue up here. 'pending-extraction' is the full pipeline.
-    'pending-thumbnail' is a poster whose metadata is already saved and only
-    needs a preview rendered; the UI queues those because it cannot reach this
-    service over HTTP.
-
-    Single posters go first, with one bulk poster after every
-    SINGLE_JOBS_PER_BULK singles; bulk posters go round-robin across batches
-    (see _BATCH_FROM_COLUMNS).
-    """
-    global _singles_since_bulk
-    print("[status] claim_next_job: querying for pending job")
-    job_id = None
-    row = None
-    with conn.cursor(cursor_factory=RealDictCursor) as cur:
-        if _has_batch_columns(cur):
-            batch, position = _BATCH_FROM_COLUMNS
-        else:
-            batch, position = _BATCH_FROM_PATH
-            print("[status] claim_next_job: no batch columns, batches from file paths")
-
-        # Select one pending job and lock it
-        bulk_first = _singles_since_bulk >= SINGLE_JOBS_PER_BULK
-        cur.execute(_claim_sql(batch, position, bulk_first))
-        row = cur.fetchone()
-        if not row:
-            print("[status] claim_next_job: no pending job")
-            return None
-        job_id = row["id"]
-        _singles_since_bulk = 0 if row["is_bulk"] else _singles_since_bulk + 1
-        print(f"[status] claim_next_job: claiming job id={job_id}")
-        cur.execute(
-            """
-            UPDATE "ExtractionJob"
-            SET status = 'processing', updated = now()
-            WHERE id = %s
-        """,
-            (job_id,),
-        )
-    conn.commit()
-    print(f"[status] claim_next_job: claimed job {job_id}")
-    return dict(row)
 
 
 def fail_stuck_processing_jobs(conn, stuck_minutes: int = STUCK_PROCESSING_MINUTES) -> int:
@@ -971,28 +850,36 @@ def save_poster_metadata(conn, poster_id: int, extraction: dict) -> None:
 # --- Worker loop ------------------------------------------------------------
 
 
-def run_one_cycle(extraction_lock, db_url: Optional[str] = None) -> bool:
+def run_one_cycle(
+    extraction_lock, db_url: str, queue_class: str = "single",
+    after_batch_id: Optional[str] = None, *, context: FeatureContext,
+) -> Optional[dict]:
     """
     Poll DB for one job, claim it, download from Bunny, extract, save metadata.
     Uses extraction_lock to serialize with any other extractors (e.g. Flask).
-    db_url overrides DATABASE_URL when polling a second database (e.g. production).
-    Returns True if a job was processed, False if no job found.
+    db_url and context must come from the same configured database target.
+    Returns the processed job, or None if no eligible job was found.
+    context comes only from the configured database target, never job input.
     """
     print("[status] run_one_cycle: starting")
-    url = db_url or DATABASE_URL
+    url = db_url
     if not url or not BUNNY_PRIVATE_STORAGE or not BUNNY_PRIVATE_STORAGE_KEY:
         log("Job worker: DATABASE_URL, BUNNY_PRIVATE_STORAGE, BUNNY_PRIVATE_STORAGE_KEY required")
         print("[status] run_one_cycle: missing env, aborting")
-        return False
+        return None
 
     conn = get_conn(url)
     try:
+        modern = has_batch_columns(conn)
         fail_stuck_processing_jobs(conn)
-        job = claim_next_job(conn)
+        if modern:
+            fail_interrupted_uploads(conn)
+        job = claim_next_job(conn, queue_class, after_batch_id, modern)
         if not job:
             print("[status] run_one_cycle: no job, cycle done")
-            return False
+            return None
 
+        print(f"[status] job environment={context.environment} class={queue_class}")
         job_id = job["id"]
         poster_id = job["posterId"]
         file_path = job["filePath"]
@@ -1035,7 +922,7 @@ def run_one_cycle(extraction_lock, db_url: Optional[str] = None) -> bool:
                     )
                     log(f"Job worker: thumbnail job {job_id} completed")
                     print(f"[status] run_one_cycle: thumbnail job {job_id} completed")
-                    return True
+                    return job
                 if thumbnail_path:
                     log(f"Job worker: thumbnail uploaded to {thumbnail_path}")
                     update_poster_image_url(conn, poster_id, thumbnail_path)
@@ -1052,7 +939,7 @@ def run_one_cycle(extraction_lock, db_url: Optional[str] = None) -> bool:
                     mark_job_failed(conn, job_id, f"Thumbnail generation failed: {e}")
                     log(f"Job worker: thumbnail job {job_id} failed: {e}")
                     print(f"[status] run_one_cycle: thumbnail job failed: {e}")
-                    return True
+                    return job
                 log(f"Job worker: thumbnail generation failed (non-fatal): {e}")
                 print(f"[status] run_one_cycle: thumbnail generation failed: {e}")
 
@@ -1060,11 +947,11 @@ def run_one_cycle(extraction_lock, db_url: Optional[str] = None) -> bool:
             acquired = extraction_lock.acquire(timeout=EXTRACTION_LOCK_TIMEOUT_SECONDS)
             if not acquired:
                 mark_job_failed(conn, job_id, "Could not acquire extraction lock")
-                return True
+                return job
 
             try:
                 print(f"[status] run_one_cycle: calling extract_poster({tmp_path})")
-                result = extract_poster(tmp_path)
+                result = extract_for_environment(tmp_path, context)
                 print("[status] run_one_cycle: extract_poster returned")
             finally:
                 extraction_lock.release()
@@ -1073,7 +960,7 @@ def run_one_cycle(extraction_lock, db_url: Optional[str] = None) -> bool:
             if "error" in result:
                 mark_job_failed(conn, job_id, result["error"])
                 log(f"Job worker: job {job_id} failed: {result['error']}")
-                return True
+                return job
 
             print("[status] run_one_cycle: validating extraction")
             result, _ = validate_and_fix_extraction(result)
@@ -1083,11 +970,12 @@ def run_one_cycle(extraction_lock, db_url: Optional[str] = None) -> bool:
                 log(f"Job worker: job {job_id} completed, PosterMetadata updated")
                 print(f"[status] run_one_cycle: job {job_id} completed successfully")
             except Exception as e:
+                conn.rollback()
                 mark_job_failed(conn, job_id, f"Failed to save metadata: {e}")
                 log(f"Job worker: job {job_id} failed to save metadata: {e}")
-                return True
+                return job
 
-            return True
+            return job
 
         except Exception as e:
             print(f"[status] run_one_cycle: exception {e}")
@@ -1096,7 +984,7 @@ def run_one_cycle(extraction_lock, db_url: Optional[str] = None) -> bool:
             import traceback
 
             traceback.print_exc()
-            return True
+            return job
         finally:
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
@@ -1107,52 +995,46 @@ def run_one_cycle(extraction_lock, db_url: Optional[str] = None) -> bool:
         print("[status] run_one_cycle: closed DB connection")
 
 
+def extract_for_environment(local_path: str, context: FeatureContext) -> dict:
+    """Shared extraction entry point for environment-specific extensions.
+
+    Add a named flag to feature_flags.KNOWN_FEATURES and branch here when a
+    feature actually changes processing. Bulk admission does not change the
+    extraction algorithm, and accepted jobs drain even if admission is disabled.
+    Never change os.environ per job: model configuration is process-wide.
+    """
+    return extract_poster(local_path)
+
+
 def run_worker_loop(
     extraction_lock, poll_interval: int = POLL_INTERVAL_SECONDS, db_urls: Optional[list] = None
 ) -> None:
-    """Run the poll loop forever. Use in a background thread.
-    db_urls is a list of (label, db_url) pairs, polled round-robin so neither
-    environment can starve the other.
-    Defaults to [("default", None)] which uses DATABASE_URL.
-    """
-    targets = db_urls or [("default", None)]
-    log(
-        f"Job worker: starting poll loop (interval={poll_interval}s, dbs={[l for l, _ in targets]})"
+    """One poster per dispatch, weighted classes, fair environments and batches."""
+    targets = dict(db_urls or [])
+    if not targets:
+        log("Job worker: no database targets configured; worker not started")
+        return
+    contexts = {label: features_for_environment(label) for label in targets}
+    scheduler = QueueScheduler(
+        list(targets), int(config.get_env("SINGLE_JOBS_PER_BULK") or "3")
     )
-    print(
-        f"[status] run_worker_loop: started, poll_interval={poll_interval}s dbs={[l for l, _ in targets]}"
-    )
-    cycle = 0
+
+    def process(environment, queue_class, last_batch):
+        try:
+            return run_one_cycle(
+                extraction_lock, db_url=targets[environment], queue_class=queue_class,
+                after_batch_id=last_batch, context=contexts[environment],
+            )
+        except Exception as error:
+            # Database errors can contain connection details. Log the exception
+            # class and environment, not credentials or connection strings.
+            log(f"Job worker: {environment} queue error ({type(error).__name__})")
+            return None
+
     while True:
-        # Consume any pending wake signal immediately BEFORE draining, never
-        # after waiting. Everything committed so far is about to be polled, so a
-        # signal lost here costs nothing - whereas clearing just before wait()
-        # would discard a signal that arrived during the drain and strand that
-        # job for a full poll interval.
+        # Consume the signal before draining, so submissions arriving during
+        # extraction keep the next wait from sleeping through fresh work.
         worker_wake_event.clear()
-
-        # Drain every queue before waiting again. run_one_cycle handles a single
-        # job, so without this a backlog would clear at one job per database per
-        # poll interval. One job per database per pass round-robins them: both
-        # environments serve real users, so a long queue in either must not
-        # starve the other.
-        while True:
-            progressed = False
-            cycle += 1
-            for label, db_url in targets:
-                print(f"[status] run_worker_loop: cycle {cycle} db={label}")
-                try:
-                    if run_one_cycle(extraction_lock, db_url=db_url):
-                        progressed = True
-                except Exception as e:
-                    log(f"Job worker: error in cycle (db={label}): {e}")
-                    print(f"[status] run_worker_loop: cycle error db={label}: {e}")
-                    import traceback
-
-                    traceback.print_exc()
-            if not progressed:
-                break
-
-        print(f"[status] run_worker_loop: waiting up to {poll_interval}s")
-        # Wake early when /jobs/check signals a new submission.
+        while scheduler.dispatch(process):
+            pass
         worker_wake_event.wait(timeout=poll_interval)

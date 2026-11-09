@@ -88,6 +88,9 @@ jobs:
             echo "CUDA_VISIBLE_DEVICES=${{ secrets.CUDA_VISIBLE_DEVICES }}"
             echo "POLL_INTERVAL_SECONDS=${{ secrets.POLL_INTERVAL_SECONDS }}"
             echo "STUCK_PROCESSING_MINUTES=${{ secrets.STUCK_PROCESSING_MINUTES }}"
+            echo "SINGLE_JOBS_PER_BULK=${{ secrets.SINGLE_JOBS_PER_BULK }}"
+            echo "STAGING_FEATURES=${{ secrets.STAGING_FEATURES }}"
+            echo "PRODUCTION_FEATURES=${{ secrets.PRODUCTION_FEATURES }}"
           } > .env.deploy
 
       # Copy .env to server so docker-compose ca,     n substitute variables
