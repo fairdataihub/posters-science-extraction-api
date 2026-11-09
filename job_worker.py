@@ -45,6 +45,8 @@ BUNNY_PRIVATE_STORAGE_KEY = _env("BUNNY_PRIVATE_STORAGE_KEY")
 POLL_INTERVAL_SECONDS = int(_env("POLL_INTERVAL_SECONDS") or "30")
 STUCK_PROCESSING_MINUTES = int(_env("STUCK_PROCESSING_MINUTES") or "5")
 EXTRACTION_LOCK_TIMEOUT_SECONDS = int(_env("EXTRACTION_LOCK_TIMEOUT_SECONDS") or "300")
+# While both are waiting, run this many single posters per bulk poster (min 1).
+SINGLE_JOBS_PER_BULK = max(1, int(_env("SINGLE_JOBS_PER_BULK") or "3"))
 
 THUMBNAIL_MAX_WIDTH = 1200  # px - enough for display, keeps file size small
 THUMBNAIL_JPEG_QUALITY = 75  # 1-100;
@@ -244,6 +246,79 @@ def get_conn(db_url: Optional[str] = None):
     return conn
 
 
+# Queue order: single posters first (oldest first), except that after every
+# SINGLE_JOBS_PER_BULK singles one bulk poster goes first, so bulk work is never
+# starved while both are waiting (an empty queue never wastes a turn). Bulk
+# posters go round-robin across batches: a bulk job's "turn" is its place in
+# its own batch, finished jobs included, so batches alternate A1, B1, A2, B2,
+# ... and a new batch joins at turn 1 instead of waiting for older batches.
+# Ties go to the oldest job.
+#
+# Each pair is the (batch, position) SQL for one kind of database:
+# - The website's batch columns. Only bulk jobs have a batchId (enforced by a
+#   database constraint), so singles have no batch.
+# - A database without those columns falls back to the batch id in the storage
+#   path: posters/<env>/b/<batch>/... or older bulk-imports/<env>/<batch>/....
+#   Single uploads are posters/<env>/<uid>/... with a uid of 8+ characters, so
+#   the one-letter "b" segment never matches one.
+_BATCH_FROM_COLUMNS = ('"batchId"', '"batchIndex"')
+_BATCH_FROM_PATH = (
+    """CASE
+        WHEN "filePath" LIKE 'posters/_/b/%' THEN split_part("filePath", '/', 4)
+        WHEN "filePath" LIKE 'bulk-imports/%' THEN split_part("filePath", '/', 3)
+    END""",
+    "NULL::integer",
+)
+
+
+def _has_batch_columns(cur) -> bool:
+    """True when ExtractionJob has the website's batchId and batchIndex columns."""
+    cur.execute(
+        """
+        SELECT count(*) AS found
+        FROM information_schema.columns
+        WHERE table_schema = current_schema()
+          AND table_name = 'ExtractionJob'
+          AND column_name IN ('batchId', 'batchIndex')
+        """
+    )
+    return cur.fetchone()["found"] == 2
+
+
+# Singles claimed since the last bulk poster (in memory; resets on restart).
+_singles_since_bulk = 0
+
+
+def _claim_sql(batch: str, position: str, bulk_first: bool) -> str:
+    """Claim query for one (batch, position) pair above; never job input."""
+    group_order = "queue.batch IS NULL" if bulk_first else "queue.batch IS NOT NULL"
+    return f"""
+        WITH jobs AS (
+            SELECT id, created, {batch} AS batch, {position} AS position,
+                   NOT completed
+                     AND status IN ('pending-extraction', 'pending-thumbnail') AS pending
+            FROM "ExtractionJob"
+        ),
+        queue AS (
+            SELECT id, batch, created, pending,
+                   ROW_NUMBER() OVER (
+                       PARTITION BY batch ORDER BY position, created, id
+                   ) AS turn
+            FROM jobs
+            WHERE (batch IS NULL AND pending)
+               OR batch IN (SELECT batch FROM jobs WHERE pending)
+        )
+        SELECT job.id, job."posterId", job."fileName", job."filePath", job.status,
+               queue.batch IS NOT NULL AS is_bulk
+        FROM queue
+        JOIN "ExtractionJob" job USING (id)
+        WHERE queue.pending
+        ORDER BY {group_order}, queue.turn, queue.created
+        LIMIT 1
+        FOR UPDATE OF job SKIP LOCKED
+    """
+
+
 def claim_next_job(conn) -> Optional[dict]:
     """
     Claim the next pending ExtractionJob (status -> processing).
@@ -253,28 +328,31 @@ def claim_next_job(conn) -> Optional[dict]:
     'pending-thumbnail' is a poster whose metadata is already saved and only
     needs a preview rendered; the UI queues those because it cannot reach this
     service over HTTP.
+
+    Single posters go first, with one bulk poster after every
+    SINGLE_JOBS_PER_BULK singles; bulk posters go round-robin across batches
+    (see _BATCH_FROM_COLUMNS).
     """
+    global _singles_since_bulk
     print("[status] claim_next_job: querying for pending job")
     job_id = None
     row = None
     with conn.cursor(cursor_factory=RealDictCursor) as cur:
+        if _has_batch_columns(cur):
+            batch, position = _BATCH_FROM_COLUMNS
+        else:
+            batch, position = _BATCH_FROM_PATH
+            print("[status] claim_next_job: no batch columns, batches from file paths")
+
         # Select one pending job and lock it
-        cur.execute(
-            """
-            SELECT id, "posterId", "fileName", "filePath", status
-            FROM "ExtractionJob"
-            WHERE completed = false
-              AND status IN ('pending-extraction', 'pending-thumbnail')
-            ORDER BY created
-            LIMIT 1
-            FOR UPDATE SKIP LOCKED
-        """
-        )
+        bulk_first = _singles_since_bulk >= SINGLE_JOBS_PER_BULK
+        cur.execute(_claim_sql(batch, position, bulk_first))
         row = cur.fetchone()
         if not row:
             print("[status] claim_next_job: no pending job")
             return None
         job_id = row["id"]
+        _singles_since_bulk = 0 if row["is_bulk"] else _singles_since_bulk + 1
         print(f"[status] claim_next_job: claiming job id={job_id}")
         cur.execute(
             """
