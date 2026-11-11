@@ -38,8 +38,11 @@ services:
       - POLL_INTERVAL_SECONDS=${POLL_INTERVAL_SECONDS:-30}
       - STUCK_PROCESSING_MINUTES=${STUCK_PROCESSING_MINUTES:-5}
       - SINGLE_JOBS_PER_BULK=${SINGLE_JOBS_PER_BULK:-3}
-      - STAGING_FEATURES=${STAGING_FEATURES:-bulk_extraction}
+      - STAGING_FEATURES=${STAGING_FEATURES:-bulk_extraction,batch_completion_email}
       - PRODUCTION_FEATURES=${PRODUCTION_FEATURES:-}
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - STAGING_SITE_URL=${STAGING_SITE_URL:-}
+      - PRODUCTION_SITE_URL=${PRODUCTION_SITE_URL:-}
     ports:
       - "${API_PORT:-8000}:8000"
     # Mount source code for hot reload - edit locally, restart to apply

@@ -30,6 +30,7 @@ from validation import validate_and_fix_extraction
 from job_queue import claim_next_job, has_batch_columns, fail_interrupted_uploads
 from scheduler import QueueScheduler
 from feature_flags import FeatureContext, features_for_environment
+from batch_notifications import notify_finished_batches
 
 
 # --- Config from config.py --------------------------------------------------
@@ -991,6 +992,15 @@ def run_one_cycle(
                 print(f"[status] run_one_cycle: removed temp file {tmp_path}")
 
     finally:
+        # Runs on idle cycles too, so batches finished by the upload timeout or
+        # stuck-job cleanup are also emailed. Never let it affect the job.
+        try:
+            conn.rollback()
+            notify_finished_batches(conn, context)
+        except Exception as error:
+            with contextlib.suppress(Exception):
+                conn.rollback()
+            log(f"Job worker: batch completion email sweep failed ({type(error).__name__})")
         conn.close()
         print("[status] run_one_cycle: closed DB connection")
 

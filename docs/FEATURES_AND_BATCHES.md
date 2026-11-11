@@ -8,9 +8,12 @@ them.
 
 | API setting | Initial deployment value | Purpose |
 | --- | --- | --- |
-| `STAGING_FEATURES` | `bulk_extraction` | Registered features for jobs from the staging database |
+| `STAGING_FEATURES` | `bulk_extraction,batch_completion_email` | Registered features for jobs from the staging database |
 | `PRODUCTION_FEATURES` | empty | Registered features for jobs from the production database |
 | `SINGLE_JOBS_PER_BULK` | `3` | Single jobs per reserved bulk turn when both classes have work |
+| `RESEND_API_KEY` | Resend key | Sends batch completion emails; without it they are skipped |
+| `STAGING_SITE_URL` | empty | Dashboard link host for staging emails, default `https://sandbox.posters.science` |
+| `PRODUCTION_SITE_URL` | empty | Dashboard link host for production emails, default `https://posters.science` |
 
 Feature values are comma-separated names from `feature_flags.KNOWN_FEATURES`.
 Use `none` to explicitly disable every feature, including when a Compose or
@@ -47,6 +50,28 @@ detects batch columns on each connection. Unmigrated databases continue to work
 as single-only queues. The worker never treats an unfinished upload as eligible
 extraction work. Uploads abandoned for 15 minutes become failed jobs with an
 upload retry prompt. Queued jobs are not subject to this upload timeout.
+
+## Batch completion emails
+
+With `batch_completion_email` enabled for an environment, the worker emails a
+batch owner once every job in the batch has finished. `batch_notifications.py`
+sweeps for finished batches at the end of every cycle, idle cycles included, so
+batches finished by the upload timeout or stuck-job cleanup are covered too.
+
+- A batch is finished when it has at least one job and none is incomplete.
+- Each batch row is locked with `FOR UPDATE SKIP LOCKED` while its email is
+  sent, and `"completionEmailSentAt"` is set in the same transaction, so each
+  batch is emailed at most once. Retrying a failed file later sends nothing.
+- Network errors, 429s and 5xx responses roll back and retry on a later sweep.
+  Other Resend rejections, such as an invalid address, mark the batch and are
+  not retried.
+- Without `RESEND_API_KEY`, or on a database without the column, the sweep does
+  nothing and leaves batches unmarked.
+- Logs record the batch id and recipient domain, never the full address.
+
+The column comes from the posters-science migration
+`20261111120000_add_extraction_batch_completion_email`. Apply it before enabling
+the flag.
 
 ## Adding a staging-first feature
 

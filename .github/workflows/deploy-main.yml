@@ -91,6 +91,9 @@ jobs:
             echo "SINGLE_JOBS_PER_BULK=${{ secrets.SINGLE_JOBS_PER_BULK }}"
             echo "STAGING_FEATURES=${{ secrets.STAGING_FEATURES }}"
             echo "PRODUCTION_FEATURES=${{ secrets.PRODUCTION_FEATURES }}"
+            echo "RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}"
+            echo "STAGING_SITE_URL=${{ secrets.STAGING_SITE_URL }}"
+            echo "PRODUCTION_SITE_URL=${{ secrets.PRODUCTION_SITE_URL }}"
           } > .env.deploy
 
       # Copy .env to server so docker-compose ca,     n substitute variables
