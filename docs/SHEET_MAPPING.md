@@ -10,7 +10,7 @@ It touches no database, no storage and no GPU model, so it can run while extract
 
 | Field | Required | What it is |
 |-------|----------|------------|
-| `sheet` | yes | The spreadsheet: `.xlsx`, `.xls`, `.csv` or `.tsv`, up to 10 MB |
+| `sheet` | yes | The spreadsheet: `.xlsx`, `.xls`, `.csv` or `.tsv`, up to 10 MB. Send it more than once for an export split over files (EasyChair `submission.csv` plus `author.csv`) |
 | `file_names` | yes in practice | JSON array of the poster file names uploaded to the batch |
 | `mapping` | no | JSON object `{column header: field or null}`, the user's confirmed choices from the confirm screen |
 
@@ -22,15 +22,19 @@ It touches no database, no storage and no GPU model, so it can run while extract
   "sheet_name": "Posters",
   "header_row": 1,
   "mapping": [{"column": "Title", "field": "title", "source": "template", "stored": true, "samples": ["..."]}],
-  "file_column": {"column": "File name", "matched_rows": 48, "rows": 50},
+  "authors_table": null,
+  "file_column": {"column": "File name", "method": "column", "matched_rows": 48, "rows": 50},
   "sheets": {
-    "About the Poster": [{"file_name": "12_smith.pdf", "title": "...", "keywords": "Human Health"}],
-    "Creators": [{"file_name": "12_smith.pdf", "given_name": "Jane", "family_name": "Do", "name_type": "Personal", "contributor_affiliation_1_name": "..."}],
-    "Additional information": [{"file_name": "12_smith.pdf", "submission_abstract": "..."}],
-    "Related resources": [{"file_name": "12_smith.pdf", "related_identifier": "https://...", "related_identifier_type": "URL", "relation_type": "References"}]
+    "About the Poster": [{"row_key": "row-13", "file_name": "12_smith.pdf", "title": "...", "keywords": "Human Health"}],
+    "Creators": [{"row_key": "row-13", "file_name": "12_smith.pdf", "given_name": "Jane", "family_name": "Do", "name_type": "Personal", "contributor_affiliation_1_name": "..."}],
+    "Additional information": [{"row_key": "row-13", "file_name": "12_smith.pdf", "submission_abstract": "..."}],
+    "Related resources": [{"row_key": "row-13", "file_name": "12_smith.pdf", "related_identifier": "https://...", "related_identifier_type": "URL", "relation_type": "References"}]
   },
   "unmatched_rows": [{"row": 14, "value": "13_lee.pdf", "title": "..."}],
   "unmatched_files": ["40_park.pdf"],
+  "match_rows": [{"row_key": "row-14", "row": 14, "title": "...", "authors": ["Ann Lee", "Bo Chen"], "number": "13"}],
+  "hints": {"row-20": {"project_license": "MIT"}},
+  "skipped": {"deleted": 0, "not_accepted": 12, "talk_only": 3},
   "warnings": [{"code": "rows_without_file", "message": "...", "severity": "warning"}],
   "needs_confirmation": true,
   "ok": true,
@@ -38,7 +42,7 @@ It touches no database, no storage and no GPU model, so it can run while extract
 }
 ```
 
-`sheets` uses the grid's sheet names and fillKeys. Rows carry `file_name`; the app swaps it for the poster id before saving.
+`sheets` uses the grid's sheet names and fillKeys. Every row carries `row_key` (its row in the file) and `file_name`. Rows linked to a file have its name; the app swaps it for the poster id before saving. Rows not linked yet have an empty `file_name` and are listed in `match_rows`, to be matched by title once posters extract (see below).
 
 Errors: `400` for a missing or wrong file type, `413` over 10 MB, `422` when the file can't be read or has no header row.
 
@@ -49,13 +53,50 @@ Errors: `400` for a missing or wrong file type, `413` over 10 MB, `422` when the
 3. **Small LLM, optional.** Only for columns still unmapped, and only when `SHEET_MAPPER_LLM_URL` is set. The model sees each header with three sample values and answers through a JSON schema that only allows our field names or null. Anything else is dropped. A failed call is a warning, never an error.
 4. **User choices** sent back in `mapping` win over all of the above.
 
-`template.known` is true only when a template matched and nothing came from fuzzy matching or the LLM. `needs_confirmation` tells the app to show the confirm screen: unknown template, rows without a file, or an error.
+`template.known` is true only when a template matched and nothing came from fuzzy matching or the LLM. `needs_confirmation` tells the app to show the confirm screen: unknown template, rows without a file, a file link that was inferred (from values, or from numbers outside EasyChair), or an error.
 
-## The file column is required
+Known templates: Curious (`curious-2027`), EasyChair (`easychair`) and our own bulk template (`posters-science-bulk`).
 
-Each row has to say which uploaded poster it describes. The file column is found by its values, not its header: the column whose cells match the most uploaded file names (case, spacing, folders and extension ignored), at least half of them. Rows that don't match a file are listed in `unmatched_rows` and skipped. Rows are never matched by title.
+## Linking rows to poster files
 
-If no column matches, the response has a `file_column_missing` error and no rows.
+In order:
+
+1. **File name column.** Found by its values, not its header: the column whose cells match the most uploaded file names (case, spacing, folders and extension ignored), at least half of them. This is the exact link and the one to ask organizers for.
+2. **Submission number in the file name.** With no file column, a numeric number column (EasyChair `#`, a poster number) links rows to files named by it: `17.pdf`, `17_smith.pdf`, `bosc2026_submission_17.pdf`, or a number run on from a year (`ISMB20262153Patel.pdf` also reads as 2153). A file that could belong to two rows is left alone. For EasyChair this is the documented naming, so it needs no check; for other sheets the organizer confirms it.
+3. **Title, after extraction.** Rows still without a file go to `match_rows`, with a `file_column_missing` (or `rows_without_file`) warning. Once posters extract, the app sends those rows and the extracted titles and authors to `POST /sheets/match`.
+
+## POST /sheets/match
+
+JSON body: `rows` (the `match_rows` from `/sheets/map`) and `posters` (`[{file_name, title, authors: [names]}]` as extracted). Up to 2000 of each.
+
+Tiers, strongest first:
+
+1. **Title.** ROUGE-L F1 between the two titles (words, case and accents ignored). Automatic (`confidence: "high"`) when the score is at least 0.95 and no other row or poster is within 0.10 of it.
+2. **Title and authors.** When the title alone isn't decisive (two posters share a title, or the poster words it a little differently, 0.60 or more), the author family names break the tie: at least half in common (spelling and OCR slips allowed), and the combined score (0.75 title, 0.25 authors) at least 0.10 ahead of the next candidate. These come back as `confidence: "review"` for the organizer to check.
+3. **No match.** The row is listed in `unmatched_rows` with its closest poster as a suggestion, and the file in `unmatched_files`.
+
+Matching is one to one, best score first. Two identical titles with no authors to tell them apart are never guessed.
+
+```json
+{
+  "matches": [{"row_key": "row-14", "file_name": "lee.pdf", "method": "title", "confidence": "high",
+               "title_score": 0.981, "author_score": 1.0, "score": 0.986, "row_title": "...", "poster_title": "..."}],
+  "unmatched_rows": [{"row_key": "row-20", "title": "...", "closest": {"file_name": "x.pdf", "title_score": 0.71, "author_score": null, "score": 0.71}}],
+  "unmatched_files": ["x.pdf"],
+  "thresholds": {"title_auto": 0.95, "title_min": 0.6, "margin": 0.1, "authors_min": 0.5}
+}
+```
+
+## EasyChair
+
+Built from the column headings of a real BOSC 2026 basic submission download and the BOSC submission form.
+
+- Accepts the basic submission download (one sheet), the Conference data download (a workbook with Submissions and Authors sheets) and the same as CSV files (`submission.csv` plus `author.csv`). Headers are matched case-insensitively.
+- With an Authors table, authors come from it in row order: first and last name, affiliation, and an ORCID when Web page is an orcid.org link. Email, country and the corresponding flag are not stored. Without it, the one-string Authors column (`A, B and C`) is split.
+- Rows are skipped when Deleted is set, when Decision does not say accept (only once at least one row is accepted), or when the Submission Type form field is TALK ONLY.
+- Keywords are one per line (a keyword may contain commas). Track name goes into keywords.
+- Form fields (`(name) value` lines): a previously published abstract's DOI becomes a related resource (IsDerivedFrom), and a source code link a related resource (URL, IsSupplementedBy). The license question is the license of the work the poster presents, so it comes back as a hint in `hints`, never as the poster's license. All other questions, including fees, diversity, income level, conflicts of interest and comments for the chairs, are dropped as the file is read. The confirm screen shows the question names only, never the answers.
+- Poster files: EasyChair's Download submissions zip names files by submission number, which step 2 links. At ISMB and BOSC the poster PDFs come from ISMB's poster platform instead, which has no EasyChair number, so those rows fall through to title matching.
 
 ## Value parsing (deterministic, no LLM)
 
@@ -84,5 +125,5 @@ SHEET_MAPPER_LLM_URL=http://localhost:8091 python api.py
 ## Tests
 
 ```bash
-python -m pytest tests/test_sheet_mapper.py
+python -m pytest tests/test_sheet_mapper.py tests/test_sheet_mapper_easychair.py tests/test_poster_matcher.py
 ```

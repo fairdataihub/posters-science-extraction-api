@@ -45,7 +45,7 @@ RUN pip3 install --upgrade pip && \
 RUN pip3 install --no-cache-dir --upgrade poster2json
 
 # Copy application code (poster extraction logic comes from poster2json library)
-COPY config.py api.py job_worker.py job_queue.py scheduler.py feature_flags.py validation.py poster_extraction_schema.json poster_schema.json ./
+COPY config.py api.py job_worker.py job_queue.py scheduler.py feature_flags.py validation.py sheet_mapper.py poster_matcher.py poster_extraction_schema.json poster_schema.json ./
 
 # Create directories for input/output
 RUN mkdir -p /app/input /app/output

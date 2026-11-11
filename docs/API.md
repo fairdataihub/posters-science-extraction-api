@@ -70,7 +70,11 @@ Run one job-worker cycle: if there is an uncompleted (pending) job, it is claime
 
 #### `POST /sheets/map`
 
-Converts an organizer's poster sheet (Curious, EasyChair, our own, .xlsx/.xls/.csv/.tsv) into the bulk metadata grid format. Requires a column that links each row to an uploaded poster file. No database or GPU. See [SHEET_MAPPING.md](SHEET_MAPPING.md).
+Converts an organizer's poster sheet (Curious, EasyChair, our own, .xlsx/.xls/.csv/.tsv) into the bulk metadata grid format. Rows link to poster files by a file name column, or by a submission number in the file names; rows left over come back for title matching. No database or GPU. See [SHEET_MAPPING.md](SHEET_MAPPING.md).
+
+#### `POST /sheets/match`
+
+Matches sheet rows without a file to extracted posters by title, with the authors as a tiebreaker. Returns each match with a confidence (`high` is automatic, `review` needs the organizer's check). Stateless. See [SHEET_MAPPING.md](SHEET_MAPPING.md).
 
 ## Job Worker
 

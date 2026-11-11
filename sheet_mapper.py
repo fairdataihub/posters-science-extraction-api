@@ -66,11 +66,15 @@ FIELDS: dict[str, str] = {
     "poster_number": "the organizer's own poster number, position or submission id",
     "social": "social media handle or profile link (LinkedIn, X, Bluesky, Instagram, Mastodon)",
     "comment": "free-text comment or note for the organizer",
+    "decision": "review decision; only accepted rows are kept",
+    "deleted": "deleted or withdrawn flag; flagged rows are skipped",
+    "form_fields": "EasyChair form fields, one '(name) value' per line",
+    "ignored": "a known column with nothing for the poster record (dates, review status, country)",
 }
 
 # Fields that are recognized but have no place in the poster record. They are
 # reported so the user sees they were read, then dropped.
-NOT_STORED = {"contact_name", "contact_email", "poster_number", "social", "comment"}
+NOT_STORED = {"contact_name", "contact_email", "poster_number", "social", "comment", "decision", "deleted", "form_fields", "ignored"}
 
 # Values that mean "empty" in organizer sheets.
 PLACEHOLDERS = {"", "no", "none", "n/a", "na", "-", "--", "\u2013", "\u2014", "null", "nil", "tbd", "x"}
@@ -80,6 +84,7 @@ POSTER_EXTENSIONS = (".pdf", ".png", ".jpg", ".jpeg")
 
 def _norm_header(text: str) -> str:
     text = unicodedata.normalize("NFKD", str(text or "")).encode("ascii", "ignore").decode()
+    text = text.replace("#", " number ")
     return re.sub(r"[^a-z0-9]+", " ", text.lower()).strip()
 
 
@@ -94,7 +99,7 @@ ALIASES: dict[str, list[str]] = {
     "authors": ["authors", "author", "author list", "author names", "authors list", "all authors", "creators", "co authors"],
     "affiliations": ["affiliation", "affiliations", "institution", "institutions", "organization", "organisation", "author affiliations"],
     "abstract": ["abstract", "summary", "submission abstract", "short abstract", "description", "poster abstract"],
-    "keywords": ["keywords", "keyword", "tags", "key words", "subjects"],
+    "keywords": ["keywords", "keyword", "tags", "key words", "subjects", "topics list"],
     "track": ["track", "session", "topic", "category", "theme", "topics", "area", "track name", "session name"],
     "language": ["language", "lang", "poster language"],
     "domain": ["domain", "field", "field of study", "discipline", "research field", "research area", "subject area"],
@@ -102,9 +107,19 @@ ALIASES: dict[str, list[str]] = {
     "doi": ["doi", "existing doi"],
     "contact_name": ["contact author", "contact", "presenter", "presenting author", "corresponding author", "contact name"],
     "contact_email": ["contact e mail", "contact email", "email", "e mail", "corresponding email", "presenter email"],
-    "poster_number": ["position", "poster number", "poster no", "no", "number", "submission id", "paper id", "id", "board", "board number", "submission"],
+    "poster_number": [
+        "position", "poster number", "poster no", "no", "number", "submission id", "paper id", "id", "board",
+        "board number", "submission", "submission number", "paper number",
+    ],
     "social": ["linkedin", "instagram", "bluesky", "x", "twitter", "mastodon", "facebook", "social", "social media"],
-    "comment": ["comment", "comments", "note", "notes", "remarks", "decision"],
+    "comment": ["comment", "comments", "note", "notes", "remarks"],
+    "decision": ["decision", "status", "acceptance", "review decision"],
+    "deleted": ["deleted", "is deleted", "withdrawn"],
+    "form_fields": ["form fields", "custom fields"],
+    "ignored": [
+        "submitted", "last updated", "notified", "reviews sent", "track number", "created", "updated",
+        "timestamp", "date submitted", "country", "person number",
+    ],
 }
 
 _ALIAS_INDEX = {alias: fld for fld, aliases in ALIASES.items() for alias in aliases}
@@ -134,6 +149,33 @@ TEMPLATES: list[dict] = [
             "X": "social",
             "Comment": "comment",
         },
+    },
+    {
+        # Basic submission download (one sheet) and the Submissions sheet of the
+        # Conference data download. Headers from a real BOSC 2026 export.
+        "id": "easychair",
+        "name": "EasyChair submissions download",
+        "headers": {
+            "#": "poster_number",
+            "Title": "title",
+            "Authors": "authors",
+            "Submitted": "ignored",
+            "Last updated": "ignored",
+            "Keywords": "keywords",
+            "Decision": "decision",
+            "Abstract": "abstract",
+        },
+        "optional": {
+            "Track #": "ignored",
+            "Track name": "track",
+            "Form fields": "form_fields",
+            "Notified": "ignored",
+            "Reviews sent": "ignored",
+            "Deleted": "deleted",
+        },
+        # Poster files named by submission number (17.pdf, bosc_submission_17.pdf)
+        # are the documented way to link files, so a number link needs no check.
+        "file_number": True,
     },
     {
         "id": "posters-science-bulk",
@@ -216,17 +258,7 @@ def _header_score(cells: list[str]) -> int:
     return sum(1 for c in cells if _norm_header(c) in _ALIAS_INDEX)
 
 
-def read_table(data: bytes, filename: str) -> Table:
-    """Pick the sheet and header row with the most recognizable headers."""
-    best = None
-    for sheet_name, rows in _read_rows(data, filename):
-        for i, cells in enumerate(rows[:15]):
-            score = _header_score(cells)
-            if best is None or score > best[0]:
-                best = (score, sheet_name, i, rows)
-    if best is None or best[0] == 0:
-        raise ValueError("Could not find a header row. The first rows should name the columns.")
-    _, sheet_name, idx, rows = best
+def _table_at(sheet_name: str, rows: list[list[str]], idx: int) -> Table:
     headers = [c.strip() for c in rows[idx]]
     while headers and not headers[-1]:
         headers.pop()
@@ -236,6 +268,44 @@ def read_table(data: bytes, filename: str) -> Table:
         cells = (cells + [""] * width)[:width]
         body.append((n, cells))
     return Table(sheet_name, idx + 1, headers, body)
+
+
+# A per-author table (EasyChair Conference data download "Authors" sheet, or
+# its author.csv): one row per author per submission.
+AUTHOR_TABLE_NEEDS = {"submission number", "first name", "last name"}
+
+
+def is_author_table(headers: list[str]) -> bool:
+    return AUTHOR_TABLE_NEEDS <= {_norm_header(h) for h in headers}
+
+
+def read_tables(files: list[tuple[bytes, str]]) -> tuple[Table, Table | None]:
+    """
+    Pick the poster table (the sheet and header row with the most recognizable
+    headers) and, when one is there, a per-author table to join to it. Several
+    files are read as one workbook, so an EasyChair export can come as one
+    .xlsx or as submission.csv plus author.csv.
+    """
+    best = None
+    authors = None
+    for data, filename in files:
+        for sheet_name, rows in _read_rows(data, filename):
+            for i, cells in enumerate(rows[:15]):
+                if is_author_table(cells):
+                    if authors is None:
+                        authors = _table_at(sheet_name, rows, i)
+                    break
+                score = _header_score(cells)
+                if best is None or score > best[0]:
+                    best = (score, sheet_name, i, rows)
+    if best is None or best[0] == 0:
+        raise ValueError("Could not find a header row. The first rows should name the columns.")
+    _, sheet_name, idx, rows = best
+    return _table_at(sheet_name, rows, idx), authors
+
+
+def read_table(data: bytes, filename: str) -> Table:
+    return read_tables([(data, filename)])[0]
 
 
 # ---------------------------------------------------------------------------
@@ -259,6 +329,13 @@ def match_template(headers: list[str]) -> dict | None:
         if need <= present:
             return tpl
     return None
+
+
+def _template_map(tpl: dict | None) -> dict[str, str]:
+    if not tpl:
+        return {}
+    both = {**tpl.get("optional", {}), **tpl["headers"]}
+    return {_norm_header(h): f for h, f in both.items()}
 
 
 def _alias_field(header: str) -> tuple[str | None, str]:
@@ -336,7 +413,7 @@ def _llm_map(columns: list[ColumnMap]) -> tuple[dict[int, str | None], str | Non
 def map_columns(table: Table, overrides: dict[str, str | None] | None = None) -> tuple[list[ColumnMap], dict | None, list[str]]:
     notes: list[str] = []
     tpl = match_template(table.headers)
-    tpl_map = {_norm_header(h): f for h, f in (tpl["headers"].items() if tpl else [])}
+    tpl_map = _template_map(tpl)
     columns: list[ColumnMap] = []
     for i, header in enumerate(table.headers):
         col = ColumnMap(i, header, None, "none", _samples(table, i))
@@ -362,7 +439,7 @@ def map_columns(table: Table, overrides: dict[str, str | None] | None = None) ->
             c.field, c.source = (want if want in FIELDS else None), "user"
 
     # One column per stored field, except multi-column fields.
-    multi = {"social", "comment", "keywords", "track"}
+    multi = {"social", "comment", "keywords", "track", "ignored"}
     seen: dict[str, ColumnMap] = {}
     for c in columns:
         if c.field and c.field not in multi:
@@ -419,6 +496,59 @@ def find_file_column(table: Table, columns: list[ColumnMap], file_names: list[st
             c.field, c.source = None, "none"
     chosen.field, chosen.source = "file_name", ("values" if chosen.source not in ("template", "user") else chosen.source)
     return chosen, by_key
+
+
+def file_numbers(name: str) -> list[str]:
+    """
+    Submission numbers a poster file name may carry, best first:
+    "bosc_submission_17.pdf" -> 17, "17_smith.pdf" -> 17, and a number run
+    together with a year ("ISMB20262153Patel.pdf") -> 2153 as well.
+    """
+    stem = os.path.splitext(re.split(r"[\\/]", name.strip())[-1])[0].lower()
+    m = re.search(r"submission[\s_-]*0*(\d+)", stem)
+    if m:
+        return [m.group(1)]
+    out: list[str] = []
+    for run in re.findall(r"\d+", stem):
+        out.append(run.lstrip("0") or "0")
+        if len(run) > 4 and run[:2] in ("19", "20"):
+            out.append(run[4:].lstrip("0") or "0")
+    return list(dict.fromkeys(out))
+
+
+def link_files_by_number(table: Table, columns: list[ColumnMap], file_names: list[str]) -> tuple[ColumnMap | None, dict[int, str]]:
+    """
+    Link rows to files through the row's submission or poster number, when the
+    files are named by it. A file that could belong to two rows is left alone
+    (it falls through to title matching). Used only when no column holds the
+    file names.
+    """
+    if not file_names:
+        return None, {}
+    for c in columns:
+        if c.field != "poster_number":
+            continue
+        ids: dict[str, int] = {}
+        values = 0
+        for i, (_, cells) in enumerate(table.rows):
+            v = cells[c.index].strip()
+            if not v:
+                continue
+            values += 1
+            if re.fullmatch(r"\d+", v):
+                ids.setdefault(v.lstrip("0") or "0", i)
+        if not values or len(ids) / values < 0.8:
+            continue
+        links: dict[int, str] = {}
+        for name in file_names:
+            hits = {ids[n] for n in file_numbers(name) if n in ids}
+            if len(hits) == 1:
+                row = hits.pop()
+                if row not in links:
+                    links[row] = name
+        if links and len(links) / len(file_names) >= 0.5:
+            return c, links
+    return None, {}
 
 
 # ---------------------------------------------------------------------------
@@ -516,7 +646,75 @@ def parse_affiliations(cell: str) -> tuple[dict[int, str], list[str]]:
 
 
 def split_keywords(cell: str) -> list[str]:
-    return [k.strip() for k in re.split(r"[;,\n]", cell or "") if k.strip()]
+    """
+    One keyword per line when the cell has line breaks (EasyChair: keywords may
+    contain commas), else split on semicolons and commas. A Python-style list
+    ("['a', 'b']") is read as its items.
+    """
+    cell = (cell or "").strip()
+    if re.fullmatch(r"\[.*\]", cell, re.S):
+        items = re.findall(r"'((?:[^'\\]|\\.)*)'|\"((?:[^\"\\]|\\.)*)\"", cell)
+        if items:
+            return [(a or b).strip() for a, b in items if (a or b).strip()]
+    sep = r"\n" if "\n" in cell else r"[;,]"
+    return [k.strip() for k in re.split(sep, cell) if k.strip()]
+
+
+def orcid_url(value: str) -> str:
+    """An ORCID iD from a web page cell, as https://orcid.org/... ; else empty."""
+    m = re.search(r"orcid\.org/(\d{4}-\d{4}-\d{4}-\d{3}[\dXx])", value or "")
+    return f"https://orcid.org/{m.group(1).upper()}" if m else ""
+
+
+def find_doi(value: str) -> str:
+    m = re.search(r"10\.\d{4,9}/\S+", value or "")
+    return m.group(0).rstrip(".,;)]") if m else ""
+
+
+def parse_form_fields(cell: str) -> dict[str, str]:
+    """
+    EasyChair "Form fields": one "(name) value" per line; a line without a
+    "(name)" continues the value above. Returns {normalized name: value}.
+    """
+    out: dict[str, str] = {}
+    last = None
+    for line in (cell or "").splitlines():
+        m = re.match(r"^\s*\(([^)]+)\)\s*(.*)$", line)
+        if m:
+            last = _norm_header(m.group(1))
+            out[last] = m.group(2).strip()
+        elif last and line.strip():
+            out[last] = (out[last] + "\n" + line.strip()).strip()
+    return out
+
+
+def read_form_fields(cell: str) -> dict:
+    """
+    Keep only what belongs on a poster record. Private questions (fees,
+    diversity, income level, conflicts of interest, comments for the chairs)
+    and consents are never read past this point.
+      - submission type: TALK ONLY rows are not posters
+      - previously published abstract: its DOI (IsDerivedFrom)
+      - source code or content link: a URL (IsSupplementedBy)
+      - license: the project's license, shown as a hint, never the poster's
+    """
+    keep: dict = {}
+    for name, value in parse_form_fields(cell).items():
+        if not value:
+            continue
+        if "submission type" in name:
+            keep["submission_type"] = value.strip().upper()
+        elif "previous" in name and ("abstract" in name or "published" in name) or name == "doi":
+            doi = find_doi(value)
+            if doi:
+                keep["derived_from_doi"] = doi
+        elif name == "source" or "source code" in name or ("link" in name and "source" in name):
+            url = value.strip().split()[0]
+            if re.match(r"^https?://\S+\.\S+", url, re.I):
+                keep["source_url"] = url
+        elif name == "license" or "license" in name:
+            keep["project_license"] = value.strip()
+    return keep
 
 
 def as_url(value: str) -> str:
@@ -533,19 +731,22 @@ def as_url(value: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _creator_rows(file_name: str, authors_cell: str, affiliations_cell: str, warn) -> list[dict]:
+
+
+def _creator_rows(link: dict, authors_cell: str, affiliations_cell: str, warn) -> list[dict]:
+    label = link["file_name"] or link["row_key"]
     authors = parse_authors(authors_cell)
     numbered, plain = parse_affiliations(affiliations_cell)
     rows = []
     for a in authors:
         given, family = split_name(a["name"])
-        row = {"file_name": file_name, "given_name": given, "family_name": family, "name_type": "Personal"}
+        row = {**link, "given_name": given, "family_name": family, "name_type": "Personal"}
         if numbered and a["numbers"]:
             a["numbers"] = resolve_numbers(a["numbers"], set(numbered))
             names = [numbered[n] for n in a["numbers"] if n in numbered]
             missing = [n for n in a["numbers"] if n not in numbered]
             if missing:
-                warn("affiliation_number_missing", f'{file_name}: {a["name"]} points to affiliation {missing}, which is not in the list.')
+                warn("affiliation_number_missing", f'{label}: {a["name"]} points to affiliation {missing}, which is not in the list.')
         elif numbered and not a["numbers"] and len(numbered) == 1:
             names = list(numbered.values())
         elif plain and len(plain) == 1:
@@ -553,7 +754,7 @@ def _creator_rows(file_name: str, authors_cell: str, affiliations_cell: str, war
         elif plain:
             names = plain
             if len(authors) > 1:
-                warn("affiliations_unassigned", f"{file_name}: affiliations are not numbered, so every author gets all of them. Check the Creators tab.")
+                warn("affiliations_unassigned", f"{label}: affiliations are not numbered, so every author gets all of them. Check the Creators tab.")
         else:
             names = []
         for slot, name in enumerate(names[:30], start=1):
@@ -562,17 +763,72 @@ def _creator_rows(file_name: str, authors_cell: str, affiliations_cell: str, war
     return rows
 
 
-def map_sheet(data: bytes, filename: str, file_names: list[str], overrides: dict[str, str | None] | None = None) -> dict:
+def _author_table_index(authors: Table) -> dict[str, list[dict]]:
+    """Submission number -> its authors in row order (EasyChair Authors sheet)."""
+    idx = {_norm_header(h): i for i, h in enumerate(authors.headers)}
+
+    def get(cells: list[str], key: str) -> str:
+        return clean(cells[idx[key]]) if key in idx else ""
+
+    out: dict[str, list[dict]] = {}
+    for _, cells in authors.rows:
+        sub = get(cells, "submission number").lstrip("0")
+        if not sub:
+            continue
+        out.setdefault(sub, []).append(
+            {
+                "given": get(cells, "first name"),
+                "family": get(cells, "last name"),
+                "affiliation": get(cells, "affiliation"),
+                "orcid": orcid_url(cells[idx["web page"]]) if "web page" in idx else "",
+            }
+        )
+    return out
+
+
+def _creator_rows_from_table(link: dict, people: list[dict]) -> list[dict]:
+    rows = []
+    for p in people:
+        if not (p["given"] or p["family"]):
+            continue
+        row = {**link, "given_name": p["given"], "family_name": p["family"], "name_type": "Personal"}
+        if p["orcid"]:
+            row["name_identifier"] = p["orcid"]
+        if p["affiliation"]:
+            row["contributor_affiliation_1_name"] = p["affiliation"]
+        rows.append(row)
+    return rows
+
+
+def _accepted(decision: str) -> bool:
+    d = decision.lower()
+    return "accept" in d and "reject" not in d
+
+
+def map_sheet(
+    data: bytes,
+    filename: str,
+    file_names: list[str],
+    overrides: dict[str, str | None] | None = None,
+    extra_files: list[tuple[bytes, str]] | None = None,
+) -> dict:
     warnings: list[dict] = []
 
     def warn(code: str, message: str, severity: str = "warning"):
         warnings.append({"code": code, "message": message, "severity": severity})
 
-    table = read_table(data, filename)
+    table, author_table = read_tables([(data, filename)] + list(extra_files or []))
     columns, tpl, notes = map_columns(table, overrides)
     for n in notes:
         warn("mapping_note", n)
     file_col, by_key = find_file_column(table, columns, file_names)
+
+    # Form answers include private questions (fees, diversity, comments for the
+    # chairs). Show only which questions were asked, never the answers.
+    for c in columns:
+        if c.field == "form_fields":
+            asked = {name for _, cells in table.rows for name in parse_form_fields(cells[c.index])}
+            c.samples = [", ".join(sorted(asked))[:160] + " (answers not shown)"] if asked else []
 
     by_field: dict[str, list[ColumnMap]] = {}
     for c in columns:
@@ -587,35 +843,73 @@ def map_sheet(data: bytes, filename: str, file_names: list[str], overrides: dict
     id_cols = {c.index for c in by_field.get("poster_number", [])}
     data_rows = [(n, cells) for n, cells in table.rows if any(clean(v) for i, v in enumerate(cells) if i not in id_cols)]
 
-    titles = strip_position_prefixes([one("title", cells) for _, cells in data_rows])
+    # Rows that are not posters: deleted, not accepted, talk only.
+    skipped = {"deleted": 0, "not_accepted": 0, "talk_only": 0}
+    has_decision = bool(by_field.get("decision"))
+    any_accepted = has_decision and any(_accepted(one("decision", cells)) for _, cells in data_rows)
+    if has_decision and not any_accepted:
+        warn("no_decisions", "No row is marked accepted yet, so every row is kept.", "info")
+    kept: list[tuple[int, list[str], dict]] = []
+    for n, cells in data_rows:
+        if one("deleted", cells):
+            skipped["deleted"] += 1
+            continue
+        if any_accepted and not _accepted(one("decision", cells)):
+            skipped["not_accepted"] += 1
+            continue
+        form = read_form_fields(one("form_fields", cells)) if by_field.get("form_fields") else {}
+        if form.get("submission_type", "").startswith("TALK ONLY"):
+            skipped["talk_only"] += 1
+            continue
+        kept.append((n, cells, form))
+    reasons = {"deleted": "deleted", "not_accepted": "not accepted", "talk_only": "talk only"}
+    if any(skipped.values()):
+        parts = [f"{v} {reasons[k]}" for k, v in skipped.items() if v]
+        warn("rows_skipped", "Skipped rows that are not accepted posters: " + ", ".join(parts) + ".", "info")
+
+    # No file column: try submission numbers in the file names.
+    num_col, num_links = (None, {})
+    if file_col is None:
+        num_col, num_links = link_files_by_number(
+            Table(table.sheet_name, table.header_row, table.headers, [(n, c) for n, c, _ in kept]), columns, file_names
+        )
+
+    people = _author_table_index(author_table) if author_table else {}
+    titles = strip_position_prefixes([one("title", cells) for _, cells, _ in kept])
 
     sheets: dict[str, list[dict]] = {SHEET_ABOUT: [], SHEET_CREATORS: [], SHEET_ADDITIONAL: [], SHEET_RELATED: []}
     unmatched_rows: list[dict] = []
+    match_rows: list[dict] = []
+    hints: dict[str, dict] = {}
     used: dict[str, int] = {}
 
-    if file_col is None:
-        warn(
-            "file_column_missing",
-            "No column matches the uploaded poster file names. Add a column with each poster's file name "
-            "(for example 12_smith.pdf) so every row links to its poster.",
-            "error",
-        )
-
-    for (row_no, cells), title in zip(data_rows, titles):
-        raw_file = cells[file_col.index].strip() if file_col else ""
-        if file_col is None:
-            continue
-        if not raw_file:
-            unmatched_rows.append({"row": row_no, "value": "", "title": title})
-            continue
-        file_name = by_key.get(file_key(raw_file)) if by_key else re.split(r"[\\/]", raw_file)[-1]
-        if not file_name:
-            unmatched_rows.append({"row": row_no, "value": raw_file, "title": title})
-            continue
-        if file_name in used:
+    for i, ((row_no, cells, form), title) in enumerate(zip(kept, titles)):
+        row_key = f"row-{row_no}"
+        file_name = ""
+        if file_col is not None:
+            raw_file = cells[file_col.index].strip()
+            if raw_file:
+                file_name = (by_key.get(file_key(raw_file)) if by_key else re.split(r"[\\/]", raw_file)[-1]) or ""
+                if not file_name:
+                    unmatched_rows.append({"row": row_no, "value": raw_file, "title": title})
+            else:
+                unmatched_rows.append({"row": row_no, "value": "", "title": title})
+        else:
+            file_name = num_links.get(i, "")
+        if file_name and file_name in used:
             warn("duplicate_file", f'Rows {used[file_name]} and {row_no} both point to "{file_name}"; using row {used[file_name]}.')
             continue
-        used[file_name] = row_no
+        if file_name:
+            used[file_name] = row_no
+        link = {"row_key": row_key, "file_name": file_name}
+
+        number = one("poster_number", cells).lstrip("0")
+        table_people = people.get(number, []) if number else []
+        if not file_name:
+            names = [f'{p["given"]} {p["family"]}'.strip() for p in table_people] or [
+                a["name"] for a in parse_authors(one("authors", cells))
+            ]
+            match_rows.append({"row_key": row_key, "row": row_no, "title": title, "authors": names, "number": number})
 
         keywords = []
         for c in by_field.get("keywords", []):
@@ -625,42 +919,80 @@ def map_sheet(data: bytes, filename: str, file_names: list[str], overrides: dict
                 keywords.append(clean(cells[c.index]))
         keywords = list(dict.fromkeys(keywords))
 
-        about = {"file_name": file_name}
+        about = dict(link)
         if title:
             about["title"] = title
         if keywords:
             about["keywords"] = "; ".join(keywords)
         sheets[SHEET_ABOUT].append(about)
 
-        extra = {"file_name": file_name}
+        extra = dict(link)
         for fld, key in (("abstract", "submission_abstract"), ("language", "language"), ("domain", "domain")):
             if one(fld, cells):
                 extra[key] = one(fld, cells)
-        if len(extra) > 1:
+        if len(extra) > 2:
             sheets[SHEET_ADDITIONAL].append(extra)
 
-        if one("authors", cells):
-            sheets[SHEET_CREATORS] += _creator_rows(file_name, one("authors", cells), one("affiliations", cells), warn)
+        if table_people:
+            sheets[SHEET_CREATORS] += _creator_rows_from_table(link, table_people)
+        elif one("authors", cells):
+            sheets[SHEET_CREATORS] += _creator_rows(link, one("authors", cells), one("affiliations", cells), warn)
         elif one("affiliations", cells):
-            warn("affiliations_without_authors", f"{file_name}: affiliations given but no authors; extraction will fill authors.")
+            warn("affiliations_without_authors", f"{file_name or row_key}: affiliations given but no authors; extraction will fill authors.")
 
         if one("website", cells):
             sheets[SHEET_RELATED].append(
-                {"file_name": file_name, "related_identifier": as_url(one("website", cells)),
+                {**link, "related_identifier": as_url(one("website", cells)),
                  "related_identifier_type": "URL", "relation_type": "References", "resource_type_general": "Other"}
             )
         if one("doi", cells):
             doi = re.sub(r"^(https?://(dx\.)?doi\.org/|doi:)", "", one("doi", cells), flags=re.I)
             sheets[SHEET_RELATED].append(
-                {"file_name": file_name, "related_identifier": doi, "related_identifier_type": "DOI",
-                 "relation_type": "IsIdenticalTo"}
+                {**link, "related_identifier": doi, "related_identifier_type": "DOI", "relation_type": "IsIdenticalTo"}
             )
+        if form.get("derived_from_doi"):
+            sheets[SHEET_RELATED].append(
+                {**link, "related_identifier": form["derived_from_doi"], "related_identifier_type": "DOI",
+                 "relation_type": "IsDerivedFrom"}
+            )
+        if form.get("source_url"):
+            sheets[SHEET_RELATED].append(
+                {**link, "related_identifier": form["source_url"], "related_identifier_type": "URL",
+                 "relation_type": "IsSupplementedBy", "resource_type_general": "Other"}
+            )
+        if form.get("project_license"):
+            hints[row_key] = {"project_license": form["project_license"]}
 
-    if unmatched_rows:
-        warn("rows_without_file", f"{len(unmatched_rows)} row(s) do not match an uploaded poster file and were skipped.")
-    unmatched_files = sorted(n for n in file_names if n not in used) if file_col else sorted(file_names)
-    if file_col and unmatched_files:
-        warn("files_without_row", f"{len(unmatched_files)} uploaded poster(s) have no row in the sheet; extraction will fill them.", "info")
+    if num_col is not None:
+        warn(
+            "files_linked_by_number",
+            f'Linked {len(used)} row(s) to poster files by the number in column "{num_col.header}" found in the file names.',
+            "info",
+        )
+    if file_col is None and num_col is None and kept:
+        warn(
+            "file_column_missing",
+            "No column holds the poster file names. After extraction, each row is matched to a poster by its title, "
+            "with the authors as a tiebreaker, and you check the matches. A file name column (for example 12_smith.pdf) "
+            "links rows exactly.",
+        )
+    elif match_rows:
+        warn(
+            "rows_without_file",
+            f"{len(match_rows)} row(s) are not linked to a poster file yet; they will be matched by title after extraction.",
+        )
+    unmatched_files = sorted(n for n in file_names if n not in used)
+    if used and unmatched_files:
+        warn("files_without_row", f"{len(unmatched_files)} uploaded poster(s) have no linked row yet.", "info")
+    if hints:
+        warn(
+            "project_license",
+            f"{len(hints)} row(s) give a license in the form fields. That is the license of the work the poster presents, "
+            "not of the poster, so it is not applied.",
+            "info",
+        )
+    if author_table is not None:
+        warn("authors_table_joined", f'Authors read from the "{author_table.sheet_name}" table, one row per author.', "info")
 
     dropped = sorted({c.header for c in columns if c.field in NOT_STORED})
     if dropped:
@@ -670,6 +1002,11 @@ def map_sheet(data: bytes, filename: str, file_names: list[str], overrides: dict
         warn("columns_unmapped", "Not matched to a field: " + ", ".join(unknown) + ".")
 
     known = tpl is not None and not any(c.source in ("llm", "fuzzy") for c in columns if c.field)
+    link_column = file_col or num_col
+    # A file link found from values (not a column named for files, not EasyChair
+    # numbering) is a good guess, so the organizer checks it.
+    number_checked = num_col is not None and not (tpl or {}).get("file_number")
+    values_checked = file_col is not None and file_col.source == "values"
     return {
         "template": {
             "id": tpl["id"] if tpl else None,
@@ -679,19 +1016,35 @@ def map_sheet(data: bytes, filename: str, file_names: list[str], overrides: dict
         },
         "sheet_name": table.sheet_name,
         "header_row": table.header_row,
+        "authors_table": author_table.sheet_name if author_table else None,
         "mapping": [
             {"column": c.header, "field": c.field, "source": c.source, "stored": bool(c.field) and c.field not in NOT_STORED, "samples": c.samples}
             for c in columns
             if c.header
         ],
         "file_column": (
-            {"column": file_col.header, "matched_rows": len(used), "rows": len(data_rows)} if file_col else None
+            {
+                "column": link_column.header,
+                "method": "column" if file_col else "number",
+                "matched_rows": len(used),
+                "rows": len(kept),
+            }
+            if link_column
+            else None
         ),
         "sheets": {k: v for k, v in sheets.items() if v},
         "unmatched_rows": unmatched_rows,
         "unmatched_files": unmatched_files,
+        "match_rows": match_rows,
+        "hints": hints,
+        "skipped": skipped,
         "warnings": warnings,
-        "needs_confirmation": (not known) or bool(unmatched_rows) or any(w["severity"] == "error" for w in warnings),
-        "ok": file_col is not None and bool(used),
+        "needs_confirmation": (not known)
+        or bool(unmatched_rows)
+        or bool(match_rows)
+        or number_checked
+        or values_checked
+        or any(w["severity"] == "error" for w in warnings),
+        "ok": bool(used) or bool(match_rows),
         "fields": FIELDS,
     }

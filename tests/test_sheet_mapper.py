@@ -46,13 +46,20 @@ def curious_rows(with_file=True):
     return rows
 
 
-def test_curious_without_file_column_is_an_error():
-    result = sm.map_sheet(xlsx(CURIOUS_HEADERS, curious_rows(False)), "c.xlsx", ["1_jane.pdf", "2_john.pdf"])
+def test_curious_without_file_column_waits_for_title_matching():
+    result = sm.map_sheet(xlsx(CURIOUS_HEADERS, curious_rows(False)), "c.xlsx", ["jane.pdf", "john.pdf"])
     assert result["template"]["id"] == "curious-2027"
     assert result["file_column"] is None
-    assert result["ok"] is False
-    assert any(w["code"] == "file_column_missing" and w["severity"] == "error" for w in result["warnings"])
-    assert result["sheets"] == {}
+    assert result["ok"] is True
+    assert result["needs_confirmation"] is True
+    assert any(w["code"] == "file_column_missing" and w["severity"] == "warning" for w in result["warnings"])
+    assert [(m["row_key"], m["title"], m["authors"]) for m in result["match_rows"]] == [
+        ("row-2", "Poster Title 1", ["Jane Do", "Another Name"]),
+        ("row-3", "Making AI efficient", ["John Do", "Ann Lee", "Bo Chen"]),
+    ]
+    about = result["sheets"]["About the Poster"]
+    assert [(r["row_key"], r["file_name"]) for r in about] == [("row-2", ""), ("row-3", "")]
+    assert {r["row_key"] for r in result["sheets"]["Creators"]} == {"row-2", "row-3"}
 
 
 def test_curious_with_file_column_maps_to_grid_rows():
@@ -61,7 +68,8 @@ def test_curious_with_file_column_maps_to_grid_rows():
     result = sm.map_sheet(xlsx(headers, curious_rows()), "c.xlsx", files)
     assert result["ok"] is True
     assert result["template"]["known"] is True
-    assert result["file_column"] == {"column": "Poster file", "matched_rows": 2, "rows": 2}
+    assert result["file_column"] == {"column": "Poster file", "method": "column", "matched_rows": 2, "rows": 2}
+    assert result["match_rows"] == []
 
     about = {r["file_name"]: r for r in result["sheets"]["About the Poster"]}
     assert about["1_jane.pdf"]["title"] == "Poster Title 1"  # position prefix removed
@@ -82,7 +90,7 @@ def test_curious_with_file_column_maps_to_grid_rows():
 
     related = result["sheets"]["Related resources"]
     assert related == [{
-        "file_name": "1_jane.pdf", "related_identifier": "https://www.test-website.de",
+        "row_key": "row-2", "file_name": "1_jane.pdf", "related_identifier": "https://www.test-website.de",
         "related_identifier_type": "URL", "relation_type": "References", "resource_type_general": "Other",
     }]  # "no" in row 2 is a placeholder, not a website
 
@@ -102,15 +110,16 @@ def test_file_column_found_by_values_not_header():
 def test_rows_without_a_matching_file_are_reported_not_guessed():
     data = "File name\tTitle\na.pdf\tFirst\nmissing.pdf\tSecond\n"
     result = sm.map_sheet(data.encode(), "s.tsv", ["a.pdf", "b.pdf"])
-    assert [r["file_name"] for r in result["sheets"]["About the Poster"]] == ["a.pdf"]
+    assert [r["file_name"] for r in result["sheets"]["About the Poster"]] == ["a.pdf", ""]
     assert result["unmatched_rows"] == [{"row": 3, "value": "missing.pdf", "title": "Second"}]
+    assert [m["row_key"] for m in result["match_rows"]] == ["row-3"]  # left for title matching
     assert result["needs_confirmation"] is True
 
 
 def test_duplicate_file_rows_keep_the_first():
     data = "File name,Title\na.pdf,First\nA.pdf,Second\n"
     result = sm.map_sheet(data.encode(), "s.csv", ["a.pdf"])
-    assert result["sheets"]["About the Poster"] == [{"file_name": "a.pdf", "title": "First"}]
+    assert result["sheets"]["About the Poster"] == [{"row_key": "row-2", "file_name": "a.pdf", "title": "First"}]
     assert any(w["code"] == "duplicate_file" for w in result["warnings"])
 
 
@@ -123,7 +132,7 @@ def test_header_row_below_a_title_banner():
     wb.save(buf)
     result = sm.map_sheet(buf.getvalue(), "s.xlsx", ["x.pdf"])
     assert result["header_row"] == 3
-    assert result["sheets"]["About the Poster"] == [{"file_name": "x.pdf", "title": "T", "keywords": "a; b; c"}]
+    assert result["sheets"]["About the Poster"] == [{"row_key": "row-4", "file_name": "x.pdf", "title": "T", "keywords": "a; b; c"}]
 
 
 def test_user_overrides_win():
@@ -181,7 +190,7 @@ def test_parse_authors(cell, expected):
 def test_run_together_numbers_split_only_when_needed():
     assert sm.resolve_numbers([12], {1, 2, 3}) == [1, 2]
     assert sm.resolve_numbers([12], set(range(1, 13))) == [12]
-    rows = sm._creator_rows("a.pdf", "Ann Lee¹²", "¹ Lab A \n² Lab B", lambda *a: None)
+    rows = sm._creator_rows({"row_key": "row-2", "file_name": "a.pdf"}, "Ann Lee¹²", "¹ Lab A \n² Lab B", lambda *a: None)
     assert rows[0]["contributor_affiliation_1_name"] == "Lab A"
     assert rows[0]["contributor_affiliation_2_name"] == "Lab B"
 
