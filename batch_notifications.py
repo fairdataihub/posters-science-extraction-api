@@ -106,7 +106,7 @@ def render_email(
   <ul>
     {"".join(lines)}
   </ul>
-  <p>Extracted details are drafts. Please review each poster before publishing.</p>
+  <p>We invite you to review them and continue the poster sharing process.</p>
   <div style="text-align: center; margin: 32px 0;">
     <a href="{url}"
        style="background-color: #4F46E5; color: #ffffff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block;">
