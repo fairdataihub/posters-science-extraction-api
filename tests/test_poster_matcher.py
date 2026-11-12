@@ -52,12 +52,11 @@ def test_same_title_without_authors_is_not_guessed():
     assert {r["row_key"] for r in out["unmatched_rows"]} == {"r1", "r2"}
 
 
-def test_reworded_title_needs_authors():
+def test_reworded_title_is_matched_for_review():
     sheet_title = "Deep learning for retinal image classification in clinics"
     poster_title = "Deep learning for retinal image classification"
     without = pm.match_rows_to_posters([row("r1", sheet_title)], [poster("a.pdf", poster_title)])
-    assert without["matches"] == []
-    assert without["unmatched_rows"][0]["closest"]["file_name"] == "a.pdf"  # shown as a suggestion
+    assert got(without) == {"r1": ("a.pdf", "words_fuzzy", "review")}  # bag of words, title cut short
 
     with_authors = pm.match_rows_to_posters(
         [row("r1", sheet_title, ["Jun Park", "Mia Lopez"])],
@@ -89,3 +88,39 @@ def test_a_few_hundred_posters_match_quickly():
     out = pm.match_rows_to_posters(rows, posters)
     assert time.time() - start < 5
     assert len(out["matches"]) == 300
+
+
+def test_ocr_slips_and_word_order_match_by_bag_of_words():
+    out = pm.match_rows_to_posters(
+        [row("r1", "Single cell atlas of the human retina"), row("r2", "Graph models for drug repurposing")],
+        [poster("a.pdf", "Human retina: a single-ce1l atlas"), poster("b.pdf", "Graph rnodels for drug repurposlng")],
+    )
+    assert got(out) == {"r1": ("a.pdf", "words_fuzzy", "review"), "r2": ("b.pdf", "words_fuzzy", "review")}
+
+
+def test_loop_restarts_after_each_match():
+    # r2's title is close to both posters until r1 takes x.pdf by an exact title.
+    rows = [row("r1", "Soil microbes under drought stress"), row("r2", "Soil microbes under drought")]
+    posters = [poster("x.pdf", "Soil microbes under drought stress"), poster("y.pdf", "Soil microbes in drought")]
+    out = pm.match_rows_to_posters(rows, posters)
+    assert got(out)["r1"] == ("x.pdf", "title", "high")
+    assert got(out)["r2"][0] == "y.pdf"
+    assert out["rounds"] >= 2 and out["unmatched_files"] == []
+
+
+def test_best_remaining_needs_mutual_best_and_a_floor():
+    out = pm.match_rows_to_posters(
+        [row("r1", "Coral reef recovery after bleaching events in the Pacific")],
+        [poster("a.pdf", "Pacific coral reef surveys 2025")],
+    )
+    assert got(out) == {"r1": ("a.pdf", "best_remaining", "review")}
+    far = pm.match_rows_to_posters([row("r1", "Coral reef recovery after bleaching")], [poster("a.pdf", "Reef fish counts")])
+    assert far["matches"] == [] and far["unmatched_rows"][0]["closest"]["file_name"] == "a.pdf"
+
+
+def test_identical_titles_without_authors_stay_unmatched_after_others_match():
+    rows = [row("r1", "Annual lab report"), row("r2", "Annual lab report"), row("r3", "Ocean acidity sensors")]
+    posters = [poster("x.pdf", "Annual lab report"), poster("y.pdf", "Annual lab report"), poster("z.pdf", "Ocean acidity sensors")]
+    out = pm.match_rows_to_posters(rows, posters)
+    assert got(out) == {"r3": ("z.pdf", "title", "high")}
+    assert sorted(out["unmatched_files"]) == ["x.pdf", "y.pdf"]

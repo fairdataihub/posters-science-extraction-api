@@ -1,20 +1,32 @@
 """
-Match spreadsheet rows to extracted posters when the sheet has no file name
-column (Curious today, EasyChair when files come from another platform).
+Match spreadsheet rows to extracted posters when a row has no file link
+(Curious has no file name column; at ISMB and BOSC the poster files come from
+another platform than EasyChair).
 
 Runs after extraction, on the title and authors poster2json read from each
-poster. Tiers, strongest first:
+poster. Tiers, strictest first:
 
-1. Title alone. ROUGE-L F1 of the two titles (word level, accents and case
-   ignored). A match is automatic when the score is at least 0.95 and no other
-   row or poster comes within 0.10 of it.
-2. Title plus authors. When titles are close but not decisive (a shared or
-   reworded title, a long title cut short on the poster), the author family
-   names break the tie. These matches are always shown for the organizer to
-   check.
-3. Nothing clears the bar: the row and the file are listed as unmatched.
+1. title: ROUGE-L F1 of the two titles (word level, accents and case ignored)
+   of at least 0.95, with no other row or poster within 0.10. Applied as is.
+2. title_authors: titles at least 0.60 and author family names at least 0.50
+   in common; the combined score (0.75 title, 0.25 authors) leads by 0.10.
+3. words_fuzzy: bag of words, order ignored, with a small allowance for
+   spelling and OCR slips in each word, and a title cut short on the poster
+   counted by containment. At least 0.70 (or 0.55 with authors at least 0.50),
+   leading by 0.10.
+4. best_remaining: among what is left, the row and the poster are each
+   other's best candidate, the combined score is at least 0.50 and leads by
+   0.05.
 
-Assignment is one to one, best score first. Stateless; no database, no model.
+The tiers run in a loop. Each match takes its row and poster out of play,
+which can make another pair decisive, so after any match the loop starts again
+at tier 1. It stops when every poster has a row, or when no tier can place
+anything more. Two equal candidates are never guessed at any tier (the margin
+is zero). Tier 1 matches are "high" confidence; the rest are "review" and are
+shown to the organizer to check. A poster left without a row keeps its
+extracted metadata only.
+
+Stateless; no database, no model.
 """
 
 from __future__ import annotations
@@ -23,16 +35,31 @@ import difflib
 import re
 import unicodedata
 
-TITLE_AUTO = 0.95  # title score for an automatic match
-TITLE_MIN = 0.60  # below this the titles are not the same poster
-MARGIN = 0.10  # lead over the next candidate, on both the row and the file side
-AUTHORS_MIN = 0.50  # share of family names in common for the authors tier
+TITLE_AUTO = 0.95  # tier 1: title score for an automatic match
+TITLE_MIN = 0.60  # tier 2: title floor when authors agree
+AUTHORS_MIN = 0.50  # share of family names in common to count as agreeing
+WORDS_MIN = 0.70  # tier 3: bag of words floor
+WORDS_WITH_AUTHORS = 0.55  # tier 3: bag of words floor when authors agree
+FLOOR = 0.50  # tier 4: combined score floor
+MARGIN = 0.10  # lead over the next candidate, on both the row and the poster side
+FINAL_MARGIN = 0.05  # tier 4 lead
 TITLE_WEIGHT = 0.75  # combined score = 0.75 title + 0.25 authors
+WORD_FUZZ = 0.80  # two words count as the same when their spelling ratio is this high
+PREFILTER = 0.25  # pairs sharing less than this (Dice of exact words) are not scored
+
+STOPWORDS = frozenset(
+    "a an and are as at by de der die for from in into is of on or the to via vs with".split()
+)
 
 
 def words(text: str) -> list[str]:
     text = unicodedata.normalize("NFKD", text or "").encode("ascii", "ignore").decode().lower()
     return re.findall(r"[a-z0-9]+", text)
+
+
+def content_words(ws: list[str]) -> list[str]:
+    out = [w for w in ws if w not in STOPWORDS and len(w) > 1]
+    return out or ws
 
 
 def _lcs(a: list[str], b: list[str]) -> int:
@@ -53,8 +80,52 @@ def title_score(a: str, b: str) -> float:
     lcs = _lcs(wa, wb)
     if not lcs:
         return 0.0
-    p, r = lcs / len(wa), lcs / len(wb)
-    return 2 * p * r / (p + r)
+    return 2 * lcs / (len(wa) + len(wb))
+
+
+_RATIO_CACHE: dict[tuple[str, str], float] = {}
+
+
+def _word_ratio(a: str, b: str) -> float:
+    key = (a, b) if a < b else (b, a)
+    hit = _RATIO_CACHE.get(key)
+    if hit is None:
+        if len(_RATIO_CACHE) > 200_000:
+            _RATIO_CACHE.clear()
+        hit = _RATIO_CACHE[key] = difflib.SequenceMatcher(None, a, b).ratio()
+    return hit
+
+
+def words_score(a: list[str], b: list[str]) -> float:
+    """
+    Bag of words similarity of two titles (content words, order ignored).
+    Words match exactly, or when longer than three letters with a spelling
+    ratio of 0.80 or more. The score is the Dice of matched words, or 0.9 of
+    the containment when the shorter title has five words or more (a title
+    cut short, or a subtitle added).
+    """
+    if not a or not b:
+        return 0.0
+    left = list(b)
+    hits = 0
+    rest = []
+    for w in a:
+        if w in left:
+            left.remove(w)
+            hits += 1
+        else:
+            rest.append(w)
+    for w in rest:
+        if len(w) <= 3 or not left:
+            continue
+        best = max(left, key=lambda g: _word_ratio(w, g))
+        if len(best) > 3 and _word_ratio(w, best) >= WORD_FUZZ:
+            left.remove(best)
+            hits += 1
+    dice = 2 * hits / (len(a) + len(b))
+    shorter = min(len(a), len(b))
+    contain = 0.9 * hits / shorter if shorter >= 5 else 0.0
+    return max(dice, contain)
 
 
 def family_name(name: str) -> str:
@@ -78,104 +149,176 @@ def author_score(a: list[str], b: list[str]) -> float | None:
     left = list(fb)
     hits = 0
     for f in fa:
-        best = max(left, key=lambda g: difflib.SequenceMatcher(None, f, g).ratio(), default=None)
-        if best is not None and (best == f or (len(f) > 3 and difflib.SequenceMatcher(None, f, best).ratio() >= 0.85)):
+        best = max(left, key=lambda g: _word_ratio(f, g), default=None)
+        if best is not None and (best == f or (len(f) > 3 and _word_ratio(f, best) >= 0.85)):
             hits += 1
             left.remove(best)
     return 2 * hits / (len(fa) + len(fb))
 
 
-def _score(row: dict, poster: dict, t: float) -> dict:
+def _combine(x: float, au: float | None) -> float:
+    return x if au is None else TITLE_WEIGHT * x + (1 - TITLE_WEIGHT) * au
+
+
+def _pair_scores(row: dict, poster: dict, rw: list[str], pw: list[str], rc: list[str], pc: list[str]) -> dict:
+    t = 2 * _lcs(rw, pw) / (len(rw) + len(pw)) if rw and pw else 0.0
+    w = max(words_score(rc, pc), t)
     au = author_score(row.get("authors") or [], poster.get("authors") or [])
-    combined = t if au is None else TITLE_WEIGHT * t + (1 - TITLE_WEIGHT) * au
-    return {"title_score": round(t, 3), "author_score": None if au is None else round(au, 3), "score": round(combined, 3)}
+    return {
+        "title_score": round(t, 3),
+        "words_score": round(w, 3),
+        "author_score": None if au is None else round(au, 3),
+        "score": round(_combine(t, au), 3),
+        "words_combined": round(_combine(w, au), 3),
+    }
+
+
+def _agree(s: dict) -> bool:
+    return s["author_score"] is not None and s["author_score"] >= AUTHORS_MIN
+
+
+# Each tier: name, confidence, the score its margin is measured on, the margin,
+# and whether a pair qualifies.
+TIERS = (
+    ("title", "high", "title_score", MARGIN, lambda s: s["title_score"] >= TITLE_AUTO),
+    ("title_authors", "review", "score", MARGIN, lambda s: s["title_score"] >= TITLE_MIN and _agree(s)),
+    (
+        "words_fuzzy",
+        "review",
+        "words_combined",
+        MARGIN,
+        lambda s: s["words_score"] >= WORDS_MIN or (s["words_score"] >= WORDS_WITH_AUTHORS and _agree(s)),
+    ),
+    ("best_remaining", "review", "words_combined", FINAL_MARGIN, lambda s: s["words_combined"] >= FLOOR),
+)
 
 
 def match_rows_to_posters(rows: list[dict], posters: list[dict]) -> dict:
     """
     rows: [{row_key, title, authors: [names]}] from the sheet.
     posters: [{file_name, title, authors: [names]}] from extraction.
-    Returns matches (with method and confidence), unmatched_rows, unmatched_files.
+    Returns matches (with method, confidence and the round that made them),
+    unmatched_rows (with the closest poster left), unmatched_files.
     """
     rows = [r for r in rows if r.get("row_key")]
     posters = [p for p in posters if p.get("file_name") and (p.get("title") or p.get("authors"))]
     row_words = [words(r.get("title", "")) for r in rows]
     poster_words = [words(p.get("title", "")) for p in posters]
-    row_sets = [set(w) for w in row_words]
-    poster_sets = [set(w) for w in poster_words]
+    row_content = [content_words(w) for w in row_words]
+    poster_content = [content_words(w) for w in poster_words]
 
-    # Score every pair that could reach TITLE_MIN. The LCS is never longer than
-    # the shared words, so 2 * shared / (len a + len b) bounds the F1 from above.
+    # Candidate pairs share at least one content word; score only those whose
+    # exact word overlap reaches PREFILTER (an upper bound on what OCR slips
+    # can lift into a match).
+    index: dict[str, list[int]] = {}
+    for j, ws in enumerate(poster_content):
+        for w in set(ws):
+            index.setdefault(w, []).append(j)
     scores: dict[tuple[int, int], dict] = {}
-    for i, r in enumerate(rows):
-        for j, p in enumerate(posters):
-            la, lb = len(row_words[i]), len(poster_words[j])
-            shared = len(row_sets[i] & poster_sets[j])
-            if not la or not lb or 2 * shared / (la + lb) < TITLE_MIN:
+    for i, ws in enumerate(row_content):
+        shared: dict[int, int] = {}
+        for w in set(ws):
+            for j in index.get(w, ()):
+                shared[j] = shared.get(j, 0) + 1
+        rset = len(set(ws))
+        for j, n in shared.items():
+            if 2 * n / (rset + len(set(poster_content[j]))) < PREFILTER:
                 continue
-            lcs = _lcs(row_words[i], poster_words[j])
-            t = 2 * lcs / (la + lb)
-            scores[(i, j)] = _score(r, p, t)
+            scores[(i, j)] = _pair_scores(rows[i], posters[j], row_words[i], poster_words[j], ws, poster_content[j])
 
-    by_row: dict[int, list[tuple[int, dict]]] = {}
-    by_file: dict[int, list[tuple[int, dict]]] = {}
-    for (i, j), s in scores.items():
-        by_row.setdefault(i, []).append((j, s))
-        by_file.setdefault(j, []).append((i, s))
+    by_row: dict[int, list[int]] = {}
+    by_file: dict[int, list[int]] = {}
+    for i, j in scores:
+        by_row.setdefault(i, []).append(j)
+        by_file.setdefault(j, []).append(i)
 
-    def runner_up(i: int, j: int, key: str) -> float:
-        others = [s[key] or 0 for k, s in by_row.get(i, []) if k != j]
-        others += [s[key] or 0 for k, s in by_file.get(j, []) if k != i]
-        return max(others, default=0.0)
-
-    candidates = []
-    for (i, j), s in scores.items():
-        if s["title_score"] < TITLE_MIN:
-            continue
-        if s["title_score"] >= TITLE_AUTO and s["title_score"] - runner_up(i, j, "title_score") >= MARGIN:
-            method, confidence = "title", "high"
-        elif s["author_score"] is not None and s["author_score"] >= AUTHORS_MIN and s["score"] - runner_up(i, j, "score") >= MARGIN:
-            method, confidence = "title_authors", "review"
-        else:
-            continue  # includes two near-identical titles with no authors to tell them apart
-        candidates.append((s["score"], i, j, method, confidence))
-
-    matches = []
     used_rows: set[int] = set()
     used_files: set[int] = set()
-    for score, i, j, method, confidence in sorted(candidates, key=lambda c: -c[0]):
-        if i in used_rows or j in used_files:
-            continue
-        used_rows.add(i)
-        used_files.add(j)
-        s = scores[(i, j)]
-        matches.append(
-            {
-                "row_key": rows[i]["row_key"],
-                "file_name": posters[j]["file_name"],
-                "method": method,
-                "confidence": confidence,
-                **s,
-                "row_title": rows[i].get("title", ""),
-                "poster_title": posters[j].get("title", ""),
-            }
-        )
+    matches: list[dict] = []
+
+    def runner_up(i: int, j: int, key: str) -> float:
+        others = [scores[(i, k)][key] for k in by_row.get(i, []) if k != j and k not in used_files]
+        others += [scores[(k, j)][key] for k in by_file.get(j, []) if k != i and k not in used_rows]
+        return max(others, default=0.0)
+
+    def best_of_row(i: int, key: str) -> int | None:
+        live = [k for k in by_row.get(i, []) if k not in used_files]
+        return max(live, key=lambda k: scores[(i, k)][key], default=None)
+
+    def best_of_file(j: int, key: str) -> int | None:
+        live = [k for k in by_file.get(j, []) if k not in used_rows]
+        return max(live, key=lambda k: scores[(k, j)][key], default=None)
+
+    rounds = 0
+    while len(used_rows) < len(rows) and len(used_files) < len(posters):
+        rounds += 1
+        placed = False
+        for name, confidence, key, margin, qualifies in TIERS:
+            found = []
+            for (i, j), s in scores.items():
+                if i in used_rows or j in used_files or not qualifies(s):
+                    continue
+                if s[key] - runner_up(i, j, key) < margin:
+                    continue
+                if name == "best_remaining" and (best_of_row(i, key) != j or best_of_file(j, key) != i):
+                    continue
+                found.append((s[key], i, j))
+            for _, i, j in sorted(found, reverse=True):
+                if i in used_rows or j in used_files:
+                    continue
+                used_rows.add(i)
+                used_files.add(j)
+                s = scores[(i, j)]
+                matches.append(
+                    {
+                        "row_key": rows[i]["row_key"],
+                        "file_name": posters[j]["file_name"],
+                        "method": name,
+                        "confidence": confidence,
+                        "round": rounds,
+                        "title_score": s["title_score"],
+                        "words_score": s["words_score"],
+                        "author_score": s["author_score"],
+                        "score": s[key],
+                        "row_title": rows[i].get("title", ""),
+                        "poster_title": posters[j].get("title", ""),
+                    }
+                )
+                placed = True
+            if placed:
+                break  # start again at tier 1 with these taken out of play
+        if not placed:
+            break
 
     unmatched_rows = []
     for i, r in enumerate(rows):
         if i in used_rows:
             continue
-        best = max(((s, j) for j, s in by_row.get(i, []) if j not in used_files), key=lambda x: x[0]["score"], default=None)
-        unmatched_rows.append(
-            {
-                "row_key": r["row_key"],
-                "title": r.get("title", ""),
-                "closest": {"file_name": posters[best[1]]["file_name"], **best[0]} if best else None,
+        j = best_of_row(i, "words_combined")
+        closest = None
+        if j is not None:
+            s = scores[(i, j)]
+            closest = {
+                "file_name": posters[j]["file_name"],
+                "title_score": s["title_score"],
+                "words_score": s["words_score"],
+                "author_score": s["author_score"],
+                "score": s["words_combined"],
             }
-        )
+        unmatched_rows.append({"row_key": r["row_key"], "title": r.get("title", ""), "closest": closest})
     return {
         "matches": matches,
         "unmatched_rows": unmatched_rows,
         "unmatched_files": [p["file_name"] for j, p in enumerate(posters) if j not in used_files],
-        "thresholds": {"title_auto": TITLE_AUTO, "title_min": TITLE_MIN, "margin": MARGIN, "authors_min": AUTHORS_MIN},
+        "rounds": rounds,
+        "thresholds": {
+            "title_auto": TITLE_AUTO,
+            "title_min": TITLE_MIN,
+            "authors_min": AUTHORS_MIN,
+            "words_min": WORDS_MIN,
+            "words_with_authors": WORDS_WITH_AUTHORS,
+            "floor": FLOOR,
+            "margin": MARGIN,
+            "final_margin": FINAL_MARGIN,
+        },
     }

@@ -11,11 +11,17 @@ here, before extraction starts:
    b. header aliases: normalized and fuzzy matching against a synonym list
    c. small LLM, only for columns still unmapped, and only when
       SHEET_MAPPER_LLM_URL is set. Output is constrained to our field names.
-3. Find the file column by its values: the column whose cells match the
-   uploaded poster file names. It is required; rows are never matched by title.
+3. Link rows to poster files, each tier taking only what is still unlinked:
+   a. the file column, found by its values (cells that match the uploaded file
+      names, by base name: folders, extension, case and spacing ignored)
+   b. a file column cell that is close to one file name only (a typo)
+   c. the submission or poster number found in the file names
+   d. after extraction, title and authors (poster_matcher.py, POST /sheets/match)
+   A poster no row reaches keeps its extracted metadata only.
 4. Convert values with deterministic parsers (authors with superscript
    affiliation numbers, numbered affiliation lists, position prefixes on
-   titles, "no" placeholders).
+   titles, "no" placeholders). Nothing else is changed: a value the sheet gives
+   replaces the extracted one, and an empty cell leaves extraction to fill it.
 
 The result is keyed the way the metadata grid saves rows: sheet name to a list
 of rows keyed by fillKey, each carrying the poster's file_name. The app swaps
@@ -488,6 +494,17 @@ def find_file_column(table: Table, columns: list[ColumnMap], file_names: list[st
             score = looks / len(values) if c.field == "file_name" else 0.0
         if score >= 0.5 and (best is None or score > best[0]):
             best = (score, c)
+    if best is None and by_key:
+        # Few exact hits (typos, renamed files): still use a column headed like
+        # a file column whose values look like file names. Its cells then link
+        # by close base names, for the organizer to check.
+        for c in columns:
+            values = [cells[c.index] for _, cells in table.rows if cells[c.index].strip()]
+            if c.field == "file_name" and values:
+                looks = sum(1 for v in values if v.lower().endswith(POSTER_EXTENSIONS))
+                if looks / len(values) >= 0.5:
+                    best = (0.0, c)
+                    break
     if best is None:
         return None, by_key
     chosen = best[1]
@@ -496,6 +513,32 @@ def find_file_column(table: Table, columns: list[ColumnMap], file_names: list[st
             c.field, c.source = None, "none"
     chosen.field, chosen.source = "file_name", ("values" if chosen.source not in ("template", "user") else chosen.source)
     return chosen, by_key
+
+
+FILE_FUZZ = 0.85  # base names this close count as a typo of each other
+FILE_FUZZ_MARGIN = 0.05
+
+
+def link_files_fuzzy(values: dict[int, str], file_names: list[str]) -> dict[int, str]:
+    """
+    Rows whose file cell names no uploaded file exactly: link a cell to the one
+    file whose base name is at least 0.85 alike and leads the next by 0.05
+    ("smith_poster.pdf" for "smith-poster-v2.pdf"). One file per row.
+    """
+    keys = {file_key(n): n for n in file_names}
+    links: dict[int, str] = {}
+    taken: set[str] = set()
+    for i, raw in values.items():
+        k = file_key(raw)
+        if not k or not keys:
+            continue
+        ranked = sorted(((difflib.SequenceMatcher(None, k, fk).ratio(), fk) for fk in keys), reverse=True)
+        best, fk = ranked[0]
+        second = ranked[1][0] if len(ranked) > 1 else 0.0
+        if best >= FILE_FUZZ and best - second >= FILE_FUZZ_MARGIN and fk not in taken:
+            links[i] = keys[fk]
+            taken.add(fk)
+    return links
 
 
 def file_numbers(name: str) -> list[str]:
@@ -556,7 +599,9 @@ def link_files_by_number(table: Table, columns: list[ColumnMap], file_names: lis
 # ---------------------------------------------------------------------------
 
 _SUPERSCRIPTS = str.maketrans("\u2070\u00b9\u00b2\u00b3\u2074\u2075\u2076\u2077\u2078\u2079", "0123456789")
-_POSITION_PREFIX = re.compile(r"^\s*\d{1,5}\s*[\u2010-\u2015\-:.)]\s*")
+_POSITION_PREFIX = re.compile(
+    r"^\s*(?:(?:poster|abstract|no\.?|nr\.?|p|#)\s*)?(\d{1,5})\s*[\u2010-\u2015\-:.)|]\s*", re.I
+)
 
 
 def clean(value: str) -> str:
@@ -564,12 +609,22 @@ def clean(value: str) -> str:
     return "" if value.lower() in PLACEHOLDERS else value
 
 
-def strip_position_prefixes(titles: list[str]) -> list[str]:
-    """Drop "12 - " style prefixes, but only when most titles in the column have one."""
+def strip_position_prefixes(titles: list[str], numbers: list[str] | None = None) -> list[str]:
+    """
+    Drop the poster's index from the start of its title ("12 - ", "P12: ",
+    "#12 |", "Poster 12."), as Curious does. A prefix is dropped when it is the
+    row's own poster number, or when most titles in the column have one.
+    """
+    numbers = numbers or [""] * len(titles)
     filled = [t for t in titles if t]
-    if not filled or sum(1 for t in filled if _POSITION_PREFIX.match(t)) / len(filled) < 0.8:
-        return titles
-    return [_POSITION_PREFIX.sub("", t, count=1) if t else t for t in titles]
+    most = bool(filled) and sum(1 for t in filled if _POSITION_PREFIX.match(t)) / len(filled) >= 0.8
+    out = []
+    for t, n in zip(titles, numbers):
+        m = _POSITION_PREFIX.match(t) if t else None
+        if m and (most or (n and m.group(1).lstrip("0") == n.lstrip("0"))) and t[m.end():].strip():
+            t = t[m.end():]
+        out.append(t)
+    return out
 
 
 def parse_authors(cell: str) -> list[dict]:
@@ -867,15 +922,40 @@ def map_sheet(
         parts = [f"{v} {reasons[k]}" for k, v in skipped.items() if v]
         warn("rows_skipped", "Skipped rows that are not accepted posters: " + ", ".join(parts) + ".", "info")
 
-    # No file column: try submission numbers in the file names.
-    num_col, num_links = (None, {})
-    if file_col is None:
+    # Link rows to files. Each tier only sees rows and files still unlinked.
+    links: dict[int, str] = {}
+    link_method: dict[int, str] = {}
+    file_cells: dict[int, str] = {}
+    if file_col is not None:
+        for i, (_, cells, _) in enumerate(kept):
+            raw_file = cells[file_col.index].strip()
+            if not raw_file:
+                continue
+            file_cells[i] = raw_file
+            name = by_key.get(file_key(raw_file)) if by_key else re.split(r"[\\/]", raw_file)[-1]
+            if name:
+                links[i], link_method[i] = name, "column"
+    if by_key and file_cells:
+        free = [n for n in file_names if n not in set(links.values())]
+        loose = link_files_fuzzy({i: v for i, v in file_cells.items() if i not in links}, free)
+        for i, name in loose.items():
+            links[i], link_method[i] = name, "column_fuzzy"
+    num_col = None
+    open_rows = [i for i in range(len(kept)) if i not in links]
+    free = [n for n in file_names if n not in set(links.values())]
+    if open_rows and free:
         num_col, num_links = link_files_by_number(
-            Table(table.sheet_name, table.header_row, table.headers, [(n, c) for n, c, _ in kept]), columns, file_names
+            Table(table.sheet_name, table.header_row, table.headers, [(kept[i][0], kept[i][1]) for i in open_rows]),
+            columns,
+            free,
         )
+        for k, name in num_links.items():
+            links[open_rows[k]], link_method[open_rows[k]] = name, "number"
 
     people = _author_table_index(author_table) if author_table else {}
-    titles = strip_position_prefixes([one("title", cells) for _, cells, _ in kept])
+    titles = strip_position_prefixes(
+        [one("title", cells) for _, cells, _ in kept], [one("poster_number", cells) for _, cells, _ in kept]
+    )
 
     sheets: dict[str, list[dict]] = {SHEET_ABOUT: [], SHEET_CREATORS: [], SHEET_ADDITIONAL: [], SHEET_RELATED: []}
     unmatched_rows: list[dict] = []
@@ -885,17 +965,9 @@ def map_sheet(
 
     for i, ((row_no, cells, form), title) in enumerate(zip(kept, titles)):
         row_key = f"row-{row_no}"
-        file_name = ""
-        if file_col is not None:
-            raw_file = cells[file_col.index].strip()
-            if raw_file:
-                file_name = (by_key.get(file_key(raw_file)) if by_key else re.split(r"[\\/]", raw_file)[-1]) or ""
-                if not file_name:
-                    unmatched_rows.append({"row": row_no, "value": raw_file, "title": title})
-            else:
-                unmatched_rows.append({"row": row_no, "value": "", "title": title})
-        else:
-            file_name = num_links.get(i, "")
+        file_name = links.get(i, "")
+        if file_col is not None and not file_name:
+            unmatched_rows.append({"row": row_no, "value": file_cells.get(i, ""), "title": title})
         if file_name and file_name in used:
             warn("duplicate_file", f'Rows {used[file_name]} and {row_no} both point to "{file_name}"; using row {used[file_name]}.')
             continue
@@ -963,10 +1035,19 @@ def map_sheet(
         if form.get("project_license"):
             hints[row_key] = {"project_license": form["project_license"]}
 
+    fuzzy_rows = [kept[i][0] for i, m in link_method.items() if m == "column_fuzzy"]
+    if fuzzy_rows:
+        warn(
+            "files_linked_fuzzy",
+            f"{len(fuzzy_rows)} row(s) name a file that is not uploaded but is close to one that is (rows "
+            + ", ".join(str(r) for r in fuzzy_rows[:10])
+            + "); linked to it for you to check.",
+        )
     if num_col is not None:
+        n_num = sum(1 for m in link_method.values() if m == "number")
         warn(
             "files_linked_by_number",
-            f'Linked {len(used)} row(s) to poster files by the number in column "{num_col.header}" found in the file names.',
+            f'Linked {n_num} row(s) to poster files by the number in column "{num_col.header}" found in the file names.',
             "info",
         )
     if file_col is None and num_col is None and kept:
@@ -1006,6 +1087,7 @@ def map_sheet(
     # A file link found from values (not a column named for files, not EasyChair
     # numbering) is a good guess, so the organizer checks it.
     number_checked = num_col is not None and not (tpl or {}).get("file_number")
+    fuzzy_checked = bool(fuzzy_rows)
     values_checked = file_col is not None and file_col.source == "values"
     return {
         "template": {
@@ -1026,6 +1108,7 @@ def map_sheet(
             {
                 "column": link_column.header,
                 "method": "column" if file_col else "number",
+                "methods": {m: sum(1 for v in link_method.values() if v == m) for m in sorted(set(link_method.values()))},
                 "matched_rows": len(used),
                 "rows": len(kept),
             }
@@ -1043,6 +1126,7 @@ def map_sheet(
         or bool(unmatched_rows)
         or bool(match_rows)
         or number_checked
+        or fuzzy_checked
         or values_checked
         or any(w["severity"] == "error" for w in warnings),
         "ok": bool(used) or bool(match_rows),

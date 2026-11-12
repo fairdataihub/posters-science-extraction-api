@@ -74,7 +74,7 @@ Converts an organizer's poster sheet (Curious, EasyChair, our own, .xlsx/.xls/.c
 
 #### `POST /sheets/match`
 
-Matches sheet rows without a file to extracted posters by title, with the authors as a tiebreaker. Returns each match with a confidence (`high` is automatic, `review` needs the organizer's check). Stateless. See [SHEET_MAPPING.md](SHEET_MAPPING.md).
+Matches sheet rows without a file to extracted posters in a loop of tiers (exact title, title plus authors, bag of words with OCR slips allowed, mutual best of what is left) until every poster has a row or nothing more can be placed. Returns each match with a confidence (`high` is automatic, `review` needs the organizer's check). Stateless. See [SHEET_MAPPING.md](SHEET_MAPPING.md).
 
 ## Job Worker
 

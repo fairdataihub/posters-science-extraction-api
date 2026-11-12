@@ -44,7 +44,7 @@ def test_basic_download_is_a_known_template():
     result = sm.map_sheet(easychair_basic(), "bosc.xlsx", ["bosc2026_submission_17.pdf", "21_ito.pdf"])
     assert result["template"]["id"] == "easychair" and result["template"]["known"] is True
     assert result["skipped"] == {"deleted": 1, "not_accepted": 1, "talk_only": 1}
-    assert result["file_column"] == {"column": "#", "method": "number", "matched_rows": 2, "rows": 2}
+    assert result["file_column"] == {"column": "#", "method": "number", "methods": {"number": 2}, "matched_rows": 2, "rows": 2}
     assert result["match_rows"] == []
     assert result["needs_confirmation"] is False  # numbered files are EasyChair's documented link
 
@@ -125,7 +125,7 @@ def test_number_link_skips_a_file_that_fits_two_rows():
 
 def test_number_link_outside_easychair_needs_a_check():
     result = sm.map_sheet(xlsx(CURIOUS_HEADERS, curious_rows(False)), "c.xlsx", ["01_jane.pdf", "02_john.pdf"])
-    assert result["file_column"] == {"column": "Position", "method": "number", "matched_rows": 2, "rows": 2}
+    assert result["file_column"] == {"column": "Position", "method": "number", "methods": {"number": 2}, "matched_rows": 2, "rows": 2}
     assert result["needs_confirmation"] is True
 
 

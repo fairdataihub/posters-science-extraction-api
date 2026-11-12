@@ -68,7 +68,7 @@ def test_curious_with_file_column_maps_to_grid_rows():
     result = sm.map_sheet(xlsx(headers, curious_rows()), "c.xlsx", files)
     assert result["ok"] is True
     assert result["template"]["known"] is True
-    assert result["file_column"] == {"column": "Poster file", "method": "column", "matched_rows": 2, "rows": 2}
+    assert result["file_column"] == {"column": "Poster file", "method": "column", "methods": {"column": 2}, "matched_rows": 2, "rows": 2}
     assert result["match_rows"] == []
 
     about = {r["file_name"]: r for r in result["sheets"]["About the Poster"]}
@@ -213,3 +213,30 @@ def test_parse_affiliations():
 def test_position_prefix_only_when_most_titles_have_one():
     assert sm.strip_position_prefixes(["1 - A", "2 \u2013 B"]) == ["A", "B"]
     assert sm.strip_position_prefixes(["3D printing in 2024", "Plain"]) == ["3D printing in 2024", "Plain"]
+
+
+def test_file_cell_with_a_typo_links_to_the_close_file_for_a_check():
+    data = "File name,Title\nsmith_poster_v2.pdf,First\njones-poster.pdf,Second\nzzz.pdf,Third\n"
+    result = sm.map_sheet(data.encode(), "s.csv", ["smith_poster_v3.pdf", "jones_poster.pdf", "lee_poster.pdf"])
+    names = [r["file_name"] for r in result["sheets"]["About the Poster"]]
+    assert names == ["smith_poster_v3.pdf", "jones_poster.pdf", ""]
+    assert result["file_column"]["methods"] == {"column": 1, "column_fuzzy": 1}
+    assert any(w["code"] == "files_linked_fuzzy" for w in result["warnings"])
+    assert result["needs_confirmation"] is True
+    assert [m["row_key"] for m in result["match_rows"]] == ["row-4"]  # left for title matching
+
+
+def test_rows_with_blank_file_cells_fall_back_to_numbers():
+    data = "Poster number,File name,Title\n1,a.pdf,First\n2,,Second\n3,,Third\n"
+    result = sm.map_sheet(data.encode(), "s.csv", ["a.pdf", "poster_2.pdf", "poster_3.pdf"])
+    names = [r["file_name"] for r in result["sheets"]["About the Poster"]]
+    assert names == ["a.pdf", "poster_2.pdf", "poster_3.pdf"]
+    assert result["file_column"]["methods"] == {"column": 1, "number": 2}
+    assert result["match_rows"] == []
+
+
+def test_title_index_dropped_when_it_is_the_rows_own_number():
+    titles = ["12 - Ocean sensors", "P13: Soil maps", "2024: a review", "Plain title"]
+    assert sm.strip_position_prefixes(titles, ["12", "13", "14", "15"]) == [
+        "Ocean sensors", "Soil maps", "2024: a review", "Plain title",
+    ]
