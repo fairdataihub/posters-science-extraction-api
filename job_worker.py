@@ -30,7 +30,7 @@ from validation import validate_and_fix_extraction
 from job_queue import claim_next_job, has_batch_columns, fail_interrupted_uploads
 from scheduler import QueueScheduler
 from feature_flags import FeatureContext, features_for_environment
-from batch_notifications import notify_finished_batches
+from batch_notifications import log_startup_status, notify_finished_batches
 
 
 # --- Config from config.py --------------------------------------------------
@@ -1025,6 +1025,7 @@ def run_worker_loop(
         log("Job worker: no database targets configured; worker not started")
         return
     contexts = {label: features_for_environment(label) for label in targets}
+    log_startup_status(contexts)
     scheduler = QueueScheduler(
         list(targets), int(config.get_env("SINGLE_JOBS_PER_BULK") or "3")
     )

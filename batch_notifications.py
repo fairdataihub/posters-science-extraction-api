@@ -19,28 +19,49 @@ from psycopg2.extras import RealDictCursor
 import config
 from feature_flags import FeatureContext
 
-FEATURE = "batch_completion_email"
 RESEND_URL = "https://api.resend.com/emails"
-FROM_ADDRESS = "Posters.science <noreply@posters.science>"
+DEFAULT_FROM_ADDRESS = "Posters.science <noreply@posters.science>"
 MAX_EMAILS_PER_SWEEP = 20
-
-# The website each database belongs to. Override with <ENV>_SITE_URL.
-_DEFAULT_SITE_URLS = {
-    "production": "https://posters.science",
-    "staging": "https://sandbox.posters.science",
-    "development": "http://localhost:3000",
-}
-
-_missing_key_logged = False
 
 
 def _log(message: str) -> None:
     print(f"[status] batch_notifications: {message}")
 
 
-def site_url(environment: str) -> str:
-    configured = config.get_env(f"{environment.upper()}_SITE_URL")
-    return (configured or _DEFAULT_SITE_URLS.get(environment, "")).rstrip("/")
+def from_address() -> str:
+    """Sender from RESEND_FROM_ADDRESS, defaulting to the website's sender.
+
+    The domain must be verified on the Resend account behind RESEND_API_KEY.
+    For local testing with a personal key, use onboarding@resend.dev, which
+    only delivers to that Resend account's own email address.
+    """
+    return (config.get_env("RESEND_FROM_ADDRESS") or "").strip() or DEFAULT_FROM_ADDRESS
+
+
+def site_url() -> str:
+    """The website the dashboard link points to, from NUXT_SITE_URL.
+
+    Use the same value as the website's NUXT_SITE_URL. One value is shared by
+    every database this worker serves. There is no fallback: when it is unset,
+    emails are skipped.
+    """
+    return (config.get_env("NUXT_SITE_URL") or "").strip().rstrip("/")
+
+
+def log_startup_status(contexts: dict[str, FeatureContext]) -> None:
+    """Say once at worker startup whether batch completion emails can be sent."""
+    if not config.get_env("RESEND_API_KEY"):
+        _log("RESEND_API_KEY is unset; email notifications disabled")
+        return
+    if not site_url():
+        _log("NUXT_SITE_URL is unset; email notifications disabled")
+        return
+
+    for environment in contexts:
+        _log(
+            f"{environment}: email notifications enabled, from {from_address()}, "
+            f"links to {site_url()}"
+        )
 
 
 def has_completion_email_column(conn) -> bool:
@@ -71,7 +92,7 @@ def render_email(
     if failed:
         lines.append(
             f"<li><strong>{failed}</strong> could not be extracted. "
-            "You can retry these from the batch.</li>"
+            "You can return to Posters.science to retry them.</li>"
         )
     if removed:
         lines.append(f"<li><strong>{removed}</strong> removed before extraction finished</li>")
@@ -108,14 +129,16 @@ def send_email(api_key: str, to: str, subject: str, body: str) -> Optional[bool]
 
     Returns True when accepted, False when Resend rejected the message for a
     reason a retry will not fix (for example an invalid address), and None for
-    a transient failure that should be retried on a later sweep.
+    a failure that should be retried on a later sweep: network errors, 429s,
+    5xx responses, and 400/401/403 key or sender problems, which are
+    configuration faults rather than problems with this batch.
     """
     domain = to.split("@")[-1] if "@" in to else "unknown"
     try:
         resp = requests.post(
             RESEND_URL,
             headers={"Authorization": f"Bearer {api_key}"},
-            json={"from": FROM_ADDRESS, "to": [to], "subject": subject, "html": body},
+            json={"from": from_address(), "to": [to], "subject": subject, "html": body},
             timeout=20,
         )
     except requests.RequestException as error:
@@ -126,11 +149,29 @@ def send_email(api_key: str, to: str, subject: str, body: str) -> Optional[bool]
         email_id = (resp.json() or {}).get("id") if resp.content else None
         _log(f"email accepted by Resend, emailId={email_id}, recipientDomain={domain}")
         return True
+    try:
+        reason = str((resp.json() or {}).get("message", ""))[:200]
+    except ValueError:
+        reason = ""
+    if resp.status_code in (400, 401, 403):
+        # A bad key (Resend answers an invalid key with 400), a malformed
+        # sender, or a sender domain not verified on this Resend account. Leave
+        # the batch unmarked so it sends once the configuration is fixed.
+        _log(
+            f"Resend refused the API key or sender ({resp.status_code}): {reason}; "
+            "check RESEND_API_KEY and RESEND_FROM_ADDRESS; will retry"
+        )
+        return None
     # 429 and 5xx are worth retrying; other 4xx will fail the same way again.
     if resp.status_code == 429 or resp.status_code >= 500:
-        _log(f"Resend returned {resp.status_code}, recipientDomain={domain}; will retry")
+        _log(
+            f"Resend returned {resp.status_code}: {reason}, recipientDomain={domain}; will retry"
+        )
         return None
-    _log(f"Resend rejected email ({resp.status_code}), recipientDomain={domain}; not retrying")
+    _log(
+        f"Resend rejected email ({resp.status_code}): {reason}, "
+        f"recipientDomain={domain}; not retrying"
+    )
     return False
 
 
@@ -163,23 +204,18 @@ def notify_finished_batches(conn, context: FeatureContext) -> int:
     transaction, so a second worker cannot send a duplicate. A transient send
     failure rolls back and leaves the batch for the next sweep.
     """
-    global _missing_key_logged
-
-    if not context.enabled(FEATURE):
-        return 0
+    # Missing configuration was already reported by log_startup_status.
     if not has_completion_email_column(conn):
         conn.rollback()
         return 0
 
     api_key = config.get_env("RESEND_API_KEY")
-    if not api_key:
-        if not _missing_key_logged:
-            _log("RESEND_API_KEY is unset; batch completion emails are not sent")
-            _missing_key_logged = True
+    base_url = site_url()
+    if not api_key or not base_url:
         conn.rollback()
         return 0
 
-    dashboard_url = f"{site_url(context.environment)}/dashboard"
+    dashboard_url = f"{base_url}/dashboard"
     sent = 0
     for _ in range(MAX_EMAILS_PER_SWEEP):
         with conn.cursor(cursor_factory=RealDictCursor) as cur:

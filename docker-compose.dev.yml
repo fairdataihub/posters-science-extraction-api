@@ -38,11 +38,11 @@ services:
       - POLL_INTERVAL_SECONDS=${POLL_INTERVAL_SECONDS:-30}
       - STUCK_PROCESSING_MINUTES=${STUCK_PROCESSING_MINUTES:-5}
       - SINGLE_JOBS_PER_BULK=${SINGLE_JOBS_PER_BULK:-3}
-      - STAGING_FEATURES=${STAGING_FEATURES:-bulk_extraction,batch_completion_email}
+      - STAGING_FEATURES=${STAGING_FEATURES:-bulk_extraction}
       - PRODUCTION_FEATURES=${PRODUCTION_FEATURES:-}
       - RESEND_API_KEY=${RESEND_API_KEY:-}
-      - STAGING_SITE_URL=${STAGING_SITE_URL:-}
-      - PRODUCTION_SITE_URL=${PRODUCTION_SITE_URL:-}
+      - RESEND_FROM_ADDRESS=${RESEND_FROM_ADDRESS:-}
+      - NUXT_SITE_URL=${NUXT_SITE_URL:-}
     ports:
       - "${API_PORT:-8000}:8000"
     # Mount source code for hot reload - edit locally, restart to apply
@@ -52,6 +52,7 @@ services:
       - ./job_queue.py:/app/job_queue.py
       - ./scheduler.py:/app/scheduler.py
       - ./feature_flags.py:/app/feature_flags.py
+      - ./batch_notifications.py:/app/batch_notifications.py
       - ./config.py:/app/config.py
       - ./validation.py:/app/validation.py
       - ./poster_extraction_schema.json:/app/poster_extraction_schema.json

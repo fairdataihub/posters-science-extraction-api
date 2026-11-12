@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import config
 
 
-KNOWN_FEATURES = frozenset({"bulk_extraction", "batch_completion_email"})
+KNOWN_FEATURES = frozenset({"bulk_extraction"})
 ENVIRONMENTS = frozenset({"staging", "production", "development"})
 
 
