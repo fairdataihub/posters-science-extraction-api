@@ -104,6 +104,7 @@ def thumbnails_generate():
     Body (JSON):
         {
           "file_path": "posters/<env>/<uid>[/version-<sequence>-<id>]/filename.pdf"
+          //        or "posters/b/<env>/<jobId>/<posterId>[/version-<sequence>-<id>]/filename.pdf" (bulk)
           // required; also accepts "pdf_path" for backwards compatibility
         }
 
@@ -115,11 +116,15 @@ def thumbnails_generate():
     spaces overlap, so the caller writes the returned URL to its own database.
     """
     # posters/<env>/<uid>[/version-<sequence>-<id>]/<filename>.<ext>
+    # posters/b/<env>/<jobId>/<posterId>[/version-<sequence>-<id>]/<filename>.<ext>  (bulk)
     # <env>      — lowercase letters only (e.g. "p", "staging", "production")
-    # <uid>      — alphanumeric + hyphens/underscores, 8-40 chars
+    # <uid>      — alphanumeric + hyphens/underscores, 8-40 chars (also <jobId>)
+    # <posterId> — numeric poster id
     # <filename> — no path traversal; must use a supported poster extension
+    # Keep in sync with THUMBNAIL_SERVICE_POSTER_PATH in posters-science
+    # server/utils/posterObjectPath.ts.
     _FILE_PATH_RE = re.compile(
-        r"^posters/[a-z]+/[a-zA-Z0-9_-]{8,40}/"
+        r"^posters/(?:b/[a-z]+/[a-zA-Z0-9_-]{8,40}/\d+|[a-z]+/[a-zA-Z0-9_-]{8,40})/"
         r"(?:version-\d+-[a-zA-Z0-9_-]{8,40}/)?"
         r"[^/]+\.(pdf|jpg|jpeg|png)$"
     )
@@ -129,11 +134,14 @@ def thumbnails_generate():
     file_path = (body.get("file_path") or body.get("pdf_path") or "").strip()
     if not file_path:
         return jsonify({"error": "file_path is required"}), 400
+    print(f"[status] api: thumbnail requested for file_path={file_path}")
     if not _FILE_PATH_RE.match(file_path):
+        print(f"[status] api: rejected file_path={file_path} (unsupported layout)")
         message = (
             "file_path must match posters/<env>/<uid>"
-            "[/version-<sequence>-<id>]/<filename>."
-            "(pdf|jpg|jpeg|png)"
+            "[/version-<sequence>-<id>]/<filename>.(pdf|jpg|jpeg|png) or "
+            "posters/b/<env>/<jobId>/<posterId>"
+            "[/version-<sequence>-<id>]/<filename>.(pdf|jpg|jpeg|png)"
         )
         return jsonify({"error": message}), 400
 
