@@ -66,6 +66,16 @@ Run one job-worker cycle: if there is an uncompleted (pending) job, it is claime
 
 **Response:** `204 No Content` (no body).
 
+### Map a poster spreadsheet
+
+#### `POST /sheets/map`
+
+Converts an organizer's poster sheet (Curious, EasyChair, or another organizer format, .xlsx/.xls/.csv/.tsv) into the bulk metadata grid format. Rows link to poster files by a file name column, or by a submission number the file name starts with; rows left over come back for title matching, and every linked row comes back in pairs for a title check. No database or GPU. See [SHEET_MAPPING.md](SHEET_MAPPING.md).
+
+#### `POST /sheets/match`
+
+Matches sheet rows without a file to extracted posters in a loop of tiers (exact title, title plus authors, bag of words with OCR slips allowed, mutual best of what is left) until every poster has a row or nothing more can be placed. Returns each match with a confidence (`high` is automatic, `review` needs the organizer's check). With pairs, also checks every already linked row's sheet title against its extracted title and flags the ones that disagree. Stateless. See [SHEET_MAPPING.md](SHEET_MAPPING.md).
+
 ## Job Worker
 
 A background thread runs continuously:
@@ -105,6 +115,7 @@ Enqueueing through the database rather than `POST /thumbnails/generate` is what 
 | `PORT` | API server port | 8000 |
 | `HOST` | API server host | 0.0.0.0 |
 | `CUDA_VISIBLE_DEVICES` | GPU device(s) | All available |
+| `SHEET_MAPPER_LLM_URL` | Optional OpenAI-compatible server for the sheet mapper's LLM tier ([SHEET_MAPPING.md](SHEET_MAPPING.md)) | unset |
 
 ### Starting with Custom Port
 
