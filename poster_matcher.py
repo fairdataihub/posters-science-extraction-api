@@ -26,6 +26,16 @@ is zero). Tier 1 matches are "high" confidence; the rest are "review" and are
 shown to the organizer to check. A poster left without a row keeps its
 extracted metadata only.
 
+Before the loop, a row whose suggested file (its number appears in the file
+name but the name does not start with it) has an agreeing title takes that
+file, for review ("number_suggested").
+
+Rows the sheet already paired with a file (file name column, close file name,
+number) are checked too: their extracted title has to agree with the sheet
+title (PAIR_AGREE), and authors, when both sides have them, must share a
+family name. A pair that does not agree is flagged for the organizer however
+it was paired, so a wrong file is caught before its metadata goes out.
+
 Stateless; no database, no model.
 """
 
@@ -46,6 +56,14 @@ FINAL_MARGIN = 0.05  # tier 4 lead
 TITLE_WEIGHT = 0.75  # combined score = 0.75 title + 0.25 authors
 WORD_FUZZ = 0.80  # two words count as the same when their spelling ratio is this high
 PREFILTER = 0.25  # pairs sharing less than this (Dice of exact words) are not scored
+# Title check on rows already paired with a file (file name column, close file
+# name, number). Calibrated on real titles from 53 conferences: a title against
+# a noisy copy of itself (cut short, OCR slips, a subtitle added, words
+# swapped) vs two different posters from the same conference. At 0.50, 0.8% of
+# true pairs are flagged for a look and 0.1% of different posters pass (a
+# French and an English title of one project). A flagged true pair costs one
+# click; a wrong pair that passes publishes the wrong metadata.
+PAIR_AGREE = 0.50
 
 STOPWORDS = frozenset(
     "a an and are as at by de der die for from in into is of on or the to via vs with".split()
@@ -193,15 +211,102 @@ TIERS = (
 )
 
 
-def match_rows_to_posters(rows: list[dict], posters: list[dict]) -> dict:
+def check_pair(row: dict, poster: dict) -> dict:
     """
-    rows: [{row_key, title, authors: [names]}] from the sheet.
+    Does the extracted poster look like the sheet row it is paired with? The
+    titles agree when their bag of words score (spelling slips, a title cut
+    short and a subtitle allowed) reaches PAIR_AGREE. Authors with no family
+    name in common also count as a disagreement, when both sides have authors.
+    """
+    rw, pw = words(row.get("title", "")), words(poster.get("title", ""))
+    if not rw or not pw:
+        return {"status": "unchecked", "reason": "no_title"}
+    s = _pair_scores(row, poster, rw, pw, content_words(rw), content_words(pw))
+    out = {k: s[k] for k in ("title_score", "words_score", "author_score")}
+    if s["words_score"] < PAIR_AGREE:
+        return {**out, "status": "disagree", "reason": "title"}
+    if s["author_score"] == 0.0:
+        return {**out, "status": "disagree", "reason": "authors"}
+    return {**out, "status": "agree", "reason": None}
+
+
+def check_pairs(pairs: list[dict], posters: list[dict]) -> list[dict]:
+    """
+    pairs: [{row_key, file_name, title, authors, method}] rows the sheet already
+    paired with a file. Each comes back with its check; a pair whose poster is
+    not in `posters` (not extracted yet) is "unchecked".
+    """
+    by_file = {p.get("file_name"): p for p in posters if p.get("file_name")}
+    out = []
+    for pair in pairs:
+        poster = by_file.get(pair.get("file_name"))
+        check = check_pair(pair, poster) if poster else {"status": "unchecked", "reason": "not_extracted"}
+        out.append(
+            {
+                "row_key": pair.get("row_key", ""),
+                "file_name": pair.get("file_name", ""),
+                "method": pair.get("method", ""),
+                **check,
+                "row_title": pair.get("title", ""),
+                "poster_title": (poster or {}).get("title", ""),
+            }
+        )
+    return out
+
+
+def match_rows_to_posters(rows: list[dict], posters: list[dict], pairs: list[dict] | None = None) -> dict:
+    """
+    rows: [{row_key, title, authors: [names], suggested_file?}] from the sheet,
+      still without a file. suggested_file is a file whose name carries the
+      row's number but does not start with it; it is taken (for review) only
+      when its title agrees.
     posters: [{file_name, title, authors: [names]}] from extraction.
+    pairs: [{row_key, file_name, title, authors, method}] rows already paired
+      by file name or number; their files are out of play, and each pair gets
+      a title check (pair_checks; disagreements also in flagged).
     Returns matches (with method, confidence and the round that made them),
-    unmatched_rows (with the closest poster left), unmatched_files.
+    unmatched_rows (with the closest poster left), unmatched_files,
+    pair_checks and flagged.
     """
+    pairs = [p for p in (pairs or []) if isinstance(p, dict) and p.get("file_name")]
+    pair_checks = check_pairs(pairs, posters)
+    taken = {p["file_name"] for p in pairs}
     rows = [r for r in rows if r.get("row_key")]
-    posters = [p for p in posters if p.get("file_name") and (p.get("title") or p.get("authors"))]
+    posters = [
+        p for p in posters
+        if p.get("file_name") and p["file_name"] not in taken and (p.get("title") or p.get("authors"))
+    ]
+
+    # A file suggested by its number is taken first, if its title agrees.
+    suggested_matches: list[dict] = []
+    by_file = {p["file_name"]: p for p in posters}
+    for r in rows:
+        poster = by_file.get(r.get("suggested_file") or "")
+        if poster is None:
+            continue
+        check = check_pair(r, poster)
+        if check["status"] == "agree":
+            suggested_matches.append(
+                {
+                    "row_key": r["row_key"],
+                    "file_name": poster["file_name"],
+                    "method": "number_suggested",
+                    "confidence": "review",
+                    "round": 0,
+                    "title_score": check["title_score"],
+                    "words_score": check["words_score"],
+                    "author_score": check["author_score"],
+                    "score": check["words_score"],
+                    "row_title": r.get("title", ""),
+                    "poster_title": poster.get("title", ""),
+                }
+            )
+            del by_file[poster["file_name"]]
+    if suggested_matches:
+        done_rows = {m["row_key"] for m in suggested_matches}
+        done_files = {m["file_name"] for m in suggested_matches}
+        rows = [r for r in rows if r["row_key"] not in done_rows]
+        posters = [p for p in posters if p["file_name"] not in done_files]
     row_words = [words(r.get("title", "")) for r in rows]
     poster_words = [words(p.get("title", "")) for p in posters]
     row_content = [content_words(w) for w in row_words]
@@ -307,11 +412,14 @@ def match_rows_to_posters(rows: list[dict], posters: list[dict]) -> dict:
             }
         unmatched_rows.append({"row_key": r["row_key"], "title": r.get("title", ""), "closest": closest})
     return {
-        "matches": matches,
+        "matches": suggested_matches + matches,
         "unmatched_rows": unmatched_rows,
         "unmatched_files": [p["file_name"] for j, p in enumerate(posters) if j not in used_files],
+        "pair_checks": pair_checks,
+        "flagged": [c for c in pair_checks if c["status"] == "disagree"],
         "rounds": rounds,
         "thresholds": {
+            "pair_agree": PAIR_AGREE,
             "title_auto": TITLE_AUTO,
             "title_min": TITLE_MIN,
             "authors_min": AUTHORS_MIN,

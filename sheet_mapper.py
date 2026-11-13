@@ -1,5 +1,5 @@
 """
-Map an organizer's poster spreadsheet (Curious, EasyChair, our own, ...) onto
+Map an organizer's poster spreadsheet (Curious, EasyChair, ...) onto
 the posters.science bulk metadata grid.
 
 The pipeline only ever works on our own format. Everything else is converted
@@ -15,8 +15,10 @@ here, before extraction starts:
    a. the file column, found by its values (cells that match the uploaded file
       names, by base name: folders, extension, case and spacing ignored)
    b. a file column cell that is close to one file name only (a typo)
-   c. the submission or poster number found in the file names
+   c. the submission or poster number a file name starts with (or has after
+      "submission"); a number elsewhere in a name is only a suggestion
    d. after extraction, title and authors (poster_matcher.py, POST /sheets/match)
+   Every linked row is also title checked after extraction (pairs).
    A poster no row reaches keeps its extracted metadata only.
 4. Convert values with deterministic parsers (authors with superscript
    affiliation numbers, numbered affiliation lists, position prefixes on
@@ -183,20 +185,6 @@ TEMPLATES: list[dict] = [
         # are the documented way to link files, so a number link needs no check.
         "file_number": True,
     },
-    {
-        "id": "posters-science-bulk",
-        "name": "Posters.science bulk submission template (Posters sheet)",
-        "headers": {
-            "posterId": "poster_number",
-            "fileName": "file_name",
-            "title": "title",
-            "abstract": "abstract",
-            "keywords": "keywords",
-            "researchField": "domain",
-            "language": "language",
-            "existingDoi": "doi",
-        },
-    },
 ]
 
 
@@ -227,6 +215,38 @@ def _cell_text(value) -> str:
     return str(value).strip()
 
 
+# An .xlsx is a zip, so the 10 MB upload limit says little about what openpyxl
+# would unpack. A real poster sheet is a few MB at most once unpacked.
+MAX_XLSX_UNPACKED = 100 * 1024 * 1024
+# The largest export we expect (every EasyChair submission of a big meeting,
+# rejected ones included) is a few thousand rows; 20,000 leaves ample room.
+MAX_ROWS = 20_000
+
+
+def _check_xlsx_size(data: bytes) -> None:
+    import zipfile
+
+    try:
+        with zipfile.ZipFile(io.BytesIO(data)) as zf:
+            unpacked = sum(i.file_size for i in zf.infolist())
+    except zipfile.BadZipFile:
+        raise ValueError("This .xlsx file could not be opened. Save it again from Excel and retry.") from None
+    if unpacked > MAX_XLSX_UNPACKED:
+        raise ValueError(
+            f"This workbook unpacks to {unpacked // (1024 * 1024)} MB, over the {MAX_XLSX_UNPACKED // (1024 * 1024)} MB "
+            "limit. Remove sheets or images that are not the poster list and retry."
+        )
+
+
+def _capped(rows, sheet_name: str) -> list:
+    out = []
+    for r in rows:
+        if len(out) == MAX_ROWS:
+            raise ValueError(f'Sheet "{sheet_name}" has more than {MAX_ROWS:,} rows. Split it or remove rows that are not posters.')
+        out.append(r)
+    return out
+
+
 def _read_rows(data: bytes, filename: str) -> list[tuple[str, list[list[str]]]]:
     """Return [(sheet name, rows of cell text)] for every sheet in the file."""
     ext = os.path.splitext(filename.lower())[1]
@@ -239,14 +259,16 @@ def _read_rows(data: bytes, filename: str) -> list[tuple[str, list[list[str]]]]:
                 delimiter = csv.Sniffer().sniff(text[:4096], delimiters=",;\t").delimiter
             except csv.Error:
                 delimiter = ","
-        rows = [[_cell_text(c) for c in r] for r in csv.reader(io.StringIO(text), delimiter=delimiter)]
-        return [(os.path.splitext(os.path.basename(filename))[0], rows)]
+        name = os.path.splitext(os.path.basename(filename))[0]
+        rows = _capped(([_cell_text(c) for c in r] for r in csv.reader(io.StringIO(text), delimiter=delimiter)), name)
+        return [(name, rows)]
     if ext in (".xlsx", ".xlsm"):
         import openpyxl
 
+        _check_xlsx_size(data)
         wb = openpyxl.load_workbook(io.BytesIO(data), read_only=True, data_only=True)
         return [
-            (ws.title, [[_cell_text(c) for c in r] for r in ws.iter_rows(values_only=True)])
+            (ws.title, _capped(([_cell_text(c) for c in r] for r in ws.iter_rows(values_only=True)), ws.title))
             for ws in wb.worksheets
         ]
     if ext == ".xls":
@@ -254,7 +276,7 @@ def _read_rows(data: bytes, filename: str) -> list[tuple[str, list[list[str]]]]:
 
         book = xlrd.open_workbook(file_contents=data)
         return [
-            (s.name, [[_cell_text(s.cell_value(i, j)) for j in range(s.ncols)] for i in range(s.nrows)])
+            (s.name, _capped(([_cell_text(s.cell_value(i, j)) for j in range(s.ncols)] for i in range(s.nrows)), s.name))
             for s in book.sheets()
         ]
     raise ValueError(f"Unsupported sheet type: {ext or filename}. Use .xlsx, .xls, .csv or .tsv.")
@@ -276,13 +298,49 @@ def _table_at(sheet_name: str, rows: list[list[str]], idx: int) -> Table:
     return Table(sheet_name, idx + 1, headers, body)
 
 
-# A per-author table (EasyChair Conference data download "Authors" sheet, or
-# its author.csv): one row per author per submission.
-AUTHOR_TABLE_NEEDS = {"submission number", "first name", "last name"}
+# A per-author table: one row per author per poster (EasyChair's "Authors"
+# sheet or author.csv, or any organizer's authors tab). It needs a column that
+# names the poster (a number or a file name), a person's name, and no title
+# column (that would make it the poster list itself).
+AUTHOR_KEY_NUMBER = {
+    "submission number", "submission", "submission id", "paper", "paper id", "paper number", "poster number",
+    "poster", "poster id", "position", "abstract id", "abstract number", "id",
+}
+AUTHOR_KEY_FILE = {"file name", "filename", "file", "poster file"}
+AUTHOR_GIVEN = {"first name", "given name", "firstname", "given names", "forename"}
+AUTHOR_FAMILY = {"last name", "family name", "lastname", "surname"}
+AUTHOR_FULL = {"name", "author", "author name", "full name", "person"}
+AUTHOR_AFFILIATION = {"affiliation", "affiliations", "institution", "organization", "organisation"}
+AUTHOR_ORCID = {"orcid", "orcid id", "orcid url", "web page"}
+
+
+def _author_columns(headers: list[str]) -> dict[str, int] | None:
+    """Column index per role for an authors table, or None when it is not one."""
+    idx = {_norm_header(h): i for i, h in reversed(list(enumerate(headers))) if _norm_header(h)}
+    if "title" in idx:
+        return None
+
+    def pick(names: set[str]) -> int | None:
+        return next((idx[n] for n in names if n in idx), None)
+
+    cols = {
+        "number": pick(AUTHOR_KEY_NUMBER),
+        "file": pick(AUTHOR_KEY_FILE),
+        "given": pick(AUTHOR_GIVEN),
+        "family": pick(AUTHOR_FAMILY),
+        "full": pick(AUTHOR_FULL),
+        "affiliation": pick(AUTHOR_AFFILIATION),
+        "orcid": pick(AUTHOR_ORCID),
+    }
+    has_key = cols["number"] is not None or cols["file"] is not None
+    has_name = cols["family"] is not None or cols["full"] is not None
+    if not (has_key and has_name):
+        return None
+    return {k: v for k, v in cols.items() if v is not None}
 
 
 def is_author_table(headers: list[str]) -> bool:
-    return AUTHOR_TABLE_NEEDS <= {_norm_header(h) for h in headers}
+    return _author_columns(headers) is not None
 
 
 def read_tables(files: list[tuple[bytes, str]]) -> tuple[Table, Table | None]:
@@ -541,17 +599,45 @@ def link_files_fuzzy(values: dict[int, str], file_names: list[str]) -> dict[int,
     return links
 
 
-def file_numbers(name: str) -> list[str]:
+def _stem(name: str) -> str:
+    return os.path.splitext(re.split(r"[\\/]", name.strip())[-1])[0].lower()
+
+
+def file_number(name: str) -> str | None:
     """
-    Submission numbers a poster file name may carry, best first:
-    "bosc_submission_17.pdf" -> 17, "17_smith.pdf" -> 17, and a number run
-    together with a year ("ISMB20262153Patel.pdf") -> 2153 as well.
+    The submission number a file is named by, when the name says so plainly:
+    it starts with the number ("17.pdf", "17_patel.pdf", "017-x.pdf") or
+    carries it after "submission" ("bosc_submission_17.pdf"). Only these pair
+    a row on their own.
     """
-    stem = os.path.splitext(re.split(r"[\\/]", name.strip())[-1])[0].lower()
+    stem = _stem(name)
     m = re.search(r"submission[\s_-]*0*(\d+)", stem)
     if m:
-        return [m.group(1)]
+        return m.group(1)
+    m = re.match(r"0*(\d+)(?![\d])", stem)
+    if not m:
+        return None
+    # "2026_smith_poster.pdf" starts with a year, not a submission number.
+    if re.fullmatch(r"(19|20)\d\d", m.group(0)) and stem[4:5] and not stem[4:5].isalnum():
+        return None
+    return m.group(1) or "0"
+
+
+def file_numbers(name: str) -> list[str]:
+    """
+    Every number a file name may carry, best first: the plain one from
+    file_number(), then any other run of digits, and a number run together
+    with a year ("ISMB20262153Patel.pdf") -> 2153 as well. Numbers found this
+    way can be anything (a version, a browser's "(2)" suffix), so a pair made
+    from them is only suggested for the organizer to check.
+    """
+    stem = _stem(name)
+    if re.search(r"submission[\s_-]*\d", stem):
+        return [file_number(name)]
     out: list[str] = []
+    plain = file_number(name)
+    if plain:
+        out.append(plain)
     for run in re.findall(r"\d+", stem):
         out.append(run.lstrip("0") or "0")
         if len(run) > 4 and run[:2] in ("19", "20"):
@@ -559,15 +645,23 @@ def file_numbers(name: str) -> list[str]:
     return list(dict.fromkeys(out))
 
 
-def link_files_by_number(table: Table, columns: list[ColumnMap], file_names: list[str]) -> tuple[ColumnMap | None, dict[int, str]]:
+def link_files_by_number(
+    table: Table, columns: list[ColumnMap], file_names: list[str]
+) -> tuple[ColumnMap | None, dict[int, str], dict[int, str]]:
     """
     Link rows to files through the row's submission or poster number, when the
-    files are named by it. A file that could belong to two rows is left alone
-    (it falls through to title matching). Used only when no column holds the
-    file names.
+    files are named by it. Returns (column, links, suggestions):
+
+    - links: the file name starts with the number or says "submission_17".
+    - suggestions: the number only appears somewhere else in the name
+      ("Smith_poster (2).pdf", "ISMB20262153Patel.pdf"). Not applied; the row
+      waits for title matching, with this file as a suggestion to check.
+
+    A file that could belong to two rows is left alone (it falls through to
+    title matching). Rows a file column already linked never get here.
     """
     if not file_names:
-        return None, {}
+        return None, {}, {}
     for c in columns:
         if c.field != "poster_number":
             continue
@@ -583,15 +677,19 @@ def link_files_by_number(table: Table, columns: list[ColumnMap], file_names: lis
         if not values or len(ids) / values < 0.8:
             continue
         links: dict[int, str] = {}
+        suggestions: dict[int, str] = {}
         for name in file_names:
+            plain = file_number(name)
+            if plain is not None and plain in ids:
+                links.setdefault(ids[plain], name)
+                continue
             hits = {ids[n] for n in file_numbers(name) if n in ids}
             if len(hits) == 1:
-                row = hits.pop()
-                if row not in links:
-                    links[row] = name
-        if links and len(links) / len(file_names) >= 0.5:
-            return c, links
-    return None, {}
+                suggestions.setdefault(hits.pop(), name)
+        suggestions = {r: n for r, n in suggestions.items() if r not in links}
+        if (links or suggestions) and (len(links) + len(suggestions)) / len(file_names) >= 0.5:
+            return c, links, suggestions
+    return None, {}, {}
 
 
 # ---------------------------------------------------------------------------
@@ -600,7 +698,9 @@ def link_files_by_number(table: Table, columns: list[ColumnMap], file_names: lis
 
 _SUPERSCRIPTS = str.maketrans("\u2070\u00b9\u00b2\u00b3\u2074\u2075\u2076\u2077\u2078\u2079", "0123456789")
 _POSITION_PREFIX = re.compile(
-    r"^\s*(?:(?:poster|abstract|no\.?|nr\.?|p|#)\s*)?(\d{1,5})\s*[\u2010-\u2015\-:.)|]\s*", re.I
+    # The separator must not run into another digit, so a range or decimal
+    # ("2019-2023 trends", "3.5 T MRI") is never read as an index.
+    r"^\s*(?:(?:poster|abstract|no\.?|nr\.?|p|#)\s*)?(\d{1,5})\s*[\u2010-\u2015\-:.)|](?!\s*\d)\s*", re.I
 )
 
 
@@ -621,8 +721,17 @@ def strip_position_prefixes(titles: list[str], numbers: list[str] | None = None)
     out = []
     for t, n in zip(titles, numbers):
         m = _POSITION_PREFIX.match(t) if t else None
-        if m and (most or (n and m.group(1).lstrip("0") == n.lstrip("0"))) and t[m.end():].strip():
-            t = t[m.end():]
+        if m and t[m.end():].strip():
+            index = m.group(1).lstrip("0")
+            if n:
+                # The row has its own number: cut only when the title starts with it.
+                cut = index == n.lstrip("0")
+            else:
+                # No number for the row: cut when most titles carry an index,
+                # but never a year ("2026: A review").
+                cut = most and not re.fullmatch(r"(19|20)\d\d", m.group(1))
+            if cut:
+                t = t[m.end():]
         out.append(t)
     return out
 
@@ -668,7 +777,7 @@ def split_name(name: str) -> tuple[str, str]:
     """"Family, Given" or "Given Middle Family" -> (given, family)."""
     if "," in name:
         family, given = [p.strip() for p in name.split(",", 1)]
-        return given, family
+        return ("", given) if given and not family else (given, family)
     parts = name.split()
     if len(parts) == 1:
         return "", parts[0]
@@ -716,8 +825,11 @@ def split_keywords(cell: str) -> list[str]:
 
 
 def orcid_url(value: str) -> str:
-    """An ORCID iD from a web page cell, as https://orcid.org/... ; else empty."""
-    m = re.search(r"orcid\.org/(\d{4}-\d{4}-\d{4}-\d{3}[\dXx])", value or "")
+    """An ORCID iD from an ORCID or web page cell, as https://orcid.org/... ; else empty."""
+    value = value or ""
+    m = re.search(r"orcid\.org/(\d{4}-\d{4}-\d{4}-\d{3}[\dXx])", value) or re.fullmatch(
+        r"\s*(\d{4}-\d{4}-\d{4}-\d{3}[\dXx])\s*", value
+    )
     return f"https://orcid.org/{m.group(1).upper()}" if m else ""
 
 
@@ -818,27 +930,41 @@ def _creator_rows(link: dict, authors_cell: str, affiliations_cell: str, warn) -
     return rows
 
 
-def _author_table_index(authors: Table) -> dict[str, list[dict]]:
-    """Submission number -> its authors in row order (EasyChair Authors sheet)."""
-    idx = {_norm_header(h): i for i, h in enumerate(authors.headers)}
+def _author_table_index(authors: Table) -> tuple[dict[str, list[dict]], dict[str, list[dict]]]:
+    """
+    The poster's authors in row order, keyed two ways: by submission or poster
+    number, and by file name key, whichever the authors table names posters by.
+    """
+    cols = _author_columns(authors.headers) or {}
 
-    def get(cells: list[str], key: str) -> str:
-        return clean(cells[idx[key]]) if key in idx else ""
+    def get(cells: list[str], role: str) -> str:
+        return clean(cells[cols[role]]) if role in cols else ""
 
-    out: dict[str, list[dict]] = {}
+    by_number: dict[str, list[dict]] = {}
+    by_file: dict[str, list[dict]] = {}
     for _, cells in authors.rows:
-        sub = get(cells, "submission number").lstrip("0")
-        if not sub:
+        given, family = get(cells, "given"), get(cells, "family")
+        if not family and get(cells, "full"):
+            given, family = split_name(get(cells, "full"))
+        if given and not family:
+            # A lone name (EasyChair allows a blank first or last name) is the
+            # family name, which Zenodo requires for a person.
+            given, family = "", given
+        if not (given or family):
             continue
-        out.setdefault(sub, []).append(
-            {
-                "given": get(cells, "first name"),
-                "family": get(cells, "last name"),
-                "affiliation": get(cells, "affiliation"),
-                "orcid": orcid_url(cells[idx["web page"]]) if "web page" in idx else "",
-            }
-        )
-    return out
+        person = {
+            "given": given,
+            "family": family,
+            "affiliation": get(cells, "affiliation"),
+            "orcid": orcid_url(cells[cols["orcid"]]) if "orcid" in cols else "",
+        }
+        number = get(cells, "number").lstrip("0")
+        if number:
+            by_number.setdefault(number, []).append(person)
+        file_cell = get(cells, "file")
+        if file_cell:
+            by_file.setdefault(file_key(file_cell), []).append(person)
+    return by_number, by_file
 
 
 def _creator_rows_from_table(link: dict, people: list[dict]) -> list[dict]:
@@ -941,18 +1067,20 @@ def map_sheet(
         for i, name in loose.items():
             links[i], link_method[i] = name, "column_fuzzy"
     num_col = None
+    suggested: dict[int, str] = {}
     open_rows = [i for i in range(len(kept)) if i not in links]
     free = [n for n in file_names if n not in set(links.values())]
     if open_rows and free:
-        num_col, num_links = link_files_by_number(
+        num_col, num_links, num_suggested = link_files_by_number(
             Table(table.sheet_name, table.header_row, table.headers, [(kept[i][0], kept[i][1]) for i in open_rows]),
             columns,
             free,
         )
         for k, name in num_links.items():
             links[open_rows[k]], link_method[open_rows[k]] = name, "number"
+        suggested = {open_rows[k]: name for k, name in num_suggested.items()}
 
-    people = _author_table_index(author_table) if author_table else {}
+    people, people_by_file = _author_table_index(author_table) if author_table else ({}, {})
     titles = strip_position_prefixes(
         [one("title", cells) for _, cells, _ in kept], [one("poster_number", cells) for _, cells, _ in kept]
     )
@@ -960,6 +1088,7 @@ def map_sheet(
     sheets: dict[str, list[dict]] = {SHEET_ABOUT: [], SHEET_CREATORS: [], SHEET_ADDITIONAL: [], SHEET_RELATED: []}
     unmatched_rows: list[dict] = []
     match_rows: list[dict] = []
+    pairs: list[dict] = []
     hints: dict[str, dict] = {}
     used: dict[str, int] = {}
 
@@ -977,11 +1106,22 @@ def map_sheet(
 
         number = one("poster_number", cells).lstrip("0")
         table_people = people.get(number, []) if number else []
-        if not file_name:
-            names = [f'{p["given"]} {p["family"]}'.strip() for p in table_people] or [
-                a["name"] for a in parse_authors(one("authors", cells))
-            ]
-            match_rows.append({"row_key": row_key, "row": row_no, "title": title, "authors": names, "number": number})
+        if not table_people and file_name:
+            # Authors table keyed by what the rows link files with ("7" for 7.pdf).
+            key = file_key(file_name)
+            table_people = people_by_file.get(key) or people.get(key.lstrip("0") or "0", [])
+        names = [f'{p["given"]} {p["family"]}'.strip() for p in table_people] or [
+            a["name"] for a in parse_authors(one("authors", cells))
+        ]
+        if file_name:
+            # Checked against the extracted title after extraction, however it paired.
+            pairs.append({"row_key": row_key, "row": row_no, "file_name": file_name, "method": link_method[i],
+                          "title": title, "authors": names})
+        else:
+            entry = {"row_key": row_key, "row": row_no, "title": title, "authors": names, "number": number}
+            if i in suggested and suggested[i] not in used:
+                entry["suggested_file"] = suggested[i]
+            match_rows.append(entry)
 
         keywords = []
         for c in by_field.get("keywords", []):
@@ -1017,11 +1157,12 @@ def map_sheet(
                 {**link, "related_identifier": as_url(one("website", cells)),
                  "related_identifier_type": "URL", "relation_type": "References", "resource_type_general": "Other"}
             )
-        if one("doi", cells):
-            doi = re.sub(r"^(https?://(dx\.)?doi\.org/|doi:)", "", one("doi", cells), flags=re.I)
-            sheets[SHEET_RELATED].append(
-                {**link, "related_identifier": doi, "related_identifier_type": "DOI", "relation_type": "IsIdenticalTo"}
-            )
+        # A DOI column is the poster's own DOI (already registered), so the
+        # poster keeps it instead of getting a new one. The grid has no DOI
+        # column, so it travels as a per-row hint for the app to apply.
+        doi = find_doi(one("doi", cells)) if one("doi", cells) else ""
+        if doi:
+            hints.setdefault(row_key, {})["doi"] = doi
         if form.get("derived_from_doi"):
             sheets[SHEET_RELATED].append(
                 {**link, "related_identifier": form["derived_from_doi"], "related_identifier_type": "DOI",
@@ -1033,7 +1174,7 @@ def map_sheet(
                  "relation_type": "IsSupplementedBy", "resource_type_general": "Other"}
             )
         if form.get("project_license"):
-            hints[row_key] = {"project_license": form["project_license"]}
+            hints.setdefault(row_key, {})["project_license"] = form["project_license"]
 
     fuzzy_rows = [kept[i][0] for i, m in link_method.items() if m == "column_fuzzy"]
     if fuzzy_rows:
@@ -1045,10 +1186,19 @@ def map_sheet(
         )
     if num_col is not None:
         n_num = sum(1 for m in link_method.values() if m == "number")
+        if n_num:
+            warn(
+                "files_linked_by_number",
+                f'Linked {n_num} row(s) to poster files by the number in column "{num_col.header}" found in the file names.',
+                "info",
+            )
+    n_suggested = sum(1 for r in match_rows if r.get("suggested_file"))
+    if n_suggested:
         warn(
-            "files_linked_by_number",
-            f'Linked {n_num} row(s) to poster files by the number in column "{num_col.header}" found in the file names.',
-            "info",
+            "files_suggested_by_number",
+            f"{n_suggested} file name(s) carry a row's number but do not start with it (for example a download copy "
+            "named \"poster (2).pdf\"). They are not linked yet; after extraction each is checked by its title, and you "
+            "confirm it.",
         )
     if file_col is None and num_col is None and kept:
         warn(
@@ -1065,10 +1215,18 @@ def map_sheet(
     unmatched_files = sorted(n for n in file_names if n not in used)
     if used and unmatched_files:
         warn("files_without_row", f"{len(unmatched_files)} uploaded poster(s) have no linked row yet.", "info")
-    if hints:
+    n_license = sum(1 for h in hints.values() if "project_license" in h)
+    n_doi = sum(1 for h in hints.values() if "doi" in h)
+    if n_doi:
+        warn(
+            "existing_doi",
+            f"{n_doi} row(s) give a DOI the poster already has. Those posters keep that DOI instead of getting a new one.",
+            "info",
+        )
+    if n_license:
         warn(
             "project_license",
-            f"{len(hints)} row(s) give a license in the form fields. That is the license of the work the poster presents, "
+            f"{n_license} row(s) give a license in the form fields. That is the license of the work the poster presents, "
             "not of the poster, so it is not applied.",
             "info",
         )
@@ -1119,6 +1277,7 @@ def map_sheet(
         "unmatched_rows": unmatched_rows,
         "unmatched_files": unmatched_files,
         "match_rows": match_rows,
+        "pairs": pairs,
         "hints": hints,
         "skipped": skipped,
         "warnings": warnings,

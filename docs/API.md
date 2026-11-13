@@ -70,11 +70,11 @@ Run one job-worker cycle: if there is an uncompleted (pending) job, it is claime
 
 #### `POST /sheets/map`
 
-Converts an organizer's poster sheet (Curious, EasyChair, our own, .xlsx/.xls/.csv/.tsv) into the bulk metadata grid format. Rows link to poster files by a file name column, or by a submission number in the file names; rows left over come back for title matching. No database or GPU. See [SHEET_MAPPING.md](SHEET_MAPPING.md).
+Converts an organizer's poster sheet (Curious, EasyChair, or another organizer format, .xlsx/.xls/.csv/.tsv) into the bulk metadata grid format. Rows link to poster files by a file name column, or by a submission number the file name starts with; rows left over come back for title matching, and every linked row comes back in pairs for a title check. No database or GPU. See [SHEET_MAPPING.md](SHEET_MAPPING.md).
 
 #### `POST /sheets/match`
 
-Matches sheet rows without a file to extracted posters in a loop of tiers (exact title, title plus authors, bag of words with OCR slips allowed, mutual best of what is left) until every poster has a row or nothing more can be placed. Returns each match with a confidence (`high` is automatic, `review` needs the organizer's check). Stateless. See [SHEET_MAPPING.md](SHEET_MAPPING.md).
+Matches sheet rows without a file to extracted posters in a loop of tiers (exact title, title plus authors, bag of words with OCR slips allowed, mutual best of what is left) until every poster has a row or nothing more can be placed. Returns each match with a confidence (`high` is automatic, `review` needs the organizer's check). With pairs, also checks every already linked row's sheet title against its extracted title and flags the ones that disagree. Stateless. See [SHEET_MAPPING.md](SHEET_MAPPING.md).
 
 ## Job Worker
 

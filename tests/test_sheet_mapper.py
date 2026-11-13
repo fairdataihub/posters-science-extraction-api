@@ -228,11 +228,98 @@ def test_file_cell_with_a_typo_links_to_the_close_file_for_a_check():
 
 def test_rows_with_blank_file_cells_fall_back_to_numbers():
     data = "Poster number,File name,Title\n1,a.pdf,First\n2,,Second\n3,,Third\n"
-    result = sm.map_sheet(data.encode(), "s.csv", ["a.pdf", "poster_2.pdf", "poster_3.pdf"])
+    result = sm.map_sheet(data.encode(), "s.csv", ["a.pdf", "2_jones.pdf", "submission_3.pdf"])
     names = [r["file_name"] for r in result["sheets"]["About the Poster"]]
-    assert names == ["a.pdf", "poster_2.pdf", "poster_3.pdf"]
+    assert names == ["a.pdf", "2_jones.pdf", "submission_3.pdf"]
     assert result["file_column"]["methods"] == {"column": 1, "number": 2}
     assert result["match_rows"] == []
+    # Every paired row goes back for a title check after extraction.
+    assert [(p["row_key"], p["method"]) for p in result["pairs"]] == [
+        ("row-2", "column"), ("row-3", "number"), ("row-4", "number"),
+    ]
+
+
+def test_number_inside_a_name_is_only_a_suggestion():
+    # "poster (2).pdf" is a browser's download copy, not submission 2.
+    data = "Poster number,File name,Title\n1,a.pdf,First\n2,,Second\n3,,Third\n"
+    result = sm.map_sheet(data.encode(), "s.csv", ["a.pdf", "Smith_poster (2).pdf", "ISMB20263Lee.pdf"])
+    names = [r["file_name"] for r in result["sheets"]["About the Poster"]]
+    assert names == ["a.pdf", "", ""]
+    assert [(m["row_key"], m.get("suggested_file")) for m in result["match_rows"]] == [
+        ("row-3", "Smith_poster (2).pdf"), ("row-4", "ISMB20263Lee.pdf"),
+    ]
+    assert any(w["code"] == "files_suggested_by_number" for w in result["warnings"])
+    assert result["needs_confirmation"] is True
+
+
+def test_easychair_number_links_only_plain_names():
+    data = (
+        "#,Title,Authors,Submitted,Last updated,Keywords,Decision,Abstract\n"
+        "17,First,A B,x,x,k,accept poster,abs\n"
+        "18,Second,C D,x,x,k,accept poster,abs\n"
+        "19,Third,E F,x,x,k,accept poster,abs\n"
+    )
+    files = ["17_smith.pdf", "bosc_submission_18.pdf", "poster (19).pdf"]
+    result = sm.map_sheet(data.encode(), "s.csv", files)
+    names = [r["file_name"] for r in result["sheets"]["About the Poster"]]
+    assert names == ["17_smith.pdf", "bosc_submission_18.pdf", ""]
+    assert result["match_rows"][0]["suggested_file"] == "poster (19).pdf"
+
+
+@pytest.mark.parametrize("name, number", [
+    ("17.pdf", "17"), ("17_patel.pdf", "17"), ("017-x.pdf", "17"), ("bosc_submission_17.pdf", "17"),
+    ("Smith_poster (2).pdf", None), ("ISMB20262153Patel.pdf", None), ("2026_smith_poster.pdf", None),
+    ("poster.pdf", None),
+])
+def test_file_number_only_for_plain_names(name, number):
+    assert sm.file_number(name) == number
+
+
+def test_doi_column_is_the_posters_own_doi():
+    data = "File name,Title,DOI\na.pdf,First,https://doi.org/10.5281/zenodo.123\nb.pdf,Second,\n"
+    result = sm.map_sheet(data.encode(), "s.csv", ["a.pdf", "b.pdf"])
+    assert result["hints"] == {"row-2": {"doi": "10.5281/zenodo.123"}}
+    assert "Related resources" not in result["sheets"]
+    assert any(w["code"] == "existing_doi" for w in result["warnings"])
+
+
+def test_any_authors_table_is_joined():
+    posters = "Poster ID,Title\n7,First\n8,Second\n"
+    authors = "Poster ID,Name,Institution,ORCID\n7,Jane Doe,Uni X,0000-0002-1825-0097\n7,John Roe,Uni Y,\n8,Ann Lee,Uni Z,\n"
+    result = sm.map_sheet(posters.encode(), "posters.csv", ["7.pdf", "8.pdf"], extra_files=[(authors.encode(), "authors.csv")])
+    creators = result["sheets"]["Creators"]
+    assert [(c["file_name"], c["given_name"], c["family_name"]) for c in creators] == [
+        ("7.pdf", "Jane", "Doe"), ("7.pdf", "John", "Roe"), ("8.pdf", "Ann", "Lee"),
+    ]
+    assert creators[0]["name_identifier"] == "https://orcid.org/0000-0002-1825-0097"
+    assert creators[0]["contributor_affiliation_1_name"] == "Uni X"
+    assert result["authors_table"] == "authors"
+
+
+def test_authors_table_keyed_by_file_name():
+    posters = "File name,Title\na.pdf,First\n"
+    authors = "File name,First name,Last name\na.pdf,Jane,Doe\n"
+    result = sm.map_sheet(posters.encode(), "posters.csv", ["a.pdf"], extra_files=[(authors.encode(), "authors.csv")])
+    assert [(c["given_name"], c["family_name"]) for c in result["sheets"]["Creators"]] == [("Jane", "Doe")]
+
+
+def test_huge_unpacked_workbook_is_refused(monkeypatch):
+    import io
+    import zipfile
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("xl/big.xml", b"0" * 2_000_000)
+    monkeypatch.setattr(sm, "MAX_XLSX_UNPACKED", 1_000_000)
+    with pytest.raises(ValueError, match="unpacks to"):
+        sm.map_sheet(buf.getvalue(), "s.xlsx", [])
+
+
+def test_row_cap(monkeypatch):
+    monkeypatch.setattr(sm, "MAX_ROWS", 3)
+    data = "File name,Title\n" + "".join(f"{i}.pdf,T{i}\n" for i in range(5))
+    with pytest.raises(ValueError, match="more than 3 rows"):
+        sm.map_sheet(data.encode(), "s.csv", [])
 
 
 def test_title_index_dropped_when_it_is_the_rows_own_number():
@@ -240,3 +327,25 @@ def test_title_index_dropped_when_it_is_the_rows_own_number():
     assert sm.strip_position_prefixes(titles, ["12", "13", "14", "15"]) == [
         "Ocean sensors", "Soil maps", "2024: a review", "Plain title",
     ]
+
+
+def test_single_name_goes_to_family_name():
+    from sheet_mapper import split_name
+
+    assert split_name("Madonna") == ("", "Madonna")
+    assert split_name(", Madonna") == ("", "Madonna")
+    assert split_name("Smith, Jane") == ("Jane", "Smith")
+
+
+def test_title_prefix_cut_only_for_real_indexes():
+    from sheet_mapper import strip_position_prefixes
+
+    titles = ["1 - Alpha study", "2 - Beta study", "3 - Gamma study",
+              "4 - Delta study", "2019-2023 trends in care", "2026: A review"]
+    out = strip_position_prefixes(titles)
+    assert out[:4] == ["Alpha study", "Beta study", "Gamma study", "Delta study"]
+    assert out[4] == "2019-2023 trends in care"  # a range, not an index
+    assert out[5] == "2026: A review"  # a year, not an index
+    # A row's own number: only that number is cut.
+    assert strip_position_prefixes(["12 - Title", "7 - Other"], ["12", "8"]) == ["Title", "7 - Other"]
+    assert strip_position_prefixes(["3.5 T MRI at scale"], ["3"]) == ["3.5 T MRI at scale"]

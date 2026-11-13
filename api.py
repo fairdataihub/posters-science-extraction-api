@@ -228,24 +228,27 @@ def sheets_match():
     with the authors as a tiebreaker. Called once posters have extracted.
 
     JSON body:
-        rows     [{row_key, title, authors: [names]}]  (match_rows from /sheets/map)
+        rows     [{row_key, title, authors: [names], suggested_file?}]  (match_rows from /sheets/map)
         posters  [{file_name, title, authors: [names]}] (what extraction read)
+        pairs    [{row_key, file_name, title, authors, method}]  optional (pairs from /sheets/map)
 
     Returns matches with method and confidence ("high" is automatic, "review"
-    needs the organizer's check), plus unmatched rows and files. Stateless.
+    needs the organizer's check), unmatched rows and files, and a title check
+    for every already paired row (pair_checks; disagreements also in flagged).
+    Stateless.
     """
     print("[status] api: POST /sheets/match")
     body = request.get_json(silent=True)
     if not isinstance(body, dict):
         return jsonify({"error": "body must be a JSON object"}), 400
-    rows, posters = body.get("rows"), body.get("posters")
-    if not isinstance(rows, list) or not isinstance(posters, list):
-        return jsonify({"error": "rows and posters must be arrays"}), 400
-    if len(rows) > 2000 or len(posters) > 2000:
-        return jsonify({"error": "at most 2000 rows and 2000 posters"}), 413
-    if not all(isinstance(x, dict) for x in rows + posters):
-        return jsonify({"error": "rows and posters must be arrays of objects"}), 400
-    return jsonify(match_rows_to_posters(rows, posters)), 200
+    rows, posters, pairs = body.get("rows"), body.get("posters"), body.get("pairs", [])
+    if not isinstance(rows, list) or not isinstance(posters, list) or not isinstance(pairs, list):
+        return jsonify({"error": "rows, posters and pairs must be arrays"}), 400
+    if len(rows) > 2000 or len(posters) > 2000 or len(pairs) > 2000:
+        return jsonify({"error": "at most 2000 rows, 2000 posters and 2000 pairs"}), 413
+    if not all(isinstance(x, dict) for x in rows + posters + pairs):
+        return jsonify({"error": "rows, posters and pairs must be arrays of objects"}), 400
+    return jsonify(match_rows_to_posters(rows, posters, pairs)), 200
 
 
 @app.route("/jobs/check", methods=["POST"])

@@ -124,3 +124,44 @@ def test_identical_titles_without_authors_stay_unmatched_after_others_match():
     out = pm.match_rows_to_posters(rows, posters)
     assert got(out) == {"r3": ("z.pdf", "title", "high")}
     assert sorted(out["unmatched_files"]) == ["x.pdf", "y.pdf"]
+
+
+def test_paired_rows_get_a_title_check():
+    pairs = [
+        {"row_key": "r1", "file_name": "1.pdf", "title": "Ocean sensor networks for coastal monitoring", "method": "column"},
+        {"row_key": "r2", "file_name": "2.pdf", "title": "Deep learning for protein folding", "method": "number"},
+        {"row_key": "r3", "file_name": "3.pdf", "title": "Soil carbon maps", "method": "number"},
+    ]
+    posters = [
+        # cut short and an OCR slip: still the same poster
+        {"file_name": "1.pdf", "title": "Ocean sensr networks for coastal"},
+        # the wrong file
+        {"file_name": "2.pdf", "title": "A survey of library open access policies"},
+    ]
+    out = pm.match_rows_to_posters([], posters, pairs)
+    status = {c["row_key"]: (c["status"], c["reason"]) for c in out["pair_checks"]}
+    assert status == {"r1": ("agree", None), "r2": ("disagree", "title"), "r3": ("unchecked", "not_extracted")}
+    assert [c["row_key"] for c in out["flagged"]] == ["r2"]
+    # Paired files are out of play for the matching loop.
+    assert out["unmatched_files"] == []
+
+
+def test_pair_with_no_author_in_common_is_flagged():
+    pair = {"row_key": "r", "file_name": "a.pdf", "title": "Ocean sensor networks", "authors": ["Jane Smith"]}
+    poster = {"file_name": "a.pdf", "title": "Ocean sensor networks", "authors": ["Wei Zhang", "Ana Costa"]}
+    assert pm.check_pair(pair, poster)["reason"] == "authors"
+
+
+def test_suggested_file_taken_for_review_when_title_agrees():
+    rows = [
+        {"row_key": "r1", "title": "Ocean sensor networks for coastal monitoring", "suggested_file": "poster (1).pdf"},
+        {"row_key": "r2", "title": "Deep learning for protein folding", "suggested_file": "poster (2).pdf"},
+    ]
+    posters = [
+        {"file_name": "poster (1).pdf", "title": "Ocean sensor networks for coastal monitoring"},
+        {"file_name": "poster (2).pdf", "title": "A survey of library open access policies"},
+    ]
+    out = pm.match_rows_to_posters(rows, posters)
+    by_row = {m["row_key"]: m for m in out["matches"]}
+    assert by_row["r1"]["method"] == "number_suggested" and by_row["r1"]["confidence"] == "review"
+    assert "r2" not in by_row
