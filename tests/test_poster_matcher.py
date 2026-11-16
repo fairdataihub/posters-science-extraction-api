@@ -165,3 +165,10 @@ def test_suggested_file_taken_for_review_when_title_agrees():
     by_row = {m["row_key"]: m for m in out["matches"]}
     assert by_row["r1"]["method"] == "number_suggested" and by_row["r1"]["confidence"] == "review"
     assert "r2" not in by_row
+
+
+def test_long_identical_title_not_flagged_on_authors_alone():
+    title = "Isolating sources of ionization in nearby Seyfert galaxies with integral field spectra"
+    pair = {"row_key": "r", "file_name": "a.pdf", "title": title, "authors": ["Garrett Polack"]}
+    poster = {"file_name": "a.pdf", "title": title, "authors": ["G. E. Pollack OCR"]}
+    assert pm.check_pair(pair, poster)["status"] == "agree"

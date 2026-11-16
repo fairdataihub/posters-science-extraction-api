@@ -64,6 +64,8 @@ PREFILTER = 0.25  # pairs sharing less than this (Dice of exact words) are not s
 # French and an English title of one project). A flagged true pair costs one
 # click; a wrong pair that passes publishes the wrong metadata.
 PAIR_AGREE = 0.50
+PAIR_TITLE_SURE = 0.90  # with PAIR_TITLE_SURE_WORDS, an author mismatch alone does not flag a pair
+PAIR_TITLE_SURE_WORDS = 6
 
 STOPWORDS = frozenset(
     "a an and are as at by de der die for from in into is of on or the to via vs with".split()
@@ -216,7 +218,8 @@ def check_pair(row: dict, poster: dict) -> dict:
     Does the extracted poster look like the sheet row it is paired with? The
     titles agree when their bag of words score (spelling slips, a title cut
     short and a subtitle allowed) reaches PAIR_AGREE. Authors with no family
-    name in common also count as a disagreement, when both sides have authors.
+    name in common also count as a disagreement, when both sides have authors
+    and the titles are not already near identical.
     """
     rw, pw = words(row.get("title", "")), words(poster.get("title", ""))
     if not rw or not pw:
@@ -225,7 +228,10 @@ def check_pair(row: dict, poster: dict) -> dict:
     out = {k: s[k] for k in ("title_score", "words_score", "author_score")}
     if s["words_score"] < PAIR_AGREE:
         return {**out, "status": "disagree", "reason": "title"}
-    if s["author_score"] == 0.0:
+    # A long, near-identical title settles it; otherwise authors with no family
+    # name in common flag the pair (a short generic title can repeat).
+    title_sure = s["words_score"] >= PAIR_TITLE_SURE and len(content_words(rw)) >= PAIR_TITLE_SURE_WORDS
+    if s["author_score"] == 0.0 and not title_sure:
         return {**out, "status": "disagree", "reason": "authors"}
     return {**out, "status": "agree", "reason": None}
 
@@ -420,6 +426,7 @@ def match_rows_to_posters(rows: list[dict], posters: list[dict], pairs: list[dic
         "rounds": rounds,
         "thresholds": {
             "pair_agree": PAIR_AGREE,
+            "pair_title_sure": PAIR_TITLE_SURE,
             "title_auto": TITLE_AUTO,
             "title_min": TITLE_MIN,
             "authors_min": AUTHORS_MIN,
