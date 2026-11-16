@@ -139,3 +139,14 @@ def test_form_field_samples_show_questions_only():
     result = sm.map_sheet(easychair_basic(), "bosc.xlsx", ["17.pdf"])
     form = next(m for m in result["mapping"] if m["column"] == "Form fields")
     assert form["samples"] == ["comments, diversity, doi, fee reason, license, source, submission type (answers not shown)"]
+
+
+def test_topics_become_keywords_and_group_headings_are_dropped():
+    sub = (b"#,title,authors,submitted,last updated,form fields,keywords,decision,notified,reviews sent,abstract,deleted?\n"
+           b'7,Ocean sensors,Jane Do,,,,"buoys\nsensors",accept,yes,no,x,no\n')
+    st = b"submission #,topic\n7,Marine Science\n7,Fairness\n7,sensors\n"
+    tl = b"topic,header?\nFairness,yes\nMarine Science,no\n"
+    res = sm.map_sheet(sub, "submission.csv", ["7.pdf"],
+                       extra_files=[(st, "submission_topic.csv"), (tl, "topics.csv")])
+    about = res["sheets"]["About the Poster"][0]
+    assert about["keywords"] == "buoys; sensors; Marine Science"

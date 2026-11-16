@@ -343,18 +343,49 @@ def is_author_table(headers: list[str]) -> bool:
     return _author_columns(headers) is not None
 
 
-def read_tables(files: list[tuple[bytes, str]]) -> tuple[Table, Table | None]:
+def _topic_columns(headers: list[str]) -> tuple[str, int, int] | None:
+    """
+    ("per_poster", number col, topic col) for EasyChair's submission_topic.csv
+    (submission #, topic), ("list", topic col, header? col) for topics.csv,
+    else None.
+    """
+    idx = {_norm_header(h): i for i, h in reversed(list(enumerate(headers))) if _norm_header(h)}
+    if "topic" not in idx or "title" in idx:
+        return None
+    number = next((idx[n] for n in AUTHOR_KEY_NUMBER if n in idx), None)
+    if number is not None and len(idx) <= 3:
+        return ("per_poster", number, idx["topic"])
+    if "header" in idx and len(idx) <= 3:
+        return ("list", idx["topic"], idx["header"])
+    return None
+
+
+def read_tables(files: list[tuple[bytes, str]]) -> tuple[Table, Table | None, dict[str, list[str]]]:
     """
     Pick the poster table (the sheet and header row with the most recognizable
     headers) and, when one is there, a per-author table to join to it. Several
     files are read as one workbook, so an EasyChair export can come as one
-    .xlsx or as submission.csv plus author.csv.
+    .xlsx or as submission.csv plus author.csv (plus submission_topic.csv and
+    topics.csv, whose topics become keywords). Returns the poster table, the
+    authors table and {submission number: [topics]}.
     """
     best = None
     authors = None
+    per_poster: list[tuple[str, str]] = []
+    group_headings: set[str] = set()
     for data, filename in files:
         for sheet_name, rows in _read_rows(data, filename):
             for i, cells in enumerate(rows[:15]):
+                topic = _topic_columns(cells)
+                if topic:
+                    kind, a, b = topic
+                    for row in rows[i + 1:]:
+                        row = list(row) + [""] * (max(a, b) + 1 - len(row))
+                        if kind == "per_poster" and clean(row[a]) and clean(row[b]):
+                            per_poster.append((clean(row[a]).lstrip("0"), clean(row[b])))
+                        elif kind == "list" and clean(row[b]).lower() == "yes":
+                            group_headings.add(clean(row[a]).lower())
+                    break
                 if is_author_table(cells):
                     if authors is None:
                         authors = _table_at(sheet_name, rows, i)
@@ -365,7 +396,11 @@ def read_tables(files: list[tuple[bytes, str]]) -> tuple[Table, Table | None]:
     if best is None or best[0] == 0:
         raise ValueError("Could not find a header row. The first rows should name the columns.")
     _, sheet_name, idx, rows = best
-    return _table_at(sheet_name, rows, idx), authors
+    topics: dict[str, list[str]] = {}
+    for number, topic in per_poster:
+        if topic.lower() not in group_headings:
+            topics.setdefault(number, []).append(topic)
+    return _table_at(sheet_name, rows, idx), authors, topics
 
 
 def read_table(data: bytes, filename: str) -> Table:
@@ -998,7 +1033,7 @@ def map_sheet(
     def warn(code: str, message: str, severity: str = "warning"):
         warnings.append({"code": code, "message": message, "severity": severity})
 
-    table, author_table = read_tables([(data, filename)] + list(extra_files or []))
+    table, author_table, topics_by_number = read_tables([(data, filename)] + list(extra_files or []))
     columns, tpl, notes = map_columns(table, overrides)
     for n in notes:
         warn("mapping_note", n)
@@ -1129,7 +1164,12 @@ def map_sheet(
         for c in by_field.get("track", []):
             if clean(cells[c.index]):
                 keywords.append(clean(cells[c.index]))
-        keywords = list(dict.fromkeys(keywords))
+        # EasyChair topics (submission_topic.csv) are the conference's own
+        # categories, so they are keywords too.
+        topic_key = (number or "").lstrip("0") or (file_key(file_name).lstrip("0") if file_name else "")
+        keywords += topics_by_number.get(topic_key, [])
+        seen: set[str] = set()
+        keywords = [k for k in keywords if not (k.lower() in seen or seen.add(k.lower()))]
 
         about = dict(link)
         if title:

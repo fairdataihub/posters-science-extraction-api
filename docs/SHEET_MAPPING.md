@@ -125,18 +125,19 @@ On 2,000 synthetic titles with OCR slips in 15 percent of words, shuffled word o
 
 Built from the column headings of a real BOSC 2026 basic submission download and the BOSC submission form.
 
-- Accepts the basic submission download (one sheet), the Conference data download (a workbook with Submissions and Authors sheets) and the same as CSV files (`submission.csv` plus `author.csv`). Headers are matched case-insensitively.
+- Accepts the basic submission download (one sheet), the Conference data download (a workbook with Submissions and Authors sheets) and the same as CSV files (`submission.csv` with `author.csv`, `submission_topic.csv` and `topics.csv`, dropped together). Headers are matched case-insensitively.
 - With an Authors table, authors come from it in row order: first and last name, affiliation, and an ORCID when Web page is an orcid.org link. Email, country and the corresponding flag are not stored. Without it, the one-string Authors column (`A, B and C`) is split.
 - Any sheet can bring an authors table the same way, not only EasyChair: a sheet or file with no title column, a column naming the poster (a submission, paper or poster number or id, or a file name) and a person's name (first and last name, or one name column). Affiliation or institution, and an ORCID column (a bare iD or an orcid.org link), are read when present.
 - Rows are skipped when Deleted is set, when Decision does not say accept (only once at least one row is accepted), or when the Submission Type form field is TALK ONLY.
 - Keywords are one per line (a keyword may contain commas). Track name goes into keywords.
+- Topics (`submission_topic.csv`, or a sheet with submission number and topic) are the conference's own categories, so they go into keywords too, after the submission's keywords and without repeats. Topics that `topics.csv` marks as group headings (`header?` = yes) are left out.
 - Form fields (`(name) value` lines): a previously published abstract's DOI becomes a related resource (IsDerivedFrom), and a source code link a related resource (URL, IsSupplementedBy). The license question is the license of the work the poster presents, so it comes back as a hint in `hints`, never as the poster's license. All other questions, including fees, diversity, income level, conflicts of interest and comments for the chairs, are dropped as the file is read. The confirm screen shows the question names only, never the answers.
 - Poster files: EasyChair's Download submissions zip names files by submission number, which tier 3 links. At ISMB and BOSC the poster PDFs come from ISMB's poster platform instead, whose file names carry ISMB's own number (`ISMB20262153PatelPoster.pdf`), not documented as the EasyChair one. Those numbers are only suggestions, so the rows are placed by title.
 
 ## Value parsing (deterministic, no LLM)
 
 - Placeholders such as `no`, `n/a`, `-` count as empty.
-- Titles lose the poster's index in front (`12 - Title` (Curious uses a long dash), `P12: Title`, `#12 | Title`, `Poster 12. Title`) when the index is the row's own poster number, or when most titles in the column have one. `3D printing` or `2024: a review` keep their numbers.
+- Titles lose the poster's index in front (`12 - Title` (Curious uses a long dash), `P12: Title`, `#12 | Title`, `Poster 12. Title`) only when it is the row's own poster number (when the sheet has one), or, with no number column, when most titles in the column have one. A year (`2026: A review`), a range (`2019-2023 trends`) or a decimal (`3.5 T MRI`) is never cut, and `3D printing` keeps its number.
 - Authors in one cell are split on commas, semicolons, `and` and new lines. Trailing digits or superscripts are affiliation numbers (`John Do1`, `Ann Lee1,2`, `Bo Chen` with superscript 3). Run-together marks like `12` read as 1 and 2 when 12 is not in the affiliation list.
 - Affiliations as a numbered list (`1 Dept A` on each line, or `1. A; 2. B`) are attached by number. A single unnumbered affiliation goes to every author. Several unnumbered ones go to every author with a warning.
 - Names split as given and family name, keeping particles (`van der Berg`) with the family name. `Family, Given` is also read.
