@@ -30,6 +30,7 @@ from validation import validate_and_fix_extraction
 from job_queue import claim_next_job, has_batch_columns, fail_interrupted_uploads
 from scheduler import QueueScheduler
 from feature_flags import FeatureContext, features_for_environment
+from batch_notifications import log_startup_status, notify_finished_batches
 
 
 # --- Config from config.py --------------------------------------------------
@@ -202,6 +203,7 @@ def generate_and_upload_thumbnail(local_path: str, file_path: str) -> Optional[s
     local_path: Path to the downloaded temp file (its extension determines which renderer is used).
     file_path:  Bunny storage path, used to derive the thumbnail destination:
                     posters/<environment>/<uid>/filename.ext  →  thumbnails/<environment>/<uid>/image.jpeg
+                    posters/b/<env>/<jobId>/<posterId>/file   →  thumbnails/b/<env>/<jobId>/<posterId>/image.jpeg
 
     Returns the full thumbnail storage URL on success, None on failure.
     """
@@ -893,6 +895,7 @@ def run_one_cycle(
         print(
             f"[status] run_one_cycle: processing {kind} job_id={job_id} poster_id={poster_id} file={file_name}"
         )
+        print(f"[status] run_one_cycle: poster {poster_id} source file_path={file_path}")
 
         suffix = Path(file_name).suffix.lower() or ".bin"
         tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
@@ -991,6 +994,15 @@ def run_one_cycle(
                 print(f"[status] run_one_cycle: removed temp file {tmp_path}")
 
     finally:
+        # Runs on idle cycles too, so batches finished by the upload timeout or
+        # stuck-job cleanup are also emailed. Never let it affect the job.
+        try:
+            conn.rollback()
+            notify_finished_batches(conn, context)
+        except Exception as error:
+            with contextlib.suppress(Exception):
+                conn.rollback()
+            log(f"Job worker: batch completion email sweep failed ({type(error).__name__})")
         conn.close()
         print("[status] run_one_cycle: closed DB connection")
 
@@ -1015,6 +1027,7 @@ def run_worker_loop(
         log("Job worker: no database targets configured; worker not started")
         return
     contexts = {label: features_for_environment(label) for label in targets}
+    log_startup_status(contexts)
     scheduler = QueueScheduler(
         list(targets), int(config.get_env("SINGLE_JOBS_PER_BULK") or "3")
     )
