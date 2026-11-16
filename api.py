@@ -134,9 +134,10 @@ def thumbnails_generate():
     file_path = (body.get("file_path") or body.get("pdf_path") or "").strip()
     if not file_path:
         return jsonify({"error": "file_path is required"}), 400
-    print(f"[status] api: thumbnail requested for file_path={file_path}")
+    # !r escapes newlines, so a crafted path cannot forge extra log lines.
+    print(f"[status] api: thumbnail requested for file_path={file_path!r}")
     if not _FILE_PATH_RE.match(file_path):
-        print(f"[status] api: rejected file_path={file_path} (unsupported layout)")
+        print(f"[status] api: rejected file_path={file_path!r} (unsupported layout)")
         message = (
             "file_path must match posters/<env>/<uid>"
             "[/version-<sequence>-<id>]/<filename>.(pdf|jpg|jpeg|png) or "

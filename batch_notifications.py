@@ -117,20 +117,29 @@ def render_email(
     return subject, body
 
 
-def send_email(api_key: str, to: str, subject: str, body: str) -> Optional[bool]:
+def send_email(
+    api_key: str, to: str, subject: str, body: str, idempotency_key: str,
+) -> Optional[bool]:
     """Send through Resend.
 
     Returns True when accepted, False when Resend rejected the message for a
     reason a retry will not fix (for example an invalid address), and None for
-    a failure that should be retried on a later sweep: network errors, 429s,
-    5xx responses, and 400/401/403 key or sender problems, which are
+    a failure that should be retried on a later sweep: network errors, 408s,
+    429s, 5xx responses, and 400/401/403 key or sender problems, which are
     configuration faults rather than problems with this batch.
+
+    `idempotency_key` makes Resend drop a repeat of an email it already
+    accepted, for 24 hours. That covers a crash or failed commit between the
+    send and recording it, which would otherwise email the owner twice.
     """
     domain = to.split("@")[-1] if "@" in to else "unknown"
     try:
         resp = requests.post(
             RESEND_URL,
-            headers={"Authorization": f"Bearer {api_key}"},
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Idempotency-Key": idempotency_key,
+            },
             json={"from": FROM_ADDRESS, "to": [to], "subject": subject, "html": body},
             timeout=20,
         )
@@ -155,8 +164,16 @@ def send_email(api_key: str, to: str, subject: str, body: str) -> Optional[bool]
             "check RESEND_API_KEY and that posters.science is verified on its Resend account; will retry"
         )
         return None
-    # 429 and 5xx are worth retrying; other 4xx will fail the same way again.
-    if resp.status_code == 429 or resp.status_code >= 500:
+    if resp.status_code == 409:
+        # Resend has already seen this idempotency key: the email went out on
+        # an earlier sweep (or is going out now) but was never recorded.
+        _log(
+            f"Resend already has this email ({reason}), recipientDomain={domain}; "
+            "recording it as sent"
+        )
+        return True
+    # 408, 429 and 5xx are worth retrying; other 4xx will fail the same way again.
+    if resp.status_code in (408, 429) or resp.status_code >= 500:
         _log(
             f"Resend returned {resp.status_code}: {reason}, recipientDomain={domain}; will retry"
         )
@@ -222,7 +239,10 @@ def notify_finished_batches(conn, context: FeatureContext) -> int:
                 batch["givenName"], batch["name"], batch["totalFiles"],
                 batch["completed"], batch["failed"], dashboard_url,
             )
-            result = send_email(api_key, batch["emailAddress"], subject, body)
+            result = send_email(
+                api_key, batch["emailAddress"], subject, body,
+                idempotency_key=f"batch-completion/{context.environment}/{batch['id']}",
+            )
             if result is None:
                 conn.rollback()
                 break
