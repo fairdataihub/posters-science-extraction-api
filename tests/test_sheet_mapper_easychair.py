@@ -150,3 +150,23 @@ def test_topics_become_keywords_and_group_headings_are_dropped():
                        extra_files=[(st, "submission_topic.csv"), (tl, "topics.csv")])
     about = res["sheets"]["About the Poster"][0]
     assert about["keywords"] == "buoys; sensors; Marine Science"
+
+
+def test_track_number_column_never_links_files():
+    # Every row is in track 1 and the files are named by submission number:
+    # only "#" may link them.
+    rows = [easychair_row(n, f"Title {n}", "Ann Lee") for n in (1, 2, 3)]
+    for r in rows:
+        r[1] = 1 if r[0] != 2 else 2
+    result = sm.map_sheet(xlsx(EASYCHAIR_HEADERS, rows), "e.xlsx", ["1.pdf", "2.pdf", "3.pdf"])
+    about = {r["title"]: r["file_name"] for r in result["sheets"]["About the Poster"]}
+    assert about == {"Title 1": "1.pdf", "Title 2": "2.pdf", "Title 3": "3.pdf"}
+    assert result["file_column"]["column"] == "#"
+
+
+@pytest.mark.parametrize("value", [False, "FALSE", "no", 0, None])
+def test_deleted_column_false_keeps_the_row(value):
+    rows = [easychair_row(1, "Kept", "Ann Lee", deleted=value), easychair_row(2, "Gone", "Bo Chen", deleted=True)]
+    result = sm.map_sheet(xlsx(EASYCHAIR_HEADERS, rows), "e.xlsx", ["1.pdf", "2.pdf"])
+    assert [r["title"] for r in result["sheets"]["About the Poster"]] == ["Kept"]
+    assert result["skipped"]["deleted"] == 1

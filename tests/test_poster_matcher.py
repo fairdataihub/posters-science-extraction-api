@@ -172,3 +172,32 @@ def test_long_identical_title_not_flagged_on_authors_alone():
     pair = {"row_key": "r", "file_name": "a.pdf", "title": title, "authors": ["Garrett Polack"]}
     poster = {"file_name": "a.pdf", "title": title, "authors": ["G. E. Pollack OCR"]}
     assert pm.check_pair(pair, poster)["status"] == "agree"
+
+
+def test_suggested_file_not_taken_when_another_row_fits_it_better():
+    # The suggestion agrees only loosely; row r2's title is the poster's own.
+    rows = [
+        {"row_key": "r1", "title": "Coastal ocean sensors", "suggested_file": "poster (1).pdf"},
+        {"row_key": "r2", "title": "Ocean sensor networks for coastal monitoring in the Baltic"},
+    ]
+    posters = [{"file_name": "poster (1).pdf", "title": "Ocean sensor networks for coastal monitoring in the Baltic"}]
+    out = pm.match_rows_to_posters(rows, posters)
+    assert got(out) == {"r2": ("poster (1).pdf", "title", "high")}
+
+
+def test_blank_extraction_is_still_a_file_without_a_row():
+    out = pm.match_rows_to_posters(
+        [row("r1", "Ocean sensor networks")],
+        [poster("a.pdf", "Ocean sensor networks"), poster("blank.pdf", "")],
+    )
+    assert got(out) == {"r1": ("a.pdf", "title", "high")}
+    assert out["unmatched_files"] == ["blank.pdf"] and out["blank_files"] == ["blank.pdf"]
+
+
+def test_wrong_field_types_are_read_not_crashed_on():
+    rows = [{"row_key": "r1", "title": 5, "authors": "Ann Lee"}, {"row_key": ["x"], "title": "t"}]
+    posters = [{"file_name": "a.pdf", "title": None, "authors": [1, "Ann Lee"]}, {"file_name": {"x": 1}}]
+    pairs = [{"row_key": "r9", "file_name": "a.pdf", "title": ["list"], "authors": None}]
+    out = pm.match_rows_to_posters(rows, posters, pairs)
+    assert out["pair_checks"][0]["status"] == "unchecked"
+    assert out["matches"] == []

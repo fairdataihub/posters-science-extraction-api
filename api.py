@@ -248,7 +248,12 @@ def sheets_match():
         return jsonify({"error": "at most 2000 rows, 2000 posters and 2000 pairs"}), 413
     if not all(isinstance(x, dict) for x in rows + posters + pairs):
         return jsonify({"error": "rows, posters and pairs must be arrays of objects"}), 400
-    return jsonify(match_rows_to_posters(rows, posters, pairs)), 200
+    try:
+        result = match_rows_to_posters(rows, posters, pairs)
+    except Exception as e:  # fields are type checked in the matcher; this is a last guard
+        print(f"[status] api: sheet match error: {e}")
+        return jsonify({"error": "Could not match these rows"}), 422
+    return jsonify(result), 200
 
 
 @app.route("/jobs/check", methods=["POST"])

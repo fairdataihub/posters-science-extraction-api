@@ -28,7 +28,12 @@ extracted metadata only.
 
 Before the loop, a row whose suggested file (its number appears in the file
 name but the name does not start with it) has an agreeing title takes that
-file, for review ("number_suggested").
+file, for review ("number_suggested"), unless another row or poster fits as
+well or better by title (within FINAL_MARGIN).
+
+Inputs are read defensively: a field of the wrong type is read as empty, and
+a poster extraction read nothing from is listed with the files without a row
+(and in blank_files), never dropped.
 
 Rows the sheet already paired with a file (file name column, close file name,
 number) are checked too: their extracted title has to agree with the sheet
@@ -260,6 +265,48 @@ def check_pairs(pairs: list[dict], posters: list[dict]) -> list[dict]:
     return out
 
 
+def _text(value) -> str:
+    return value.strip() if isinstance(value, str) else ""
+
+
+def _names(value) -> list[str]:
+    if isinstance(value, str):
+        value = [value]
+    if not isinstance(value, list):
+        return []
+    return [v.strip() for v in value if isinstance(v, str) and v.strip()]
+
+
+def normalize_items(items) -> list[dict]:
+    """
+    Keep each item's fields in the shape the matcher reads: strings for
+    row_key, file_name, title, method and suggested_file, a list of name
+    strings for authors. A wrong type (a number for a title, one string for
+    the authors) is read or dropped instead of failing the request.
+    """
+    out = []
+    for item in items or []:
+        if not isinstance(item, dict):
+            continue
+        clean = {k: _text(item.get(k)) for k in ("row_key", "file_name", "title", "method", "suggested_file", "number")}
+        clean["authors"] = _names(item.get("authors"))
+        out.append(clean)
+    return out
+
+
+def _best_other(target: dict, others: list[dict]) -> float:
+    """Highest bag of words title score between target and any of others."""
+    tw = content_words(words(target.get("title", "")))
+    tset = set(tw)
+    best = 0.0
+    for o in others:
+        ow = content_words(words(o.get("title", "")))
+        if not tset & set(ow):
+            continue
+        best = max(best, words_score(tw, ow))
+    return best
+
+
 def match_rows_to_posters(rows: list[dict], posters: list[dict], pairs: list[dict] | None = None) -> dict:
     """
     rows: [{row_key, title, authors: [names], suggested_file?}] from the sheet,
@@ -274,16 +321,20 @@ def match_rows_to_posters(rows: list[dict], posters: list[dict], pairs: list[dic
     unmatched_rows (with the closest poster left), unmatched_files,
     pair_checks and flagged.
     """
-    pairs = [p for p in (pairs or []) if isinstance(p, dict) and p.get("file_name")]
+    rows, posters = normalize_items(rows), normalize_items(posters)
+    pairs = [p for p in normalize_items(pairs) if p["file_name"]]
     pair_checks = check_pairs(pairs, posters)
     taken = {p["file_name"] for p in pairs}
-    rows = [r for r in rows if r.get("row_key")]
-    posters = [
-        p for p in posters
-        if p.get("file_name") and p["file_name"] not in taken and (p.get("title") or p.get("authors"))
-    ]
+    rows = [r for r in rows if r["row_key"]]
+    posters = [p for p in posters if p["file_name"] and p["file_name"] not in taken]
+    # A poster extraction read nothing from (no title, no authors) cannot be
+    # matched, but it is still a file without a row, so it is reported.
+    blank_files = [p["file_name"] for p in posters if not (p["title"] or p["authors"])]
+    posters = [p for p in posters if p["title"] or p["authors"]]
 
-    # A file suggested by its number is taken first, if its title agrees.
+    # A file suggested by its number is taken first, if its title agrees and
+    # no other row or poster fits better: the number in a file name ("(2)", a
+    # version) is weak evidence, so it never wins against a clearer title.
     suggested_matches: list[dict] = []
     by_file = {p["file_name"]: p for p in posters}
     for r in rows:
@@ -292,6 +343,11 @@ def match_rows_to_posters(rows: list[dict], posters: list[dict], pairs: list[dic
             continue
         check = check_pair(r, poster)
         if check["status"] == "agree":
+            other_rows = [o for o in rows if o is not r]
+            other_posters = [p for p in by_file.values() if p is not poster]
+            rival = max(_best_other(poster, other_rows), _best_other(r, other_posters))
+            if check["words_score"] - rival < FINAL_MARGIN:
+                continue
             suggested_matches.append(
                 {
                     "row_key": r["row_key"],
@@ -420,7 +476,8 @@ def match_rows_to_posters(rows: list[dict], posters: list[dict], pairs: list[dic
     return {
         "matches": suggested_matches + matches,
         "unmatched_rows": unmatched_rows,
-        "unmatched_files": [p["file_name"] for j, p in enumerate(posters) if j not in used_files],
+        "unmatched_files": [p["file_name"] for j, p in enumerate(posters) if j not in used_files] + blank_files,
+        "blank_files": blank_files,
         "pair_checks": pair_checks,
         "flagged": [c for c in pair_checks if c["status"] == "disagree"],
         "rounds": rounds,

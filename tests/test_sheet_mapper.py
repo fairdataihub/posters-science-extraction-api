@@ -349,3 +349,59 @@ def test_title_prefix_cut_only_for_real_indexes():
     # A row's own number: only that number is cut.
     assert strip_position_prefixes(["12 - Title", "7 - Other"], ["12", "8"]) == ["Title", "7 - Other"]
     assert strip_position_prefixes(["3.5 T MRI at scale"], ["3"]) == ["3.5 T MRI at scale"]
+
+
+def test_superscript_affiliations_inline():
+    numbered, plain = sm.parse_affiliations("¹Dept A, Uni X ²Dept B")
+    assert numbered == {1: "Dept A, Uni X", 2: "Dept B"} and plain == []
+
+
+@pytest.mark.parametrize("cell, names", [
+    ("Smith, John; Doe, Jane", ["Smith, John", "Doe, Jane"]),
+    ("Smith, John1,2; van der Berg, Anna Maria3", ["Smith, John", "van der Berg, Anna Maria"]),
+    ("John Do, Ann Lee", ["John Do", "Ann Lee"]),
+    ("John Do; Ann Lee", ["John Do", "Ann Lee"]),
+])
+def test_family_given_authors_split_on_semicolons(cell, names):
+    assert [a["name"] for a in sm.parse_authors(cell)] == names
+
+
+def test_family_given_authors_map_to_given_and_family():
+    data = "File name,Title,Authors\na.pdf,First,\"Smith, John1; Doe, Jane2\"\n"
+    result = sm.map_sheet(data.encode(), "s.csv", ["a.pdf"])
+    people = [(c["given_name"], c["family_name"]) for c in result["sheets"]["Creators"]]
+    assert people == [("John", "Smith"), ("Jane", "Doe")]
+
+
+@pytest.mark.parametrize("name", ["3D_imaging_poster.pdf", "16S_rRNA.pdf", "submission_17b.pdf"])
+def test_number_glued_to_letters_is_not_a_submission_number(name):
+    assert sm.file_number(name) is None
+
+
+def test_placeholder_row_is_not_taken_for_the_header():
+    data = "Poster Title,Authors,Notes,Something\nno,x,no,x\nOcean sensors,Ann Lee,,\n"
+    table = sm.read_table(data.encode(), "s.csv")
+    assert table.header_row == 1
+
+
+def test_poster_list_with_id_and_author_columns_is_not_an_authors_table():
+    data = "ID,Poster Title,Author\n1,Ocean sensors,Ann Lee\n2,Soil maps,Bo Chen\n"
+    result = sm.map_sheet(data.encode(), "s.csv", [])
+    assert result["authors_table"] is None
+    assert [r["title"] for r in result["sheets"]["About the Poster"]] == ["Ocean sensors", "Soil maps"]
+
+
+def test_repeated_poster_numbers_link_nothing_and_warn():
+    data = "Position,Track,Title\n1,Health,First\n1,Digital,Second\n2,Health,Third\n3,Health,Fourth\n4,Health,Fifth\n"
+    result = sm.map_sheet(data.encode(), "s.csv", ["01_a.pdf", "02_b.pdf", "03_c.pdf", "04_d.pdf"])
+    names = {r["row_key"]: r["file_name"] for r in result["sheets"]["About the Poster"]}
+    assert names == {"row-2": "", "row-3": "", "row-4": "02_b.pdf", "row-5": "03_c.pdf", "row-6": "04_d.pdf"}
+    assert any(w["code"] == "duplicate_numbers" for w in result["warnings"])
+
+
+@pytest.mark.parametrize("decision, kept", [
+    ("accept", True), ("Accept (poster)", True), ("Not accepted", False), ("non-accepted", False),
+    ("reject", False), ("withdrawn", False), ("pending", False),
+])
+def test_decisions(decision, kept):
+    assert sm._accepted(decision) is kept

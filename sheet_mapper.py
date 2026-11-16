@@ -250,7 +250,16 @@ def _capped(rows, sheet_name: str) -> list:
 def _read_rows(data: bytes, filename: str) -> list[tuple[str, list[list[str]]]]:
     """Return [(sheet name, rows of cell text)] for every sheet in the file."""
     ext = os.path.splitext(filename.lower())[1]
+    if ext == ".xls" and data[:2] == b"PK":
+        ext = ".xlsx"  # an .xlsx saved under an .xls name
+    if ext == ".xls" and data.lstrip()[:1] == b"<":
+        raise ValueError(
+            "This .xls file is a web page or XML export, not an Excel workbook. Open it in Excel and save it as "
+            ".xlsx or .csv, then retry."
+        )
     if ext in (".csv", ".tsv", ".txt"):
+        # A long abstract can pass the csv module's 128 KB default cell limit.
+        csv.field_size_limit(max(csv.field_size_limit(), 10 * 1024 * 1024))
         text = data.decode("utf-8-sig", errors="replace")
         if ext == ".tsv":
             delimiter = "\t"
@@ -283,7 +292,17 @@ def _read_rows(data: bytes, filename: str) -> list[tuple[str, list[list[str]]]]:
 
 
 def _header_score(cells: list[str]) -> int:
-    return sum(1 for c in cells if _norm_header(c) in _ALIAS_INDEX)
+    """
+    How much a row looks like a header row: the number of different fields
+    its cells name. Placeholder words ("no", "x", "-") never count, so a first
+    data row of "no" cells is not taken for the header.
+    """
+    fields = set()
+    for c in cells:
+        key = _norm_header(c)
+        if key and c.strip().lower() not in PLACEHOLDERS and key in _ALIAS_INDEX:
+            fields.add(_ALIAS_INDEX[key])
+    return len(fields)
 
 
 def _table_at(sheet_name: str, rows: list[list[str]], idx: int) -> Table:
@@ -302,6 +321,7 @@ def _table_at(sheet_name: str, rows: list[list[str]], idx: int) -> Table:
 # sheet or author.csv, or any organizer's authors tab). It needs a column that
 # names the poster (a number or a file name), a person's name, and no title
 # column (that would make it the poster list itself).
+POSTER_LIST_FIELDS = {"title", "abstract", "keywords", "decision", "form_fields"}
 AUTHOR_KEY_NUMBER = {
     "submission number", "submission", "submission id", "paper", "paper id", "paper number", "poster number",
     "poster", "poster id", "position", "abstract id", "abstract number", "id",
@@ -317,7 +337,9 @@ AUTHOR_ORCID = {"orcid", "orcid id", "orcid url", "web page"}
 def _author_columns(headers: list[str]) -> dict[str, int] | None:
     """Column index per role for an authors table, or None when it is not one."""
     idx = {_norm_header(h): i for i, h in reversed(list(enumerate(headers))) if _norm_header(h)}
-    if "title" in idx:
+    # A column only a poster list has ("Title", "Poster Title", "Abstract")
+    # makes this the poster list, however it names its authors.
+    if any(_ALIAS_INDEX.get(k) in POSTER_LIST_FIELDS or k in ("title", "topic") for k in idx):
         return None
 
     def pick(names: set[str]) -> int | None:
@@ -564,6 +586,10 @@ def file_key(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "", unicodedata.normalize("NFKD", stem).encode("ascii", "ignore").decode().lower())
 
 
+# Fields a file column may have been mapped to, preferred first.
+FILE_COLUMN_FIELDS = ("file_name", "poster_number", None)
+
+
 def find_file_column(table: Table, columns: list[ColumnMap], file_names: list[str]) -> tuple[ColumnMap | None, dict[str, str]]:
     """
     The file column is decided by its values, not its header: the column whose
@@ -574,19 +600,27 @@ def find_file_column(table: Table, columns: list[ColumnMap], file_names: list[st
     for name in file_names:
         by_key.setdefault(file_key(name), name)
 
-    best: tuple[float, ColumnMap] | None = None
+    best: tuple[float, int, ColumnMap] | None = None
     for c in columns:
+        # Only a column that can name a file: one named for files, a poster
+        # number, or one we could not place. "Track #" (ignored) or a title
+        # column never links rows, even when its values look like file names.
+        if c.field not in FILE_COLUMN_FIELDS:
+            continue
         values = [cells[c.index] for _, cells in table.rows if cells[c.index].strip()]
         if not values:
             continue
         if by_key:
-            hits = sum(1 for v in values if file_key(v) in by_key)
+            # Each file counts once, so a column that repeats a value ("1" in
+            # every row) cannot pass as a file column.
+            hits = len({file_key(v) for v in values} & set(by_key))
             score = hits / len(values)
         else:
             looks = sum(1 for v in values if v.lower().endswith(POSTER_EXTENSIONS))
             score = looks / len(values) if c.field == "file_name" else 0.0
-        if score >= 0.5 and (best is None or score > best[0]):
-            best = (score, c)
+        rank = FILE_COLUMN_FIELDS.index(c.field)
+        if score >= 0.5 and (best is None or (score, -rank) > (best[0], -best[1])):
+            best = (score, rank, c)
     if best is None and by_key:
         # Few exact hits (typos, renamed files): still use a column headed like
         # a file column whose values look like file names. Its cells then link
@@ -596,11 +630,11 @@ def find_file_column(table: Table, columns: list[ColumnMap], file_names: list[st
             if c.field == "file_name" and values:
                 looks = sum(1 for v in values if v.lower().endswith(POSTER_EXTENSIONS))
                 if looks / len(values) >= 0.5:
-                    best = (0.0, c)
+                    best = (0.0, 0, c)
                     break
     if best is None:
         return None, by_key
-    chosen = best[1]
+    chosen = best[2]
     for c in columns:
         if c is not chosen and c.field == "file_name":
             c.field, c.source = None, "none"
@@ -642,14 +676,17 @@ def file_number(name: str) -> str | None:
     """
     The submission number a file is named by, when the name says so plainly:
     it starts with the number ("17.pdf", "17_patel.pdf", "017-x.pdf") or
-    carries it after "submission" ("bosc_submission_17.pdf"). Only these pair
-    a row on their own.
+    carries it after "submission" ("bosc_submission_17.pdf"), and the number
+    stands alone ("3D_imaging.pdf" is not 3). Only these pair a row on their
+    own.
     """
     stem = _stem(name)
-    m = re.search(r"submission[\s_-]*0*(\d+)", stem)
+    m = re.search(r"submission[\s_-]*0*(\d+)(?![a-z0-9])", stem)
     if m:
         return m.group(1)
-    m = re.match(r"0*(\d+)(?![\d])", stem)
+    # The number must end at a separator or the end of the name, so
+    # "3D_imaging.pdf" or "16S_rRNA.pdf" is not submission 3 or 16.
+    m = re.match(r"0*(\d+)(?![a-z0-9])", stem)
     if not m:
         return None
     # "2026_smith_poster.pdf" starts with a year, not a submission number.
@@ -667,7 +704,7 @@ def file_numbers(name: str) -> list[str]:
     from them is only suggested for the organizer to check.
     """
     stem = _stem(name)
-    if re.search(r"submission[\s_-]*\d", stem):
+    if re.search(r"submission[\s_-]*\d+(?![a-z0-9])", stem):
         return [file_number(name)]
     out: list[str] = []
     plain = file_number(name)
@@ -693,7 +730,8 @@ def link_files_by_number(
       waits for title matching, with this file as a suggestion to check.
 
     A file that could belong to two rows is left alone (it falls through to
-    title matching). Rows a file column already linked never get here.
+    title matching), and so is a number two rows share. Rows a file column
+    already linked never get here.
     """
     if not file_names:
         return None, {}, {}
@@ -701,6 +739,7 @@ def link_files_by_number(
         if c.field != "poster_number":
             continue
         ids: dict[str, int] = {}
+        repeated: set[str] = set()
         values = 0
         for i, (_, cells) in enumerate(table.rows):
             v = cells[c.index].strip()
@@ -708,9 +747,16 @@ def link_files_by_number(
                 continue
             values += 1
             if re.fullmatch(r"\d+", v):
-                ids.setdefault(v.lstrip("0") or "0", i)
+                key = v.lstrip("0") or "0"
+                if key in ids:
+                    repeated.add(key)
+                ids.setdefault(key, i)
         if not values or len(ids) / values < 0.8:
             continue
+        # A number two rows share (positions that restart in each track) names
+        # neither row for sure, so it links nothing; those rows wait for titles.
+        for key in repeated:
+            del ids[key]
         links: dict[int, str] = {}
         suggestions: dict[int, str] = {}
         for name in file_names:
@@ -731,7 +777,8 @@ def link_files_by_number(
 # Value parsers
 # ---------------------------------------------------------------------------
 
-_SUPERSCRIPTS = str.maketrans("\u2070\u00b9\u00b2\u00b3\u2074\u2075\u2076\u2077\u2078\u2079", "0123456789")
+_SUPERSCRIPT_DIGITS = "\u2070\u00b9\u00b2\u00b3\u2074\u2075\u2076\u2077\u2078\u2079"
+_SUPERSCRIPTS = str.maketrans(_SUPERSCRIPT_DIGITS, "0123456789")
 _POSITION_PREFIX = re.compile(
     # The separator must not run into another digit, so a range or decimal
     # ("2019-2023 trends", "3.5 T MRI") is never read as an index.
@@ -771,13 +818,43 @@ def strip_position_prefixes(titles: list[str], numbers: list[str] | None = None)
     return out
 
 
+def _family_given_list(text: str) -> list[dict] | None:
+    """
+    Authors written "Family, Given" and separated by semicolons ("Smith,
+    John; Doe, Jane", the usual citation form). None when the cell is not in
+    that form, so the usual comma split applies. Only semicolons count: a line
+    break or "and" between "John Do, Ann Lee" pairs is just as likely to
+    separate two lists of "Given Family" names.
+    """
+    if ";" not in text:
+        return None
+    groups = [g.strip() for g in re.split(r"\s*;\s*", text) if g and g.strip()]
+    if len(groups) < 2:
+        return None
+    out = []
+    for g in groups:
+        m = re.match(r"^(.*?[^\d\s,])\s*((?:\d{1,2}\s*,?\s*)*)$", g)
+        if not m or m.group(1).count(",") != 1:
+            return None
+        family, given = (p.strip() for p in m.group(1).split(","))
+        if not family or not given or len(family.split()) > 4 or len(given.split()) > 4 or re.search(r"\d", family + given):
+            return None
+        out.append({"name": f"{family}, {given}", "numbers": [int(n) for n in re.findall(r"\d{1,2}", m.group(2))]})
+    return out
+
+
 def parse_authors(cell: str) -> list[dict]:
     """
     "John Do1, Ann Lee1,2, Bo Chen\u00b3" -> [{name, numbers}]. Authors are split
     on commas, semicolons, " and " and newlines; trailing digits are affiliation
     numbers. A bare number after a comma ("Lee1, 2") belongs to the author before.
+    "Smith, John; Doe, Jane" (every author as "Family, Given", split by
+    semicolons, lines or "and") is two authors, kept in that form.
     """
     text = (cell or "").translate(_SUPERSCRIPTS).replace("*", "")
+    inverted = _family_given_list(text)
+    if inverted is not None:
+        return inverted
     parts = [p.strip() for p in re.split(r"\s*[,;\n]\s*|\s+and\s+|\s*&\s*", text) if p and p.strip()]
     authors: list[dict] = []
     for part in parts:
@@ -828,7 +905,12 @@ def parse_affiliations(cell: str) -> tuple[dict[int, str], list[str]]:
     Numbered lists ("1 Dept A\\n2 Dept B", "1. A; 2. B", "\u00b9A \u00b2B") become
     {1: "Dept A", 2: "Dept B"}. Anything unnumbered is returned as a plain list.
     """
-    text = (cell or "").translate(_SUPERSCRIPTS).strip()
+    raw = (cell or "").strip()
+    if raw[:1] in _SUPERSCRIPT_DIGITS:
+        # Inline superscript marks ("¹Dept A ²Dept B"): each mark starts a
+        # new affiliation, so put it on its own line before reading the list.
+        raw = re.sub(f"[{_SUPERSCRIPT_DIGITS}]+", lambda m: "\n" + m.group(0).translate(_SUPERSCRIPTS) + " ", raw)
+    text = raw.translate(_SUPERSCRIPTS).strip()
     if not text:
         return {}, []
     numbered = list(re.finditer(r"(?:^|[\n;])\s*(\d{1,2})[\s.):]+(?=\D)", text))
@@ -1016,9 +1098,21 @@ def _creator_rows_from_table(link: dict, people: list[dict]) -> list[dict]:
     return rows
 
 
+# Cell values that mean "no" in a yes/no column (Excel stores FALSE, a CSV
+# export may write 0 or "no").
+FALSE_VALUES = {"", "no", "n", "false", "0", "none", "-", "--", "n/a", "na", "null", "nil"}
+
+
+def _flag_set(value: str) -> bool:
+    """A Deleted or Withdrawn cell that says yes (yes, TRUE, 1, a date, "withdrawn")."""
+    return (value or "").strip().lower() not in FALSE_VALUES
+
+
 def _accepted(decision: str) -> bool:
-    d = decision.lower()
-    return "accept" in d and "reject" not in d
+    d = re.sub(r"\s+", " ", decision.lower())
+    if re.search(r"\b(?:not|non|un)[\s-]?accept|reject|declin|withdr|cancel", d):
+        return False
+    return "accept" in d
 
 
 def map_sheet(
@@ -1067,7 +1161,8 @@ def map_sheet(
         warn("no_decisions", "No row is marked accepted yet, so every row is kept.", "info")
     kept: list[tuple[int, list[str], dict]] = []
     for n, cells in data_rows:
-        if one("deleted", cells):
+        deleted_cols = by_field.get("deleted") or []
+        if deleted_cols and _flag_set(cells[deleted_cols[0].index]):
             skipped["deleted"] += 1
             continue
         if any_accepted and not _accepted(one("decision", cells)):
@@ -1082,6 +1177,22 @@ def map_sheet(
     if any(skipped.values()):
         parts = [f"{v} {reasons[k]}" for k, v in skipped.items() if v]
         warn("rows_skipped", "Skipped rows that are not accepted posters: " + ", ".join(parts) + ".", "info")
+
+    # A poster number two rows share (positions that restart per track) names
+    # neither row for sure: no file, authors table or topic joins by it.
+    counts: dict[str, int] = {}
+    for _, cells, _ in kept:
+        key = one("poster_number", cells).lstrip("0")
+        if key:
+            counts[key] = counts.get(key, 0) + 1
+    repeated_numbers = {k for k, v in counts.items() if v > 1}
+    if repeated_numbers:
+        shown = ", ".join(sorted(repeated_numbers, key=lambda k: (len(k), k))[:10])
+        warn(
+            "duplicate_numbers",
+            f"{len(repeated_numbers)} poster number(s) appear on more than one row ({shown}), so those rows are not "
+            "linked by number. They are matched by title after extraction.",
+        )
 
     # Link rows to files. Each tier only sees rows and files still unlinked.
     links: dict[int, str] = {}
@@ -1140,7 +1251,8 @@ def map_sheet(
         link = {"row_key": row_key, "file_name": file_name}
 
         number = one("poster_number", cells).lstrip("0")
-        table_people = people.get(number, []) if number else []
+        join_number = "" if number in repeated_numbers else number
+        table_people = people.get(join_number, []) if join_number else []
         if not table_people and file_name:
             # Authors table keyed by what the rows link files with ("7" for 7.pdf).
             key = file_key(file_name)
@@ -1166,7 +1278,7 @@ def map_sheet(
                 keywords.append(clean(cells[c.index]))
         # EasyChair topics (submission_topic.csv) are the conference's own
         # categories, so they are keywords too.
-        topic_key = (number or "").lstrip("0") or (file_key(file_name).lstrip("0") if file_name else "")
+        topic_key = join_number or (file_key(file_name).lstrip("0") if file_name else "")
         keywords += topics_by_number.get(topic_key, [])
         seen: set[str] = set()
         keywords = [k for k in keywords if not (k.lower() in seen or seen.add(k.lower()))]
