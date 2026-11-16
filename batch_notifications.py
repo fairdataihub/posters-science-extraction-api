@@ -20,22 +20,15 @@ import config
 from feature_flags import FeatureContext
 
 RESEND_URL = "https://api.resend.com/emails"
-DEFAULT_FROM_ADDRESS = "Posters.science <noreply@posters.science>"
+# Same sender as the website (posters-science server/utils/sendEmail.ts). The
+# posters.science domain must be verified on the Resend account behind
+# RESEND_API_KEY.
+FROM_ADDRESS = "Posters.science <noreply@posters.science>"
 MAX_EMAILS_PER_SWEEP = 20
 
 
 def _log(message: str) -> None:
     print(f"[status] batch_notifications: {message}")
-
-
-def from_address() -> str:
-    """Sender from RESEND_FROM_ADDRESS, defaulting to the website's sender.
-
-    The domain must be verified on the Resend account behind RESEND_API_KEY.
-    For local testing with a personal key, use onboarding@resend.dev, which
-    only delivers to that Resend account's own email address.
-    """
-    return (config.get_env("RESEND_FROM_ADDRESS") or "").strip() or DEFAULT_FROM_ADDRESS
 
 
 def site_url() -> str:
@@ -59,7 +52,7 @@ def log_startup_status(contexts: dict[str, FeatureContext]) -> None:
 
     for environment in contexts:
         _log(
-            f"{environment}: email notifications enabled, from {from_address()}, "
+            f"{environment}: email notifications enabled, from {FROM_ADDRESS}, "
             f"links to {site_url()}"
         )
 
@@ -138,7 +131,7 @@ def send_email(api_key: str, to: str, subject: str, body: str) -> Optional[bool]
         resp = requests.post(
             RESEND_URL,
             headers={"Authorization": f"Bearer {api_key}"},
-            json={"from": from_address(), "to": [to], "subject": subject, "html": body},
+            json={"from": FROM_ADDRESS, "to": [to], "subject": subject, "html": body},
             timeout=20,
         )
     except requests.RequestException as error:
@@ -159,7 +152,7 @@ def send_email(api_key: str, to: str, subject: str, body: str) -> Optional[bool]
         # the batch unmarked so it sends once the configuration is fixed.
         _log(
             f"Resend refused the API key or sender ({resp.status_code}): {reason}; "
-            "check RESEND_API_KEY and RESEND_FROM_ADDRESS; will retry"
+            "check RESEND_API_KEY and that posters.science is verified on its Resend account; will retry"
         )
         return None
     # 429 and 5xx are worth retrying; other 4xx will fail the same way again.

@@ -92,7 +92,6 @@ jobs:
             echo "STAGING_FEATURES=${{ secrets.STAGING_FEATURES }}"
             echo "PRODUCTION_FEATURES=${{ secrets.PRODUCTION_FEATURES }}"
             echo "RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}"
-            echo "RESEND_FROM_ADDRESS=${{ secrets.RESEND_FROM_ADDRESS }}"
             echo "NUXT_SITE_URL=${{ secrets.NUXT_SITE_URL }}"
           } > .env.deploy
 
