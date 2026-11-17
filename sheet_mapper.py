@@ -188,6 +188,35 @@ TEMPLATES: list[dict] = [
 ]
 
 
+# Formats the organizer can choose in the app, by template id. With a format
+# chosen, a sheet without that template's columns is refused.
+FORMATS: dict[str, str] = {"easychair": "easychair", "curious": "curious-2027"}
+
+
+class SheetFormatError(ValueError):
+    """The sheet is not the format the organizer chose."""
+
+    def __init__(self, message: str, missing: list[str], detected: str | None):
+        super().__init__(message)
+        self.missing = missing
+        self.detected = detected
+
+
+def check_format(headers: list[str], fmt: str) -> None:
+    """Raise SheetFormatError when `headers` lack a column of format `fmt`."""
+    tpl = next(t for t in TEMPLATES if t["id"] == FORMATS[fmt])
+    present = {_norm_header(h) for h in headers}
+    missing = [h for h in tpl["headers"] if _norm_header(h) not in present]
+    if not missing:
+        return
+    other = match_template(headers)
+    detected = next((k for k, v in FORMATS.items() if other and v == other["id"]), None)
+    message = f"This sheet is not the {tpl['name']}: it has no {', '.join(missing)} column{'s' if len(missing) > 1 else ''}."
+    if detected:
+        message += f" It looks like the {other['name']}; choose that format instead."
+    raise SheetFormatError(message, missing, detected)
+
+
 def header_fingerprint(headers: list[str]) -> str:
     """Stable id for a header row: order and case do not matter."""
     keys = sorted({_norm_header(h) for h in headers if _norm_header(h)})
@@ -1121,13 +1150,18 @@ def map_sheet(
     file_names: list[str],
     overrides: dict[str, str | None] | None = None,
     extra_files: list[tuple[bytes, str]] | None = None,
+    expected_format: str | None = None,
 ) -> dict:
     warnings: list[dict] = []
 
     def warn(code: str, message: str, severity: str = "warning"):
         warnings.append({"code": code, "message": message, "severity": severity})
 
+    if expected_format is not None and expected_format not in FORMATS:
+        raise ValueError(f"Unknown sheet format {expected_format!r}; expected one of {', '.join(FORMATS)}.")
     table, author_table, topics_by_number = read_tables([(data, filename)] + list(extra_files or []))
+    if expected_format:
+        check_format(table.headers, expected_format)
     columns, tpl, notes = map_columns(table, overrides)
     for n in notes:
         warn("mapping_note", n)

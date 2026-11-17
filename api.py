@@ -22,7 +22,7 @@ from flask_cors import CORS
 from poster2json.extract import log, load_json_model
 from feature_flags import features_for_environment
 from poster_matcher import match_rows_to_posters
-from sheet_mapper import map_sheet
+from sheet_mapper import FORMATS, SheetFormatError, map_sheet
 from job_worker import (
     run_worker_loop,
     generate_and_upload_thumbnail,
@@ -179,6 +179,9 @@ def sheets_map():
         file_names  JSON array of the poster file names uploaded to the batch
         mapping     optional JSON object {column header: field or null}, the
                     user's confirmed choices from the confirm screen
+        format      optional, the format the organizer chose: easychair or
+                    curious. A sheet without that format's columns is refused
+                    with 422 and code format_mismatch.
 
     Returns the detected template, the column mapping, the file column, the
     rows in our format (sheet name -> rows keyed by fillKey, linked by
@@ -210,9 +213,16 @@ def sheets_map():
         return jsonify({"error": "file_names must be a JSON array of strings"}), 400
     if overrides is not None and not isinstance(overrides, dict):
         return jsonify({"error": "mapping must be a JSON object"}), 400
+    sheet_format = (request.form.get("format") or "").strip().lower() or None
+    if sheet_format is not None and sheet_format not in FORMATS:
+        return jsonify({"error": f"format must be one of {', '.join(FORMATS)}"}), 400
 
     try:
-        result = map_sheet(files[0][0], files[0][1], file_names, overrides, extra_files=files[1:])
+        result = map_sheet(files[0][0], files[0][1], file_names, overrides, extra_files=files[1:],
+                           expected_format=sheet_format)
+    except SheetFormatError as e:
+        return jsonify({"error": str(e), "code": "format_mismatch", "format": sheet_format,
+                        "missing_columns": e.missing, "detected_format": e.detected}), 422
     except ValueError as e:
         return jsonify({"error": str(e)}), 422
     except Exception as e:

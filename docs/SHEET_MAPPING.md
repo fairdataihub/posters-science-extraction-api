@@ -24,6 +24,7 @@ In the grid (posters.science app):
 | `sheet` | yes | The spreadsheet: `.xlsx`, `.xls`, `.csv` or `.tsv`, up to 10 MB. An `.xlsx` must also unpack to 100 MB or less, and a sheet may have up to 20,000 rows. Send it more than once for an export split over files (EasyChair `submission.csv` plus `author.csv`, or a posters list plus an authors list) |
 | `file_names` | yes in practice | JSON array of the poster file names uploaded to the batch |
 | `mapping` | no | JSON object `{column header: field or null}`, the user's confirmed choices from the confirm screen |
+| `format` | no | The format the organizer chose in the app: `easychair` or `curious`. A sheet without every required column of that format is refused (see below). Without it, any sheet is mapped as before |
 
 ## Response
 
@@ -58,7 +59,19 @@ In the grid (posters.science app):
 
 `hints` holds per row values the grid has no column for: `doi`, a DOI the poster already has (from a DOI column), which the poster keeps instead of getting a new one; and `project_license` (EasyChair form fields).
 
-Errors: `400` for a missing or wrong file type, `413` over 10 MB, `422` when the file can't be read, has no header row, unpacks past 100 MB, or has more than 20,000 rows.
+Errors: `400` for a missing or wrong file type or an unknown `format`, `413` over 10 MB, `422` when the file can't be read, has no header row, unpacks past 100 MB, or has more than 20,000 rows.
+
+With `format` set, a sheet missing a required column of that format is `422` with `code` `format_mismatch`, so the app can tell the organizer which columns are missing and, when the sheet is the other known format, which one to choose:
+
+```json
+{"error": "This sheet is not the Curious poster information template: it has no Position, Track, ... columns. It looks like the EasyChair submissions download; choose that format instead.",
+ "code": "format_mismatch", "format": "curious", "missing_columns": ["Position", "Track", "..."], "detected_format": "easychair"}
+```
+
+Required columns (extra columns are fine, header case is ignored):
+
+- `easychair`: `#`, `Title`, `Authors`, `Submitted`, `Last updated`, `Keywords`, `Decision`, `Abstract`. For the CSV download this is `submission.csv`; `author.csv`, `submission_topic.csv` and `topics.csv` are sent with it.
+- `curious`: `Position`, `Track`, `Title`, `Authors`, `Contact Author`, `Contact E-Mail`, `Affiliation`, `Abstract`, `Website`, `LinkedIn`, `Instagram`, `Bluesky`, `X`, `Comment`.
 
 ## How columns are mapped
 

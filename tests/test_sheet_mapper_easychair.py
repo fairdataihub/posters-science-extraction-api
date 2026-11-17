@@ -170,3 +170,49 @@ def test_deleted_column_false_keeps_the_row(value):
     result = sm.map_sheet(xlsx(EASYCHAIR_HEADERS, rows), "e.xlsx", ["1.pdf", "2.pdf"])
     assert [r["title"] for r in result["sheets"]["About the Poster"]] == ["Kept"]
     assert result["skipped"]["deleted"] == 1
+
+
+def test_chosen_format_accepts_its_own_sheet():
+    result = sm.map_sheet(easychair_basic(), "bosc.xlsx", [], expected_format="easychair")
+    assert result["template"]["id"] == "easychair"
+    result = sm.map_sheet(xlsx(CURIOUS_HEADERS, curious_rows(with_file=False)), "c.xlsx", [], expected_format="curious")
+    assert result["template"]["id"] == "curious-2027"
+
+
+def test_chosen_format_refuses_the_other_format():
+    with pytest.raises(sm.SheetFormatError) as err:
+        sm.map_sheet(easychair_basic(), "bosc.xlsx", [], expected_format="curious")
+    assert err.value.detected == "easychair"
+    assert "Position" in err.value.missing and "EasyChair" in str(err.value)
+    with pytest.raises(sm.SheetFormatError) as err:
+        sm.map_sheet(xlsx(CURIOUS_HEADERS, curious_rows()), "c.xlsx", [], expected_format="easychair")
+    assert err.value.detected == "curious"
+
+
+def test_chosen_format_refuses_an_unknown_sheet():
+    sheet = xlsx(["Poster title", "Presenter"], [["A study", "Kim Park"]])
+    with pytest.raises(sm.SheetFormatError) as err:
+        sm.map_sheet(sheet, "own.xlsx", [], expected_format="easychair")
+    assert err.value.detected is None and "#" in err.value.missing
+    assert sm.map_sheet(sheet, "own.xlsx", [])["ok"] is True  # no format chosen: mapped as before
+
+
+def test_unknown_format_name_is_an_error():
+    with pytest.raises(ValueError):
+        sm.map_sheet(easychair_basic(), "bosc.xlsx", [], expected_format="openreview")
+
+
+def test_api_format_mismatch_is_422():
+    pytest.importorskip("torch")
+    pytest.importorskip("poster2json")
+    import api
+    client = api.app.test_client()
+    data = {"sheet": (io.BytesIO(easychair_basic()), "bosc.xlsx"), "file_names": "[]", "format": "Curious"}
+    resp = client.post("/sheets/map", data=data, content_type="multipart/form-data")
+    assert resp.status_code == 422
+    body = resp.get_json()
+    assert body["code"] == "format_mismatch" and body["detected_format"] == "easychair"
+    data = {"sheet": (io.BytesIO(easychair_basic()), "bosc.xlsx"), "file_names": "[]", "format": "openreview"}
+    assert client.post("/sheets/map", data=data, content_type="multipart/form-data").status_code == 400
+    data = {"sheet": (io.BytesIO(easychair_basic()), "bosc.xlsx"), "file_names": "[]", "format": "easychair"}
+    assert client.post("/sheets/map", data=data, content_type="multipart/form-data").status_code == 200
