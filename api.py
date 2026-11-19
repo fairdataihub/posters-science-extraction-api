@@ -22,7 +22,7 @@ from flask_cors import CORS
 from poster2json.extract import log, load_json_model
 from feature_flags import features_for_environment
 from poster_matcher import match_rows_to_posters
-from sheet_mapper import FORMATS, SheetFormatError, map_sheet
+from sheet_mapper import FORMATS, MAX_ROWS, MAX_SHEET_FILES, SheetFormatError, map_sheet
 from job_worker import (
     run_worker_loop,
     generate_and_upload_thumbnail,
@@ -173,6 +173,18 @@ def thumbnails_generate():
 
 # Organizer sheets are small; anything bigger is not a poster list.
 _SHEET_MAX_BYTES = 10 * 1024 * 1024
+_SHEET_MAX_REQUEST = _SHEET_MAX_BYTES + 1024 * 1024  # room for file_names and the form fields
+_MATCH_MAX_REQUEST = 32 * 1024 * 1024
+_MATCH_MAX_POSTERS = 5000
+
+
+def _limit_body(limit: int) -> None:
+    """Cap this request's body for werkzeug's parser too (chunked bodies have
+    no Content-Length). Flask 3.1 and later; older Flask keeps the check above."""
+    try:
+        request.max_content_length = limit
+    except AttributeError:
+        pass
 _SHEET_EXTENSIONS = (".xlsx", ".xlsm", ".xls", ".csv", ".tsv")
 
 
@@ -199,7 +211,13 @@ def sheets_map():
     Touches no database and no GPU model, like /thumbnails/generate.
     """
     print("[status] api: POST /sheets/map")
+    # Refuse an oversized body before multipart parsing spools it to disk.
+    if (request.content_length or 0) > _SHEET_MAX_REQUEST:
+        return jsonify({"error": "sheet is larger than 10 MB"}), 413
+    _limit_body(_SHEET_MAX_REQUEST)
     uploads = [u for u in request.files.getlist("sheet") if u and u.filename]
+    if len(uploads) > MAX_SHEET_FILES:
+        return jsonify({"error": f"upload at most {MAX_SHEET_FILES} sheet files"}), 400
     if not uploads:
         return jsonify({"error": "sheet is required"}), 400
     if not all(u.filename.lower().endswith(_SHEET_EXTENSIONS) for u in uploads):
@@ -257,14 +275,19 @@ def sheets_match():
     Stateless.
     """
     print("[status] api: POST /sheets/match")
+    if (request.content_length or 0) > _MATCH_MAX_REQUEST:
+        return jsonify({"error": "request is too large"}), 413
+    _limit_body(_MATCH_MAX_REQUEST)
     body = request.get_json(silent=True)
     if not isinstance(body, dict):
         return jsonify({"error": "body must be a JSON object"}), 400
     rows, posters, pairs = body.get("rows"), body.get("posters"), body.get("pairs", [])
     if not isinstance(rows, list) or not isinstance(posters, list) or not isinstance(pairs, list):
         return jsonify({"error": "rows, posters and pairs must be arrays"}), 400
-    if len(rows) > 2000 or len(posters) > 2000 or len(pairs) > 2000:
-        return jsonify({"error": "at most 2000 rows, 2000 posters and 2000 pairs"}), 413
+    # Rows and pairs come from a mapped sheet (up to MAX_ROWS); posters from
+    # one batch. Each row scores only its best few candidates, so this stays fast.
+    if len(rows) > MAX_ROWS or len(pairs) > MAX_ROWS or len(posters) > _MATCH_MAX_POSTERS:
+        return jsonify({"error": f"at most {MAX_ROWS} rows and pairs and {_MATCH_MAX_POSTERS} posters"}), 413
     if not all(isinstance(x, dict) for x in rows + posters + pairs):
         return jsonify({"error": "rows, posters and pairs must be arrays of objects"}), 400
     try:

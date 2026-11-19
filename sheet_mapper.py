@@ -193,6 +193,46 @@ TEMPLATES: list[dict] = [
 FORMATS: dict[str, str] = {"easychair": "easychair", "curious": "curious-2027"}
 
 
+# What each format may upload. EasyChair gives its Excel download (the
+# conference data workbook, sometimes with a separate authors copy) or up to
+# four CSV files (submission.csv, author.csv, submission_topic.csv,
+# topics.csv). Curious gives its own Excel template only.
+EXCEL_EXTENSIONS = (".xlsx", ".xlsm", ".xls")
+TEXT_EXTENSIONS = (".csv", ".tsv")
+FORMAT_FILE_LIMITS: dict[str, dict[str, int]] = {
+    "easychair": {"excel": 2, "text": 4},
+    "curious": {"excel": 1, "text": 0},
+}
+MAX_SHEET_FILES = 6
+
+
+def check_files(filenames: list[str], fmt: str | None) -> None:
+    """Refuse file types or counts the chosen format does not use."""
+    if len(filenames) > MAX_SHEET_FILES:
+        raise ValueError(f"Upload at most {MAX_SHEET_FILES} sheet files at once.")
+    if not fmt:
+        return
+    excel = sum(1 for n in filenames if n.lower().endswith(EXCEL_EXTENSIONS))
+    text = sum(1 for n in filenames if n.lower().endswith(TEXT_EXTENSIONS))
+    limits = FORMAT_FILE_LIMITS[fmt]
+    if fmt == "curious":
+        if text or excel != 1 or len(filenames) != 1:
+            raise SheetFormatError(
+                "The Curious format takes one Excel file (.xlsx), the poster information template from Curious. "
+                "CSV files are not accepted.",
+                [],
+                None,
+            )
+        return
+    if excel > limits["excel"] or text > limits["text"]:
+        raise SheetFormatError(
+            f"The EasyChair format takes up to {limits['excel']} Excel files or up to {limits['text']} CSV files "
+            "(submission.csv, author.csv, submission_topic.csv, topics.csv).",
+            [],
+            None,
+        )
+
+
 class SheetFormatError(ValueError):
     """The sheet is not the format the organizer chose."""
 
@@ -250,34 +290,62 @@ MAX_XLSX_UNPACKED = 100 * 1024 * 1024
 # The largest export we expect (every EasyChair submission of a big meeting,
 # rejected ones included) is a few thousand rows; 20,000 leaves ample room.
 MAX_ROWS = 20_000
+# Several files are read as one workbook, so the limits also hold for all of
+# them together, not only for each one.
+MAX_TOTAL_ROWS = 100_000
+MAX_XLS_CELLS = 2_000_000
 
 
-def _check_xlsx_size(data: bytes) -> None:
+def _xlsx_unpacked(data: bytes) -> int:
     import zipfile
 
     try:
         with zipfile.ZipFile(io.BytesIO(data)) as zf:
-            unpacked = sum(i.file_size for i in zf.infolist())
+            return sum(i.file_size for i in zf.infolist())
     except zipfile.BadZipFile:
         raise ValueError("This .xlsx file could not be opened. Save it again from Excel and retry.") from None
+
+
+def _check_xlsx_size(data: bytes, already: int = 0) -> int:
+    """Raise when this workbook, plus what earlier uploads unpacked to, is over
+    the limit. Returns the new running total."""
+    unpacked = already + _xlsx_unpacked(data)
     if unpacked > MAX_XLSX_UNPACKED:
         raise ValueError(
             f"This workbook unpacks to {unpacked // (1024 * 1024)} MB, over the {MAX_XLSX_UNPACKED // (1024 * 1024)} MB "
             "limit. Remove sheets or images that are not the poster list and retry."
         )
+    return unpacked
 
 
-def _capped(rows, sheet_name: str) -> list:
+class _Budget:
+    """What all uploads of one request have used so far (unpacked bytes, rows)."""
+
+    def __init__(self):
+        self.unpacked = 0
+        self.rows = 0
+
+
+def _capped(rows, sheet_name: str, budget: _Budget | None = None) -> list:
     out = []
     for r in rows:
         if len(out) == MAX_ROWS:
             raise ValueError(f'Sheet "{sheet_name}" has more than {MAX_ROWS:,} rows. Split it or remove rows that are not posters.')
+        if budget is not None:
+            budget.rows += 1
+            if budget.rows > MAX_TOTAL_ROWS:
+                raise ValueError(
+                    f"These files have more than {MAX_TOTAL_ROWS:,} rows together. Upload only the poster list "
+                    "(and its authors and topics) and retry."
+                )
         out.append(r)
     return out
 
 
-def _read_rows(data: bytes, filename: str) -> list[tuple[str, list[list[str]]]]:
-    """Return [(sheet name, rows of cell text)] for every sheet in the file."""
+def _read_rows(data: bytes, filename: str, budget: _Budget | None = None) -> list[tuple[str, list[list[str]]]]:
+    """Return [(sheet name, rows of cell text)] for every sheet in the file.
+    With a budget, the size and row limits count every file read with it."""
+    budget = budget or _Budget()
     ext = os.path.splitext(filename.lower())[1]
     if ext == ".xls" and data[:2] == b"PK":
         ext = ".xlsx"  # an .xlsx saved under an .xls name
@@ -298,25 +366,39 @@ def _read_rows(data: bytes, filename: str) -> list[tuple[str, list[list[str]]]]:
             except csv.Error:
                 delimiter = ","
         name = os.path.splitext(os.path.basename(filename))[0]
-        rows = _capped(([_cell_text(c) for c in r] for r in csv.reader(io.StringIO(text), delimiter=delimiter)), name)
+        rows = _capped(([_cell_text(c) for c in r] for r in csv.reader(io.StringIO(text), delimiter=delimiter)), name, budget)
         return [(name, rows)]
     if ext in (".xlsx", ".xlsm"):
         import openpyxl
 
-        _check_xlsx_size(data)
+        budget.unpacked = _check_xlsx_size(data, budget.unpacked)
         wb = openpyxl.load_workbook(io.BytesIO(data), read_only=True, data_only=True)
         return [
-            (ws.title, _capped(([_cell_text(c) for c in r] for r in ws.iter_rows(values_only=True)), ws.title))
+            (ws.title, _capped(([_cell_text(c) for c in r] for r in ws.iter_rows(values_only=True)), ws.title, budget))
             for ws in wb.worksheets
         ]
     if ext == ".xls":
         import xlrd
 
-        book = xlrd.open_workbook(file_contents=data)
-        return [
-            (s.name, _capped(([_cell_text(s.cell_value(i, j)) for j in range(s.ncols)] for i in range(s.nrows)), s.name))
-            for s in book.sheets()
-        ]
+        # Sheets load one at a time and are released after reading, so only one
+        # sheet's cells are in memory, and a sheet over the cell limit is
+        # refused before its cells are copied out.
+        book = xlrd.open_workbook(file_contents=data, on_demand=True)
+        out = []
+        try:
+            for k in range(book.nsheets):
+                sh = book.sheet_by_index(k)
+                if sh.nrows > MAX_ROWS or sh.nrows * sh.ncols > MAX_XLS_CELLS:
+                    raise ValueError(
+                        f'Sheet "{sh.name}" is too large ({sh.nrows:,} rows by {sh.ncols:,} columns). Remove rows or '
+                        "columns that are not the poster list and retry."
+                    )
+                rows = _capped(([_cell_text(sh.cell_value(i, j)) for j in range(sh.ncols)] for i in range(sh.nrows)), sh.name, budget)
+                out.append((sh.name, rows))
+                book.unload_sheet(k)
+        finally:
+            book.release_resources()
+        return out
     raise ValueError(f"Unsupported sheet type: {ext or filename}. Use .xlsx, .xls, .csv or .tsv.")
 
 
@@ -424,8 +506,9 @@ def read_tables(files: list[tuple[bytes, str]]) -> tuple[Table, Table | None, di
     authors = None
     per_poster: list[tuple[str, str]] = []
     group_headings: set[str] = set()
+    budget = _Budget()
     for data, filename in files:
-        for sheet_name, rows in _read_rows(data, filename):
+        for sheet_name, rows in _read_rows(data, filename, budget):
             for i, cells in enumerate(rows[:15]):
                 topic = _topic_columns(cells)
                 if topic:
@@ -470,6 +553,7 @@ class ColumnMap:
     field: str | None
     source: str  # template | alias | fuzzy | llm | values | none
     samples: list[str] = dc_field(default_factory=list)
+    renamed: bool = False  # became the file column from another field (a number column)
 
 
 def match_template(headers: list[str]) -> dict | None:
@@ -589,12 +673,18 @@ def map_columns(table: Table, overrides: dict[str, str | None] | None = None) ->
             c.field, c.source = (want if want in FIELDS else None), "user"
 
     # One column per stored field, except multi-column fields.
+    # A field the user chose for a column belongs to that column, so any column
+    # mapped to it automatically gives it up, whichever comes first.
     multi = {"social", "comment", "keywords", "track", "ignored"}
     seen: dict[str, ColumnMap] = {}
     for c in columns:
-        if c.field and c.field not in multi:
+        if c.source == "user" and c.field and c.field not in multi and c.field not in seen:
+            seen[c.field] = c
+    for c in columns:
+        if c.field and c.field not in multi and seen.get(c.field) is not c:
             if c.field in seen:
-                notes.append(f'Columns "{seen[c.field].header}" and "{c.header}" both look like {c.field}; using the first.')
+                which = "your choice" if seen[c.field].source == "user" else "the first"
+                notes.append(f'Columns "{seen[c.field].header}" and "{c.header}" both look like {c.field}; using {which}.')
                 c.field, c.source = None, "duplicate"
             else:
                 seen[c.field] = c
@@ -615,6 +705,25 @@ def file_key(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "", unicodedata.normalize("NFKD", stem).encode("ascii", "ignore").decode().lower())
 
 
+def file_index(file_names: list[str]) -> tuple[dict[str, str], dict[str, list[str]]]:
+    """
+    {file key: file name} for keys only one upload has, and {key: names} for
+    keys two or more uploads share ("Smith Poster.pdf" and "smith_poster.pdf").
+    A shared key names no file for sure, so a sheet cell links to one of those
+    files only by its exact base name.
+    """
+    groups: dict[str, list[str]] = {}
+    for name in file_names:
+        groups.setdefault(file_key(name), []).append(name)
+    unique = {k: v[0] for k, v in groups.items() if len(v) == 1}
+    shared = {k: v for k, v in groups.items() if len(v) > 1}
+    return unique, shared
+
+
+def _base(name: str) -> str:
+    return re.split(r"[\\/]", name.strip())[-1]
+
+
 # Fields a file column may have been mapped to, preferred first.
 FILE_COLUMN_FIELDS = ("file_name", "poster_number", None)
 
@@ -625,9 +734,7 @@ def find_file_column(table: Table, columns: list[ColumnMap], file_names: list[st
     cells match the most uploaded file names. Without an upload list, fall back
     to a column named like a file column whose values look like file names.
     """
-    by_key: dict[str, str] = {}
-    for name in file_names:
-        by_key.setdefault(file_key(name), name)
+    by_key, collisions = file_index(file_names)
 
     best: tuple[float, int, ColumnMap] | None = None
     for c in columns:
@@ -642,7 +749,7 @@ def find_file_column(table: Table, columns: list[ColumnMap], file_names: list[st
         if by_key:
             # Each file counts once, so a column that repeats a value ("1" in
             # every row) cannot pass as a file column.
-            hits = len({file_key(v) for v in values} & set(by_key))
+            hits = len({file_key(v) for v in values} & (set(by_key) | set(collisions)))
             score = hits / len(values)
         else:
             looks = sum(1 for v in values if v.lower().endswith(POSTER_EXTENSIONS))
@@ -667,7 +774,13 @@ def find_file_column(table: Table, columns: list[ColumnMap], file_names: list[st
     for c in columns:
         if c is not chosen and c.field == "file_name":
             c.field, c.source = None, "none"
-    chosen.field, chosen.source = "file_name", ("values" if chosen.source not in ("template", "user") else chosen.source)
+    # A column only counts as named for files when the template or the user
+    # mapped it to file_name. One picked because its values match the uploads
+    # (a Curious position column next to files named 1.pdf, 2.pdf) is a good
+    # guess, so its links are checked.
+    named = chosen.field == "file_name" and chosen.source in ("template", "user")
+    chosen.renamed = chosen.field != "file_name"
+    chosen.field, chosen.source = "file_name", (chosen.source if named else "values")
     return chosen, by_key
 
 
@@ -797,7 +910,15 @@ def link_files_by_number(
             if len(hits) == 1:
                 suggestions.setdefault(hits.pop(), name)
         suggestions = {r: n for r, n in suggestions.items() if r not in links}
-        if (links or suggestions) and (len(links) + len(suggestions)) / len(file_names) >= 0.5:
+        # A file named plainly by a row's number ("17.pdf", "submission_17")
+        # links even when most files are named some other way; every link is
+        # title checked after extraction anyway. Weaker suggestions (a number
+        # elsewhere in the name) count only when the column explains at least
+        # half of the uploads, so a column of small numbers that happen to
+        # appear in file names suggests nothing.
+        if (len(links) + len(suggestions)) / len(file_names) < 0.5:
+            suggestions = {}
+        if links or suggestions:
             return c, links, suggestions
     return None, {}, {}
 
@@ -834,13 +955,16 @@ def strip_position_prefixes(titles: list[str], numbers: list[str] | None = None)
         m = _POSITION_PREFIX.match(t) if t else None
         if m and t[m.end():].strip():
             index = m.group(1).lstrip("0")
+            year = bool(re.fullmatch(r"(19|20)\d\d", m.group(1)))
             if n:
-                # The row has its own number: cut only when the title starts with it.
-                cut = index == n.lstrip("0")
+                # The row has its own number: cut only when the title starts
+                # with it, and never a year ("2026: A review" stays whole even
+                # for poster 2026).
+                cut = index == n.lstrip("0") and not year
             else:
                 # No number for the row: cut when most titles carry an index,
                 # but never a year ("2026: A review").
-                cut = most and not re.fullmatch(r"(19|20)\d\d", m.group(1))
+                cut = most and not year
             if cut:
                 t = t[m.end():]
         out.append(t)
@@ -872,6 +996,34 @@ def _family_given_list(text: str) -> list[dict] | None:
     return out
 
 
+_NAME_PARTICLES = {"van", "von", "de", "del", "della", "der", "den", "da", "das", "dos", "du", "di", "le", "la", "al", "el", "bin", "ter", "ten", "zu"}
+
+
+def _single_inverted(text: str) -> dict | None:
+    """
+    One author written "Family, Given" ("Smith, John", "van Dijk, J. R.",
+    "Lee, Ann1"). Read only when the cell has a single comma and nothing
+    else that separates authors, the part before the comma is one word (or a
+    family name with a particle like "van Dijk"), and the part after it is one
+    to three given names or initials. "John Smith, Jane Doe" stays two authors.
+    """
+    if re.search(r"[;\n&]|\sand\s", text) or text.count(",") != 1:
+        return None
+    m = re.match(r"^(.*?[^\d\s,])\s*((?:\d{1,2}\s*,?\s*)*)$", text.strip())
+    if not m or m.group(1).count(",") != 1:
+        return None
+    family, given = (p.strip() for p in m.group(1).split(","))
+    fw, gw = family.split(), given.split()
+    if not fw or not gw or len(gw) > 3 or re.search(r"\d", family + given):
+        return None
+    if len(fw) > 1 and not all(w.lower() in _NAME_PARTICLES for w in fw[:-1]):
+        return None
+    if len(gw) == 2 and not any(re.fullmatch(r"[A-Z]\.?(?:-?[A-Z]\.?)*", w) for w in gw):
+        # "Smith, Jane Doe" reads as two authors, "Smith, J. R." as one.
+        return None
+    return {"name": f"{family}, {given}", "numbers": [int(n) for n in re.findall(r"\d{1,2}", m.group(2))]}
+
+
 def parse_authors(cell: str) -> list[dict]:
     """
     "John Do1, Ann Lee1,2, Bo Chen\u00b3" -> [{name, numbers}]. Authors are split
@@ -884,6 +1036,9 @@ def parse_authors(cell: str) -> list[dict]:
     inverted = _family_given_list(text)
     if inverted is not None:
         return inverted
+    single = _single_inverted(text)
+    if single is not None:
+        return [single]
     parts = [p.strip() for p in re.split(r"\s*[,;\n]\s*|\s+and\s+|\s*&\s*", text) if p and p.strip()]
     authors: list[dict] = []
     for part in parts:
@@ -1051,6 +1206,7 @@ def _creator_rows(link: dict, authors_cell: str, affiliations_cell: str, warn) -
     authors = parse_authors(authors_cell)
     numbered, plain = parse_affiliations(affiliations_cell)
     rows = []
+    unassigned_numbered = False
     for a in authors:
         given, family = split_name(a["name"])
         row = {**link, "given_name": given, "family_name": family, "name_type": "Personal"}
@@ -1062,6 +1218,11 @@ def _creator_rows(link: dict, authors_cell: str, affiliations_cell: str, warn) -
                 warn("affiliation_number_missing", f'{label}: {a["name"]} points to affiliation {missing}, which is not in the list.')
         elif numbered and not a["numbers"] and len(numbered) == 1:
             names = list(numbered.values())
+        elif numbered and not a["numbers"]:
+            # Numbered affiliations but no numbers on this author: keep them all
+            # for review rather than dropping them.
+            names = list(numbered.values())
+            unassigned_numbered = True
         elif plain and len(plain) == 1:
             names = plain
         elif plain:
@@ -1073,6 +1234,12 @@ def _creator_rows(link: dict, authors_cell: str, affiliations_cell: str, warn) -
         for slot, name in enumerate(names[:30], start=1):
             row[f"contributor_affiliation_{slot}_name"] = name
         rows.append(row)
+    if unassigned_numbered:
+        warn(
+            "affiliations_unassigned",
+            f"{label}: affiliations are numbered but the authors have no numbers, so authors without one get all of "
+            "them. Check the Creators tab.",
+        )
     return rows
 
 
@@ -1137,9 +1304,23 @@ def _flag_set(value: str) -> bool:
     return (value or "").strip().lower() not in FALSE_VALUES
 
 
-def _accepted(decision: str) -> bool:
+_DECISION_NEGATIVE = re.compile(r"\b(?:not|non|un)\b[\s\w-]{0,15}?accept|\b(?:non|un)-?accept|reject|declin|withdr|cancel")
+_DECISION_PENDING = re.compile(r"pending|undecided|to be decided|\btbd\b|under review|in review|waitlist|wait list|on hold|tentative|\?")
+
+
+def _rejected(decision: str) -> bool:
+    """A final no: rejected, declined, withdrawn, cancelled, not accepted."""
     d = re.sub(r"\s+", " ", decision.lower())
-    if re.search(r"\b(?:not|non|un)[\s-]?accept|reject|declin|withdr|cancel", d):
+    return bool(re.search(r"reject|declin|withdr|cancel", d)) or (
+        bool(re.search(r"\b(?:not|non|un)\b[\s\w-]{0,15}?accept|\b(?:non|un)-?accept", d))
+        and not _DECISION_PENDING.search(d) and "yet" not in d
+    )
+
+
+def _accepted(decision: str) -> bool:
+    """A final yes. "Not yet accepted", "pending" or "accept?" are not."""
+    d = re.sub(r"\s+", " ", decision.lower())
+    if _DECISION_NEGATIVE.search(d) or _DECISION_PENDING.search(d):
         return False
     return "accept" in d
 
@@ -1159,6 +1340,7 @@ def map_sheet(
 
     if expected_format is not None and expected_format not in FORMATS:
         raise ValueError(f"Unknown sheet format {expected_format!r}; expected one of {', '.join(FORMATS)}.")
+    check_files([filename] + [n for _, n in (extra_files or [])], expected_format)
     table, author_table, topics_by_number = read_tables([(data, filename)] + list(extra_files or []))
     if expected_format:
         check_format(table.headers, expected_format)
@@ -1166,6 +1348,8 @@ def map_sheet(
     for n in notes:
         warn("mapping_note", n)
     file_col, by_key = find_file_column(table, columns, file_names)
+    _, shared_keys = file_index(file_names)
+    uploaded = set(file_names)
 
     # Form answers include private questions (fees, diversity, comments for the
     # chairs). Show only which questions were asked, never the answers.
@@ -1192,14 +1376,16 @@ def map_sheet(
     has_decision = bool(by_field.get("decision"))
     any_accepted = has_decision and any(_accepted(one("decision", cells)) for _, cells in data_rows)
     if has_decision and not any_accepted:
-        warn("no_decisions", "No row is marked accepted yet, so every row is kept.", "info")
+        warn("no_decisions", "No row is marked accepted yet, so every row is kept except rejected or withdrawn ones.", "info")
     kept: list[tuple[int, list[str], dict]] = []
     for n, cells in data_rows:
         deleted_cols = by_field.get("deleted") or []
         if deleted_cols and _flag_set(cells[deleted_cols[0].index]):
             skipped["deleted"] += 1
             continue
-        if any_accepted and not _accepted(one("decision", cells)):
+        if has_decision and (
+            not _accepted(one("decision", cells)) if any_accepted else _rejected(one("decision", cells))
+        ):
             skipped["not_accepted"] += 1
             continue
         form = read_form_fields(one("form_fields", cells)) if by_field.get("form_fields") else {}
@@ -1232,23 +1418,64 @@ def map_sheet(
     links: dict[int, str] = {}
     link_method: dict[int, str] = {}
     file_cells: dict[int, str] = {}
+    ambiguous_cells: list[int] = []
+    # A column picked because its values match the uploads (a number column
+    # next to files named 7.pdf) links nothing for a value two rows share, and
+    # that value joins no authors or topics either, like a repeated number.
+    repeated_cells: set[str] = set()
+    if file_col is not None and file_col.renamed:
+        seen_cells: dict[str, int] = {}
+        for _, cells, _ in kept:
+            k = file_key(cells[file_col.index]) if cells[file_col.index].strip() else ""
+            if k:
+                seen_cells[k] = seen_cells.get(k, 0) + 1
+        repeated_cells = {k for k, v in seen_cells.items() if v > 1}
+        repeated_numbers |= {k.lstrip("0") or "0" for k in repeated_cells}
     if file_col is not None:
-        for i, (_, cells, _) in enumerate(kept):
+        for i, (row_no, cells, _) in enumerate(kept):
             raw_file = cells[file_col.index].strip()
-            if not raw_file:
+            if not raw_file or file_key(raw_file) in repeated_cells:
                 continue
             file_cells[i] = raw_file
-            name = by_key.get(file_key(raw_file)) if by_key else re.split(r"[\\/]", raw_file)[-1]
+            if not file_names:
+                # Nothing uploaded yet (the sheet came first): keep the name
+                # the sheet gives, so the row re-links once that file is
+                # stored. It is not a verified link until then.
+                links[i], link_method[i] = _base(raw_file), "column_unverified"
+                continue
+            key = file_key(raw_file)
+            if _base(raw_file) in uploaded:
+                name = _base(raw_file)
+            elif key in shared_keys:
+                # Two uploads share this key and neither is named exactly.
+                ambiguous_cells.append(row_no)
+                continue
+            else:
+                name = by_key.get(key)
             if name:
                 links[i], link_method[i] = name, "column"
+    if ambiguous_cells:
+        warn(
+            "ambiguous_file",
+            f"{len(ambiguous_cells)} row(s) name a file that matches two or more uploads that differ only in case, "
+            "spacing or punctuation (rows " + ", ".join(str(r) for r in ambiguous_cells[:10]) + "). They are matched "
+            "by title after extraction.",
+        )
     if by_key and file_cells:
         free = [n for n in file_names if n not in set(links.values())]
-        loose = link_files_fuzzy({i: v for i, v in file_cells.items() if i not in links}, free)
+        loose = link_files_fuzzy(
+            {i: v for i, v in file_cells.items() if i not in links and kept[i][0] not in ambiguous_cells}, free
+        )
         for i, name in loose.items():
             links[i], link_method[i] = name, "column_fuzzy"
     num_col = None
     suggested: dict[int, str] = {}
-    open_rows = [i for i in range(len(kept)) if i not in links]
+    # A number two kept rows share links neither row, even when the file
+    # column already linked one of them.
+    open_rows = [
+        i for i in range(len(kept))
+        if i not in links and one("poster_number", kept[i][1]).lstrip("0") not in repeated_numbers
+    ]
     free = [n for n in file_names if n not in set(links.values())]
     if open_rows and free:
         num_col, num_links, num_suggested = link_files_by_number(
@@ -1289,8 +1516,12 @@ def map_sheet(
         table_people = people.get(join_number, []) if join_number else []
         if not table_people and file_name:
             # Authors table keyed by what the rows link files with ("7" for 7.pdf).
+            # A number two rows share names neither, so it is not looked up.
             key = file_key(file_name)
-            table_people = people_by_file.get(key) or people.get(key.lstrip("0") or "0", [])
+            stem_number = key.lstrip("0") or "0"
+            table_people = people_by_file.get(key) or (
+                people.get(stem_number, []) if stem_number not in repeated_numbers else []
+            )
         names = [f'{p["given"]} {p["family"]}'.strip() for p in table_people] or [
             a["name"] for a in parse_authors(one("authors", cells))
         ]
@@ -1313,6 +1544,8 @@ def map_sheet(
         # EasyChair topics (submission_topic.csv) are the conference's own
         # categories, so they are keywords too.
         topic_key = join_number or (file_key(file_name).lstrip("0") if file_name else "")
+        if topic_key in repeated_numbers:
+            topic_key = ""
         keywords += topics_by_number.get(topic_key, [])
         seen: set[str] = set()
         keywords = [k for k in keywords if not (k.lower() in seen or seen.add(k.lower()))]
@@ -1362,6 +1595,13 @@ def map_sheet(
         if form.get("project_license"):
             hints.setdefault(row_key, {})["project_license"] = form["project_license"]
 
+    unverified = [kept[i][0] for i, m in link_method.items() if m == "column_unverified"]
+    if unverified:
+        warn(
+            "files_not_uploaded",
+            f"No poster files were uploaded yet, so {len(unverified)} row(s) keep the file name the sheet gives. Each "
+            "re-links once a file with that name is uploaded, and its title is checked after extraction.",
+        )
     fuzzy_rows = [kept[i][0] for i, m in link_method.items() if m == "column_fuzzy"]
     if fuzzy_rows:
         warn(
@@ -1473,6 +1713,7 @@ def map_sheet(
         or number_checked
         or fuzzy_checked
         or values_checked
+        or bool(unverified)
         or any(w["severity"] == "error" for w in warnings),
         "ok": bool(used) or bool(match_rows),
         "fields": FIELDS,

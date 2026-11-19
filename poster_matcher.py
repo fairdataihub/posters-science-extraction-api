@@ -60,7 +60,8 @@ MARGIN = 0.10  # lead over the next candidate, on both the row and the poster si
 FINAL_MARGIN = 0.05  # tier 4 lead
 TITLE_WEIGHT = 0.75  # combined score = 0.75 title + 0.25 authors
 WORD_FUZZ = 0.80  # two words count as the same when their spelling ratio is this high
-PREFILTER = 0.25  # pairs sharing less than this (Dice of exact words) are not scored
+PREFILTER = 0.25  # pairs sharing less than this (Dice of near-same words) are not scored
+CANDIDATES_PER_ROW = 25  # each row scores at most this many posters, best prefilter first
 # Title check on rows already paired with a file (file name column, close file
 # name, number). Calibrated on real titles from 53 conferences: a title against
 # a noisy copy of itself (cut short, OCR slips, a subtitle added, words
@@ -294,14 +295,42 @@ def normalize_items(items) -> list[dict]:
     return out
 
 
-def _best_other(target: dict, others: list[dict]) -> float:
-    """Highest bag of words title score between target and any of others."""
-    tw = content_words(words(target.get("title", "")))
-    tset = set(tw)
+def word_keys(w: str) -> set[str]:
+    """
+    Lookup keys for a word: the word, and for words longer than three letters
+    the word with any one letter dropped. Two words that differ by one OCR
+    slip (a letter swapped, added or lost) share a key, so pairs that only
+    agree once spelling slips are allowed are still found as candidates.
+    """
+    if len(w) <= 3:
+        return {w}
+    return {w} | {w[:k] + w[k + 1:] for k in range(len(w))}
+
+
+def _title_keys(item: dict) -> tuple[list[str], set[str]]:
+    cw = content_words(words(item.get("title", "")))
+    keys: set[str] = set()
+    for w in cw:
+        keys |= word_keys(w)
+    return cw, keys
+
+
+def _best_other(target: dict, others: list[dict], keyed=None) -> float:
+    """Highest bag of words title score between target and any of others that
+    shares a word with it, OCR slips allowed. keyed caches _title_keys by id."""
+    keyed = keyed if keyed is not None else {}
+
+    def get(item):
+        hit = keyed.get(id(item))
+        if hit is None:
+            hit = keyed[id(item)] = _title_keys(item)
+        return hit
+
+    tw, tkeys = get(target)
     best = 0.0
     for o in others:
-        ow = content_words(words(o.get("title", "")))
-        if not tset & set(ow):
+        ow, okeys = get(o)
+        if not tkeys & okeys:
             continue
         best = max(best, words_score(tw, ow))
     return best
@@ -336,6 +365,7 @@ def match_rows_to_posters(rows: list[dict], posters: list[dict], pairs: list[dic
     # no other row or poster fits better: the number in a file name ("(2)", a
     # version) is weak evidence, so it never wins against a clearer title.
     suggested_matches: list[dict] = []
+    keyed: dict[int, tuple[list[str], set[str]]] = {}
     by_file = {p["file_name"]: p for p in posters}
     for r in rows:
         poster = by_file.get(r.get("suggested_file") or "")
@@ -345,7 +375,7 @@ def match_rows_to_posters(rows: list[dict], posters: list[dict], pairs: list[dic
         if check["status"] == "agree":
             other_rows = [o for o in rows if o is not r]
             other_posters = [p for p in by_file.values() if p is not poster]
-            rival = max(_best_other(poster, other_rows), _best_other(r, other_posters))
+            rival = max(_best_other(poster, other_rows, keyed), _best_other(r, other_posters, keyed))
             if check["words_score"] - rival < FINAL_MARGIN:
                 continue
             suggested_matches.append(
@@ -374,23 +404,32 @@ def match_rows_to_posters(rows: list[dict], posters: list[dict], pairs: list[dic
     row_content = [content_words(w) for w in row_words]
     poster_content = [content_words(w) for w in poster_words]
 
-    # Candidate pairs share at least one content word; score only those whose
-    # exact word overlap reaches PREFILTER (an upper bound on what OCR slips
-    # can lift into a match).
-    index: dict[str, list[int]] = {}
+    # Candidate pairs share content words, the same or one OCR slip apart
+    # (word_keys). Score only those whose shared words reach PREFILTER, and
+    # for each row only its CANDIDATES_PER_ROW best by that share, so a batch
+    # of near-identical titles cannot make the scoring quadratic.
+    index: dict[str, set[int]] = {}
     for j, ws in enumerate(poster_content):
         for w in set(ws):
-            index.setdefault(w, []).append(j)
+            for k in word_keys(w):
+                index.setdefault(k, set()).add(j)
     scores: dict[tuple[int, int], dict] = {}
     for i, ws in enumerate(row_content):
         shared: dict[int, int] = {}
         for w in set(ws):
-            for j in index.get(w, ()):
+            hit: set[int] = set()
+            for k in word_keys(w):
+                hit |= index.get(k, set())
+            for j in hit:
                 shared[j] = shared.get(j, 0) + 1
         rset = len(set(ws))
-        for j, n in shared.items():
-            if 2 * n / (rset + len(set(poster_content[j]))) < PREFILTER:
-                continue
+        ranked = sorted(
+            ((2 * n / (rset + len(set(poster_content[j]))), j) for j, n in shared.items()),
+            reverse=True,
+        )
+        for dice, j in ranked[:CANDIDATES_PER_ROW]:
+            if dice < PREFILTER:
+                break
             scores[(i, j)] = _pair_scores(rows[i], posters[j], row_words[i], poster_words[j], ws, poster_content[j])
 
     by_row: dict[int, list[int]] = {}
@@ -403,18 +442,39 @@ def match_rows_to_posters(rows: list[dict], posters: list[dict], pairs: list[dic
     used_files: set[int] = set()
     matches: list[dict] = []
 
+    # Each row's and each poster's candidates, best first per score key, so
+    # the runner up and best candidate are found by walking past the few
+    # already used instead of scanning every alternative.
+    ranked_cache: dict[tuple[str, str, int], list[tuple[float, int]]] = {}
+
+    def ranked(side: str, x: int, key: str) -> list[tuple[float, int]]:
+        hit = ranked_cache.get((side, key, x))
+        if hit is None:
+            if side == "row":
+                hit = sorted(((scores[(x, k)][key], k) for k in by_row.get(x, [])), reverse=True)
+            else:
+                hit = sorted(((scores[(k, x)][key], k) for k in by_file.get(x, [])), reverse=True)
+            ranked_cache[(side, key, x)] = hit
+        return hit
+
+    def _first(side: str, x: int, key: str, skip: int | None, used: set[int]) -> tuple[float, int] | None:
+        for v, k in ranked(side, x, key):
+            if k != skip and k not in used:
+                return v, k
+        return None
+
     def runner_up(i: int, j: int, key: str) -> float:
-        others = [scores[(i, k)][key] for k in by_row.get(i, []) if k != j and k not in used_files]
-        others += [scores[(k, j)][key] for k in by_file.get(j, []) if k != i and k not in used_rows]
-        return max(others, default=0.0)
+        a = _first("row", i, key, j, used_files)
+        b = _first("file", j, key, i, used_rows)
+        return max(a[0] if a else 0.0, b[0] if b else 0.0)
 
     def best_of_row(i: int, key: str) -> int | None:
-        live = [k for k in by_row.get(i, []) if k not in used_files]
-        return max(live, key=lambda k: scores[(i, k)][key], default=None)
+        hit = _first("row", i, key, None, used_files)
+        return hit[1] if hit else None
 
     def best_of_file(j: int, key: str) -> int | None:
-        live = [k for k in by_file.get(j, []) if k not in used_rows]
-        return max(live, key=lambda k: scores[(k, j)][key], default=None)
+        hit = _first("file", j, key, None, used_rows)
+        return hit[1] if hit else None
 
     rounds = 0
     while len(used_rows) < len(rows) and len(used_files) < len(posters):
