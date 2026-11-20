@@ -135,6 +135,21 @@ _ALIAS_INDEX = {alias: fld for fld, aliases in ALIASES.items() for alias in alia
 # ---------------------------------------------------------------------------
 # Known templates (tier a). Add one entry per confirmed organizer format.
 # `headers` must all be present; extra columns (a file name column) are fine.
+#
+# Keys a template can have:
+#   id, name        Template id (FORMATS maps a choosable format to it) and
+#                   the name used in messages.
+#   headers         {column: field}, all required in the poster table.
+#   optional        {column: field}, mapped when present.
+#   files           {"excel": n, "text": n}: how many Excel and CSV/TSV files
+#                   the format may upload (0 refuses that type).
+#   main_file       CSV file name of the poster table, when the export can
+#                   come as several CSV files; it is then the required one.
+#   main_sheet      Workbook sheet name of the poster table.
+#   multi_file      True when only the files named here may be uploaded.
+#   tables          The export's other tables: [{name, file, headers,
+#                   optional}], checked by their columns.
+#   file_number     True when files named by submission number link directly.
 # ---------------------------------------------------------------------------
 
 TEMPLATES: list[dict] = [
@@ -157,6 +172,8 @@ TEMPLATES: list[dict] = [
             "X": "social",
             "Comment": "comment",
         },
+        # Curious gives its own Excel template only.
+        "files": {"excel": 1, "text": 0},
     },
     {
         # Basic submission download (one sheet) and the Submissions sheet of the
@@ -184,6 +201,9 @@ TEMPLATES: list[dict] = [
         # Poster files named by submission number (17.pdf, bosc_submission_17.pdf)
         # are the documented way to link files, so a number link needs no check.
         "file_number": True,
+        # The Excel download (the conference data workbook, sometimes with a
+        # separate authors copy) or up to four CSV files.
+        "files": {"excel": 2, "text": 4},
         # The Conference data workbook, or its sheets as CSV files dropped
         # together: submission.csv is this table, the rest are below.
         "main_file": "submission.csv",
@@ -208,17 +228,41 @@ TEMPLATES: list[dict] = [
 FORMATS: dict[str, str] = {"easychair": "easychair", "curious": "curious-2027"}
 
 
-# What each format may upload. EasyChair gives its Excel download (the
-# conference data workbook, sometimes with a separate authors copy) or up to
-# four CSV files (submission.csv, author.csv, submission_topic.csv,
-# topics.csv). Curious gives its own Excel template only.
+# File types a sheet can come as. What each format may upload is its
+# template's `files`.
 EXCEL_EXTENSIONS = (".xlsx", ".xlsm", ".xls")
 TEXT_EXTENSIONS = (".csv", ".tsv")
-FORMAT_FILE_LIMITS: dict[str, dict[str, int]] = {
-    "easychair": {"excel": 2, "text": 4},
-    "curious": {"excel": 1, "text": 0},
-}
 MAX_SHEET_FILES = 6
+
+
+def _template_for(fmt: str) -> dict:
+    return next(t for t in TEMPLATES if t["id"] == FORMATS[fmt])
+
+
+def _csv_file_names(tpl: dict) -> list[str]:
+    """The CSV files a template's export splits into, main table first."""
+    names = [tpl.get("main_file")] + [t.get("file") for t in tpl.get("tables", [])]
+    return [n for n in names if n]
+
+
+def _files_wording(tpl: dict) -> str:
+    """'one Excel file (.xlsx) ...' for a format's `files`, for messages."""
+    limits = tpl["files"]
+    parts = []
+    if limits["excel"]:
+        n = limits["excel"]
+        parts.append("one Excel file (.xlsx)" if n == 1 else f"up to {n} Excel files (.xlsx)")
+    if limits["text"]:
+        n = limits["text"]
+        csv = "one CSV file" if n == 1 else f"up to {n} CSV files"
+        names = _csv_file_names(tpl)
+        parts.append(f"{csv} ({', '.join(names)})" if names else csv)
+    wording = " or ".join(parts)
+    if not limits["text"]:
+        wording += ". CSV files are not accepted"
+    elif not limits["excel"]:
+        wording += ". Excel files are not accepted"
+    return wording
 
 
 def check_files(filenames: list[str], fmt: str | None) -> None:
@@ -227,25 +271,13 @@ def check_files(filenames: list[str], fmt: str | None) -> None:
         raise ValueError(f"Upload at most {MAX_SHEET_FILES} sheet files at once.")
     if not fmt:
         return
+    tpl = _template_for(fmt)
+    limits = tpl["files"]
     excel = sum(1 for n in filenames if n.lower().endswith(EXCEL_EXTENSIONS))
     text = sum(1 for n in filenames if n.lower().endswith(TEXT_EXTENSIONS))
-    limits = FORMAT_FILE_LIMITS[fmt]
-    if fmt == "curious":
-        if text or excel != 1 or len(filenames) != 1:
-            raise SheetFormatError(
-                "The Curious format takes one Excel file (.xlsx), the poster information template from Curious. "
-                "CSV files are not accepted.",
-                [],
-                None,
-            )
-        return
-    if excel > limits["excel"] or text > limits["text"]:
-        raise SheetFormatError(
-            f"The EasyChair format takes up to {limits['excel']} Excel files or up to {limits['text']} CSV files "
-            "(submission.csv, author.csv, submission_topic.csv, topics.csv).",
-            [],
-            None,
-        )
+    other = len(filenames) - excel - text
+    if other or excel > limits["excel"] or text > limits["text"]:
+        raise SheetFormatError(f"The {tpl['name']} takes {_files_wording(tpl)}.", [], None)
 
 
 class SheetFormatError(ValueError):
@@ -259,7 +291,7 @@ class SheetFormatError(ValueError):
 
 def check_format(headers: list[str], fmt: str) -> None:
     """Raise SheetFormatError when `headers` lack a column of format `fmt`."""
-    tpl = next(t for t in TEMPLATES if t["id"] == FORMATS[fmt])
+    tpl = _template_for(fmt)
     present = {_norm_header(h) for h in headers}
     missing = [h for h in tpl["headers"] if _norm_header(h) not in present]
     if not missing:
@@ -279,13 +311,14 @@ def _first_header_row(rows: list[list[str]]) -> list[str] | None:
 
 def check_tables(files: list[tuple[bytes, str]], fmt: str) -> None:
     """
-    Check the columns of a format's other tables (EasyChair's Authors,
-    Submission topics and Topics, as sheets or CSV files), that every CSV file
-    is one of the format's, and that the required CSV file is there. File
-    types and counts are check_files; the main table's columns are
-    check_format. Raises SheetFormatError.
+    Check the columns of a format's other tables (its template's `tables`,
+    as sheets or CSV files), that every CSV file is one of the format's when
+    the template is `multi_file`, and that its `main_file` is there when only
+    CSV files were sent. File types and counts are check_files; the main
+    table's columns are check_format. Formats without `tables` or
+    `main_file` pass. Raises SheetFormatError.
     """
-    tpl = next(t for t in TEMPLATES if t["id"] == FORMATS[fmt])
+    tpl = _template_for(fmt)
     tables = tpl.get("tables", [])
 
     def stem(name: str) -> str:
@@ -293,11 +326,11 @@ def check_tables(files: list[tuple[bytes, str]], fmt: str) -> None:
 
     main_names = {stem(tpl.get("main_file", "")), _norm_header(tpl.get("main_sheet", ""))} - {""}
     main_headers = {_norm_header(h) for h in tpl["headers"]}
-    csv_names = [tpl.get("main_file")] + [t.get("file") for t in tables]
+    csv_names = _csv_file_names(tpl)
     all_csv = True
     main_found = False
     for data, filename in files:
-        is_csv = os.path.splitext(filename.lower())[1] in (".csv", ".tsv", ".txt")
+        is_csv = filename.lower().endswith(TEXT_EXTENSIONS)
         all_csv = all_csv and is_csv
         for sheet_name, rows in _read_rows(data, filename):
             name = stem(filename) if is_csv else _norm_header(sheet_name)
@@ -324,7 +357,7 @@ def check_tables(files: list[tuple[bytes, str]], fmt: str) -> None:
             if is_csv and tpl.get("multi_file"):
                 raise SheetFormatError(
                     f"{label} is not one of the {tpl['name']} CSV files "
-                    f"({', '.join(n for n in csv_names if n)}).",
+                    f"({', '.join(csv_names)}).",
                     [],
                     None,
                 )
