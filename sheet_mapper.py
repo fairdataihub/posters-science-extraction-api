@@ -184,6 +184,21 @@ TEMPLATES: list[dict] = [
         # Poster files named by submission number (17.pdf, bosc_submission_17.pdf)
         # are the documented way to link files, so a number link needs no check.
         "file_number": True,
+        # The Conference data workbook, or its sheets as CSV files dropped
+        # together: submission.csv is this table, the rest are below.
+        "main_file": "submission.csv",
+        "main_sheet": "Submissions",
+        "multi_file": True,
+        "tables": [
+            {
+                "name": "Authors",
+                "file": "author.csv",
+                "headers": ["submission #", "first name", "last name", "affiliation"],
+                "optional": ["email", "country", "Web page", "person #", "corresponding?"],
+            },
+            {"name": "Submission topics", "file": "submission_topic.csv", "headers": ["submission #", "topic"]},
+            {"name": "Topics", "file": "topics.csv", "headers": ["topic", "header?"]},
+        ],
     },
 ]
 
@@ -255,6 +270,69 @@ def check_format(headers: list[str], fmt: str) -> None:
     if detected:
         message += f" It looks like the {other['name']}; choose that format instead."
     raise SheetFormatError(message, missing, detected)
+
+
+def _first_header_row(rows: list[list[str]]) -> list[str] | None:
+    """The first row (of the first 15) naming at least two columns."""
+    return next((r for r in rows[:15] if sum(1 for c in r if str(c).strip()) >= 2), None)
+
+
+def check_tables(files: list[tuple[bytes, str]], fmt: str) -> None:
+    """
+    Check the columns of a format's other tables (EasyChair's Authors,
+    Submission topics and Topics, as sheets or CSV files), that every CSV file
+    is one of the format's, and that the required CSV file is there. File
+    types and counts are check_files; the main table's columns are
+    check_format. Raises SheetFormatError.
+    """
+    tpl = next(t for t in TEMPLATES if t["id"] == FORMATS[fmt])
+    tables = tpl.get("tables", [])
+
+    def stem(name: str) -> str:
+        return _norm_header(os.path.splitext(os.path.basename(name))[0])
+
+    main_names = {stem(tpl.get("main_file", "")), _norm_header(tpl.get("main_sheet", ""))} - {""}
+    main_headers = {_norm_header(h) for h in tpl["headers"]}
+    csv_names = [tpl.get("main_file")] + [t.get("file") for t in tables]
+    all_csv = True
+    main_found = False
+    for data, filename in files:
+        is_csv = os.path.splitext(filename.lower())[1] in (".csv", ".tsv", ".txt")
+        all_csv = all_csv and is_csv
+        for sheet_name, rows in _read_rows(data, filename):
+            name = stem(filename) if is_csv else _norm_header(sheet_name)
+            label = os.path.basename(filename) if is_csv else f"The {sheet_name} sheet"
+            header = _first_header_row(rows)
+            present = {_norm_header(h) for h in header or []}
+            if name in main_names or (present and main_headers <= present):
+                main_found = True
+                continue
+            # Recognized by its columns first, so a renamed file still counts.
+            if any(present and {_norm_header(h) for h in t["headers"]} <= present for t in tables):
+                continue
+            table = next(
+                (t for t in tables if name in {_norm_header(t["name"]), stem(t.get("file", ""))}), None
+            )
+            if table:
+                missing = [h for h in table["headers"] if _norm_header(h) not in present]
+                raise SheetFormatError(
+                    f"{label} is not the {table['name']} table of the {tpl['name']}: it has no "
+                    f"{', '.join(missing)} column{'s' if len(missing) > 1 else ''}.",
+                    missing,
+                    None,
+                )
+            if is_csv and tpl.get("multi_file"):
+                raise SheetFormatError(
+                    f"{label} is not one of the {tpl['name']} CSV files "
+                    f"({', '.join(n for n in csv_names if n)}).",
+                    [],
+                    None,
+                )
+            # Any other sheet in a workbook is left alone.
+    if all_csv and tpl.get("main_file") and not main_found:
+        raise SheetFormatError(
+            f"Add {tpl['main_file']}: it is the one CSV file that is required.", [], None
+        )
 
 
 def header_fingerprint(headers: list[str]) -> str:
@@ -1341,6 +1419,8 @@ def map_sheet(
     if expected_format is not None and expected_format not in FORMATS:
         raise ValueError(f"Unknown sheet format {expected_format!r}; expected one of {', '.join(FORMATS)}.")
     check_files([filename] + [n for _, n in (extra_files or [])], expected_format)
+    if expected_format:
+        check_tables([(data, filename)] + list(extra_files or []), expected_format)
     table, author_table, topics_by_number = read_tables([(data, filename)] + list(extra_files or []))
     if expected_format:
         check_format(table.headers, expected_format)
