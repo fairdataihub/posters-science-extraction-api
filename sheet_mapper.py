@@ -347,7 +347,7 @@ def check_format(headers: list[str], fmt: str, table: "Table | None" = None) -> 
         return
     other = match_template(headers)
     detected = next((k for k, v in FORMATS.items() if other and v == other["id"]), None)
-    message = f"This sheet is not the {tpl['name']}: it has no {_columns_wording(missing)}."
+    message = f"This worksheet is not the {tpl['name']}: it has no {_columns_wording(missing)}."
     if detected:
         message += f" It looks like the {other['name']}; choose that format instead."
     issue = sheet_issue(
@@ -594,7 +594,7 @@ def _read_rows(data: bytes, filename: str, budget: _Budget | None = None) -> lis
         finally:
             book.release_resources()
         return out
-    raise ValueError(f"Unsupported sheet type: {ext or filename}. Use .xlsx, .xls, .csv or .tsv.")
+    raise ValueError(f"Unsupported worksheet type: {ext or filename}. Use .xlsx, .xls, .csv or .tsv.")
 
 
 def _header_score(cells: list[str]) -> int:
@@ -1609,11 +1609,11 @@ def map_sheet(
             issue = message
         else:
             parts = [f"{v} {reasons[k]}" for k, v in skipped.items() if v]
-            message = "The sheet has no accepted posters: every row is skipped (" + ", ".join(parts) + ")."
+            message = "The worksheet has no accepted posters: every row is skipped (" + ", ".join(parts) + ")."
             issue = (
                 f"All {len(data_rows)} row{'s' if len(data_rows) != 1 else ''} below the header are skipped ("
                 + ", ".join(parts)
-                + "). Mark the accepted posters, or export the sheet again after decisions are made."
+                + "). Mark the accepted posters, or export the worksheet again after decisions are made."
             )
         raise SheetFormatError(message, [], None, [sheet_issue(issue, **where)])
 
