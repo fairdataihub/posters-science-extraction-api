@@ -275,22 +275,71 @@ def check_files(filenames: list[str], fmt: str | None) -> None:
     limits = tpl["files"]
     excel = sum(1 for n in filenames if n.lower().endswith(EXCEL_EXTENSIONS))
     text = sum(1 for n in filenames if n.lower().endswith(TEXT_EXTENSIONS))
-    other = len(filenames) - excel - text
+    other = [n for n in filenames if not n.lower().endswith(EXCEL_EXTENSIONS + TEXT_EXTENSIONS)]
     if other or excel > limits["excel"] or text > limits["text"]:
-        raise SheetFormatError(f"The {tpl['name']} takes {_files_wording(tpl)}.", [], None)
+        message = f"The {tpl['name']} takes {_files_wording(tpl)}."
+        issues = [sheet_issue(message)]
+        issues += [sheet_issue("This file type is not a sheet this format takes.", file=os.path.basename(n))
+                   for n in other]
+        if not limits["text"]:
+            issues += [sheet_issue("CSV files are not accepted for this format.", file=os.path.basename(n))
+                       for n in filenames if n.lower().endswith(TEXT_EXTENSIONS)]
+        if not limits["excel"]:
+            issues += [sheet_issue("Excel files are not accepted for this format.", file=os.path.basename(n))
+                       for n in filenames if n.lower().endswith(EXCEL_EXTENSIONS)]
+        raise SheetFormatError(message, [], None, issues)
 
 
 class SheetFormatError(ValueError):
     """The sheet is not the format the organizer chose."""
 
-    def __init__(self, message: str, missing: list[str], detected: str | None):
+    def __init__(
+        self, message: str, missing: list[str], detected: str | None, issues: list[dict] | None = None
+    ):
         super().__init__(message)
         self.missing = missing
         self.detected = detected
+        # Where each problem is, for the app to list: [{file, sheet, row,
+        # message, missing, found}]. file, sheet and row are None when the
+        # problem is not at one place (a file that is not there).
+        self.issues = issues or [sheet_issue(message, missing=missing)]
 
 
-def check_format(headers: list[str], fmt: str) -> None:
-    """Raise SheetFormatError when `headers` lack a column of format `fmt`."""
+class SheetReadError(ValueError):
+    """A sheet file could not be read (corrupt, too large); names the file."""
+
+    def __init__(self, message: str, file: str | None):
+        super().__init__(message)
+        self.file = file
+
+
+def sheet_issue(
+    message: str,
+    *,
+    file: str | None = None,
+    sheet: str | None = None,
+    row: int | None = None,
+    missing: list[str] | None = None,
+    found: list[str] | None = None,
+) -> dict:
+    """One rejection reason and where it is (row is 1-based, as in Excel)."""
+    return {
+        "message": message,
+        "file": file,
+        "sheet": sheet,
+        "row": row,
+        "missing": missing or [],
+        "found": [h for h in (found or []) if str(h).strip()],
+    }
+
+
+def _columns_wording(missing: list[str]) -> str:
+    return f"{', '.join(missing)} column{'s' if len(missing) > 1 else ''}"
+
+
+def check_format(headers: list[str], fmt: str, table: "Table | None" = None) -> None:
+    """Raise SheetFormatError when `headers` lack a column of format `fmt`.
+    With the table, the error says which file, sheet and row the headers are on."""
     tpl = _template_for(fmt)
     present = {_norm_header(h) for h in headers}
     missing = [h for h in tpl["headers"] if _norm_header(h) not in present]
@@ -298,15 +347,26 @@ def check_format(headers: list[str], fmt: str) -> None:
         return
     other = match_template(headers)
     detected = next((k for k, v in FORMATS.items() if other and v == other["id"]), None)
-    message = f"This sheet is not the {tpl['name']}: it has no {', '.join(missing)} column{'s' if len(missing) > 1 else ''}."
+    message = f"This sheet is not the {tpl['name']}: it has no {_columns_wording(missing)}."
     if detected:
         message += f" It looks like the {other['name']}; choose that format instead."
-    raise SheetFormatError(message, missing, detected)
+    issue = sheet_issue(
+        f"The header row has no {_columns_wording(missing)}.",
+        file=table.file_name or None if table else None,
+        sheet=table.sheet_name if table else None,
+        row=table.header_row if table else None,
+        missing=missing,
+        found=headers,
+    )
+    raise SheetFormatError(message, missing, detected, [issue])
 
 
-def _first_header_row(rows: list[list[str]]) -> list[str] | None:
-    """The first row (of the first 15) naming at least two columns."""
-    return next((r for r in rows[:15] if sum(1 for c in r if str(c).strip()) >= 2), None)
+def _first_header_row(rows: list[list[str]]) -> tuple[int, list[str]] | tuple[None, None]:
+    """The first row (of the first 15) naming at least two columns, and its
+    1-based row number."""
+    return next(
+        ((i + 1, r) for i, r in enumerate(rows[:15]) if sum(1 for c in r if str(c).strip()) >= 2), (None, None)
+    )
 
 
 def check_tables(files: list[tuple[bytes, str]], fmt: str) -> None:
@@ -316,7 +376,8 @@ def check_tables(files: list[tuple[bytes, str]], fmt: str) -> None:
     the template is `multi_file`, and that its `main_file` is there when only
     CSV files were sent. File types and counts are check_files; the main
     table's columns are check_format. Formats without `tables` or
-    `main_file` pass. Raises SheetFormatError.
+    `main_file` pass. Raises SheetFormatError with every problem found, not
+    only the first.
     """
     tpl = _template_for(fmt)
     tables = tpl.get("tables", [])
@@ -329,13 +390,15 @@ def check_tables(files: list[tuple[bytes, str]], fmt: str) -> None:
     csv_names = _csv_file_names(tpl)
     all_csv = True
     main_found = False
+    issues: list[dict] = []
     for data, filename in files:
         is_csv = filename.lower().endswith(TEXT_EXTENSIONS)
         all_csv = all_csv and is_csv
-        for sheet_name, rows in _read_rows(data, filename):
+        base = os.path.basename(filename)
+        for sheet_name, rows in read_sheet_file(data, filename):
             name = stem(filename) if is_csv else _norm_header(sheet_name)
-            label = os.path.basename(filename) if is_csv else f"The {sheet_name} sheet"
-            header = _first_header_row(rows)
+            label = base if is_csv else f"The {sheet_name} sheet"
+            row_no, header = _first_header_row(rows)
             present = {_norm_header(h) for h in header or []}
             if name in main_names or (present and main_headers <= present):
                 main_found = True
@@ -346,26 +409,46 @@ def check_tables(files: list[tuple[bytes, str]], fmt: str) -> None:
             table = next(
                 (t for t in tables if name in {_norm_header(t["name"]), stem(t.get("file", ""))}), None
             )
+            where = {"file": base, "sheet": None if is_csv else sheet_name}
             if table:
                 missing = [h for h in table["headers"] if _norm_header(h) not in present]
-                raise SheetFormatError(
+                issues.append(sheet_issue(
                     f"{label} is not the {table['name']} table of the {tpl['name']}: it has no "
-                    f"{', '.join(missing)} column{'s' if len(missing) > 1 else ''}.",
-                    missing,
-                    None,
-                )
-            if is_csv and tpl.get("multi_file"):
-                raise SheetFormatError(
-                    f"{label} is not one of the {tpl['name']} CSV files "
-                    f"({', '.join(csv_names)}).",
-                    [],
-                    None,
-                )
+                    f"{_columns_wording(missing)}.",
+                    **where, row=row_no, missing=missing, found=header,
+                ))
+            elif is_csv and tpl.get("multi_file"):
+                issues.append(sheet_issue(
+                    f"{label} is not one of the {tpl['name']} CSV files ({', '.join(csv_names)}).",
+                    **where, row=row_no, found=header,
+                ))
             # Any other sheet in a workbook is left alone.
     if all_csv and tpl.get("main_file") and not main_found:
-        raise SheetFormatError(
-            f"Add {tpl['main_file']}: it is the one CSV file that is required.", [], None
-        )
+        issues.append(sheet_issue(f"Add {tpl['main_file']}: it is the one CSV file that is required."))
+    if issues:
+        message = issues[0]["message"]
+        if len(issues) > 1:
+            message += f" ({len(issues) - 1} more problem{'s' if len(issues) > 2 else ''})"
+        missing = [h for issue in issues for h in issue["missing"]]
+        raise SheetFormatError(message, missing, None, issues)
+
+
+def read_sheet_file(data: bytes, filename: str, budget: "_Budget | None" = None) -> list[tuple[str, list[list[str]]]]:
+    """_read_rows, with any read error naming the file it came from."""
+    try:
+        return _read_rows(data, filename, budget)
+    except SheetReadError:
+        raise
+    except ValueError as e:
+        raise SheetReadError(str(e), os.path.basename(filename)) from e
+    except Exception as e:
+        # openpyxl and xlrd raise their own errors for corrupt, encrypted or
+        # unsupported files.
+        raise SheetReadError(
+            "This file could not be opened. It may be damaged or password protected; save it again from "
+            "Excel (without a password) and retry.",
+            os.path.basename(filename),
+        ) from e
 
 
 def header_fingerprint(headers: list[str]) -> str:
@@ -385,6 +468,7 @@ class Table:
     header_row: int  # 1-based row number in the file
     headers: list[str]
     rows: list[tuple[int, list[str]]]  # (1-based row number, cells)
+    file_name: str = ""  # the uploaded file it was read from
 
 
 def _cell_text(value) -> str:
@@ -619,7 +703,7 @@ def read_tables(files: list[tuple[bytes, str]]) -> tuple[Table, Table | None, di
     group_headings: set[str] = set()
     budget = _Budget()
     for data, filename in files:
-        for sheet_name, rows in _read_rows(data, filename, budget):
+        for sheet_name, rows in read_sheet_file(data, filename, budget):
             for i, cells in enumerate(rows[:15]):
                 topic = _topic_columns(cells)
                 if topic:
@@ -634,18 +718,21 @@ def read_tables(files: list[tuple[bytes, str]]) -> tuple[Table, Table | None, di
                 if is_author_table(cells):
                     if authors is None:
                         authors = _table_at(sheet_name, rows, i)
+                        authors.file_name = os.path.basename(filename)
                     break
                 score = _header_score(cells)
                 if best is None or score > best[0]:
-                    best = (score, sheet_name, i, rows)
+                    best = (score, sheet_name, i, rows, os.path.basename(filename))
     if best is None or best[0] == 0:
         raise ValueError("Could not find a header row. The first rows should name the columns.")
-    _, sheet_name, idx, rows = best
+    _, sheet_name, idx, rows, best_file = best
     topics: dict[str, list[str]] = {}
     for number, topic in per_poster:
         if topic.lower() not in group_headings:
             topics.setdefault(number, []).append(topic)
-    return _table_at(sheet_name, rows, idx), authors, topics
+    table = _table_at(sheet_name, rows, idx)
+    table.file_name = best_file
+    return table, authors, topics
 
 
 def read_table(data: bytes, filename: str) -> Table:
@@ -1456,7 +1543,7 @@ def map_sheet(
         check_tables([(data, filename)] + list(extra_files or []), expected_format)
     table, author_table, topics_by_number = read_tables([(data, filename)] + list(extra_files or []))
     if expected_format:
-        check_format(table.headers, expected_format)
+        check_format(table.headers, expected_format, table)
     columns, tpl, notes = map_columns(table, overrides)
     for n in notes:
         warn("mapping_note", n)
@@ -1510,6 +1597,25 @@ def map_sheet(
     if any(skipped.values()):
         parts = [f"{v} {reasons[k]}" for k, v in skipped.items() if v]
         warn("rows_skipped", "Skipped rows that are not accepted posters: " + ", ".join(parts) + ".", "info")
+
+    # A sheet with no poster rows left would fill nothing: refuse it.
+    if not kept:
+        where = {
+            "file": table.file_name or None,
+            "sheet": None if (table.file_name or "").lower().endswith(TEXT_EXTENSIONS) else table.sheet_name,
+        }
+        if not data_rows:
+            message = "The worksheet is blank apart from the header row."
+            issue = message
+        else:
+            parts = [f"{v} {reasons[k]}" for k, v in skipped.items() if v]
+            message = "The sheet has no accepted posters: every row is skipped (" + ", ".join(parts) + ")."
+            issue = (
+                f"All {len(data_rows)} row{'s' if len(data_rows) != 1 else ''} below the header are skipped ("
+                + ", ".join(parts)
+                + "). Mark the accepted posters, or export the sheet again after decisions are made."
+            )
+        raise SheetFormatError(message, [], None, [sheet_issue(issue, **where)])
 
     # A poster number two rows share (positions that restart per track) names
     # neither row for sure: no file, authors table or topic joins by it.

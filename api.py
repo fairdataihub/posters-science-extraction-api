@@ -22,7 +22,7 @@ from flask_cors import CORS
 from poster2json.extract import log, load_json_model
 from feature_flags import features_for_environment
 from poster_matcher import match_rows_to_posters
-from sheet_mapper import FORMATS, MAX_ROWS, MAX_SHEET_FILES, SheetFormatError, map_sheet
+from sheet_mapper import FORMATS, MAX_ROWS, MAX_SHEET_FILES, SheetFormatError, SheetReadError, map_sheet, sheet_issue
 from job_worker import (
     run_worker_loop,
     generate_and_upload_thumbnail,
@@ -249,9 +249,12 @@ def sheets_map():
                            expected_format=sheet_format)
     except SheetFormatError as e:
         return jsonify({"error": str(e), "code": "format_mismatch", "format": sheet_format,
-                        "missing_columns": e.missing, "detected_format": e.detected}), 422
+                        "missing_columns": e.missing, "detected_format": e.detected, "issues": e.issues}), 422
+    except SheetReadError as e:
+        return jsonify({"error": str(e), "code": "unreadable",
+                        "issues": [sheet_issue(str(e), file=e.file)]}), 422
     except ValueError as e:
-        return jsonify({"error": str(e)}), 422
+        return jsonify({"error": str(e), "issues": [sheet_issue(str(e))]}), 422
     except Exception as e:
         print(f"[status] api: sheet mapping error: {e}")
         return jsonify({"error": "Could not read this spreadsheet"}), 422
