@@ -5,6 +5,8 @@ import random
 import sys
 import time
 
+import pytest
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import poster_matcher as pm  # noqa: E402
@@ -78,16 +80,30 @@ def test_family_name_forms():
     assert pm.author_score([], ["A. Silva"]) is None
 
 
-def test_a_few_hundred_posters_match_quickly():
+# Timing limits depend on the machine, so they only run when asked for
+# (RUN_PERF_TESTS=1). The matches are checked on every run.
+perf = pytest.mark.skipif(os.environ.get("RUN_PERF_TESTS") != "1", reason="set RUN_PERF_TESTS=1 to run timing checks")
+
+
+def few_hundred():
     rnd = random.Random(1)
     vocab = [f"w{i}" for i in range(400)]
     titles = [" ".join(rnd.sample(vocab, 9)) for _ in range(300)]
-    rows = [row(f"r{i}", t) for i, t in enumerate(titles)]
-    posters = [poster(f"{i}.pdf", t) for i, t in enumerate(titles)]
-    start = time.time()
+    return [row(f"r{i}", t) for i, t in enumerate(titles)], [poster(f"{i}.pdf", t) for i, t in enumerate(titles)]
+
+
+def test_a_few_hundred_posters_each_match_their_own_row():
+    rows, posters = few_hundred()
     out = pm.match_rows_to_posters(rows, posters)
-    assert time.time() - start < 5
-    assert len(out["matches"]) == 300
+    assert {m["row_key"]: m["file_name"] for m in out["matches"]} == {f"r{i}": f"{i}.pdf" for i in range(300)}
+
+
+@perf
+def test_a_few_hundred_posters_match_quickly():
+    rows, posters = few_hundred()
+    start = time.perf_counter()
+    pm.match_rows_to_posters(rows, posters)
+    assert time.perf_counter() - start < 5
 
 
 def test_ocr_slips_and_word_order_match_by_bag_of_words():

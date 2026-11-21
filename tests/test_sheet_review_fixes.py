@@ -55,7 +55,9 @@ def test_not_yet_accepted_row_is_dropped_once_others_are_accepted():
     ("Lee, Ann1", ["Lee, Ann"]),
     ("John Smith, Jane Doe", ["John Smith", "Jane Doe"]),
     ("Smith, Jane Doe", ["Smith", "Jane Doe"]),
-    ("Smith, John and Ann Lee", ["Smith", "John", "Ann Lee"]),
+    ("Smith, John and Ann Lee", ["Smith, John", "Ann Lee"]),
+    ("Smith, John1 & Ann Lee2", ["Smith, John", "Ann Lee"]),
+    ("Lee, Chen and Wu", ["Lee", "Chen", "Wu"]),
 ])
 def test_single_inverted_name(cell, names):
     assert [a["name"] for a in sm.parse_authors(cell)] == names
@@ -70,7 +72,8 @@ def test_numbered_affiliations_without_author_numbers_are_kept_with_a_warning():
     warnings = []
     rows = sm._creator_rows({"file_name": "a.pdf", "row_key": "row-2"}, "Ann Lee, Bo Chen",
                             "1 Lab A\n2 Lab B", lambda *a: warnings.append(a[0]))
-    assert [r.get("contributor_affiliation_2_name") for r in rows] == ["Lab B", "Lab B"]
+    for r in rows:
+        assert (r.get("contributor_affiliation_1_name"), r.get("contributor_affiliation_2_name")) == ("Lab A", "Lab B")
     assert warnings == ["affiliations_unassigned"]
 
 
@@ -124,12 +127,17 @@ def test_plain_number_links_hold_when_most_files_are_named_otherwise():
 
 
 def test_shared_number_does_not_pull_authors_or_topics_by_file_name():
-    sub = "#,title,authors,decision\n7,One,Ann Lee,accept\n7,Two,Bo Chen,accept\n"
+    sub = "#,title,authors,keywords,decision\n7,One,Ann Lee,own one,accept\n7,Two,Bo Chen,own two,accept\n"
     au = "submission #,first name,last name,affiliation\n7,Wrong,Person,Lab X\n"
-    result = sm.map_sheet(sub.encode(), "submission.csv", ["7.pdf"], extra_files=[(au.encode(), "author.csv")])
+    st = "submission #,topic\n7,Wrong Topic\n"
+    tl = "topic,header?\nWrong Topic,no\n"
+    extra = [(au.encode(), "author.csv"), (st.encode(), "submission_topic.csv"), (tl.encode(), "topics.csv")]
+    result = sm.map_sheet(sub.encode(), "submission.csv", ["7.pdf"], extra_files=extra)
     names = {m["title"]: m["authors"] for m in result["match_rows"]}
     assert names == {"One": ["Ann Lee"], "Two": ["Bo Chen"]}
     assert "Creators" not in result["sheets"] or all(c["family_name"] != "Person" for c in result["sheets"]["Creators"])
+    keywords = {r["title"]: r["keywords"] for r in result["sheets"]["About the Poster"]}
+    assert keywords == {"One": "own one", "Two": "own two"}
 
 
 # File types and limits
@@ -186,14 +194,28 @@ def test_ocr_slips_are_found_without_shared_exact_words():
     assert [(m["row_key"], m["file_name"]) for m in out["matches"]] == [("r1", "p.pdf")]
 
 
+def near_identical(n=1500):
+    title = "Genome analysis of sample {} in coastal wetland soils"
+    rows = [{"row_key": f"r{i}", "title": title.format(i), "authors": []} for i in range(n)]
+    posters = [{"file_name": f"{i}.pdf", "title": title.format(i), "authors": []} for i in range(n)]
+    return rows, posters
+
+
+def test_near_identical_titles_each_match_their_own_poster():
+    # 1001 is one slip from 101, 100 and 1011; the poster with the same title
+    # must still be among each row's candidates.
+    rows, posters = near_identical()
+    out = pm.match_rows_to_posters(rows, posters)
+    assert {m["row_key"]: m["file_name"] for m in out["matches"]} == {f"r{i}": f"{i}.pdf" for i in range(1500)}
+
+
+# Timing limits depend on the machine, so they only run when asked for.
+@pytest.mark.skipif(os.environ.get("RUN_PERF_TESTS") != "1", reason="set RUN_PERF_TESTS=1 to run timing checks")
 def test_near_identical_titles_stay_fast():
-    rows = [{"row_key": f"r{i}", "title": f"Genome analysis of sample {i} in coastal wetland soils", "authors": []}
-            for i in range(1500)]
-    posters = [{"file_name": f"{i}.pdf", "title": f"Genome analysis of sample {i} in coastal wetland soils", "authors": []}
-               for i in range(1500)]
-    start = time.time()
+    rows, posters = near_identical()
+    start = time.perf_counter()
     pm.match_rows_to_posters(rows, posters)
-    assert time.time() - start < 30
+    assert time.perf_counter() - start < 30
 
 
 # API
