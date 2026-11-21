@@ -1024,6 +1024,32 @@ def _single_inverted(text: str) -> dict | None:
     return {"name": f"{family}, {given}", "numbers": [int(n) for n in re.findall(r"\d{1,2}", m.group(2))]}
 
 
+def _mixed_inverted(text: str) -> list[dict] | None:
+    """
+    Authors split by " and ", "&", semicolons or lines where some are written
+    "Family, Given" and the rest "Given Family": "Smith, John and Ann Lee" is
+    Smith, John and Ann Lee. Read only when every piece is either one
+    "Family, Given" name or a full name of two or more words with no comma,
+    so "Lee, Chen and Wu" (three family names) is left to the comma split.
+    """
+    pieces = [p.strip() for p in re.split(r"\s*[;\n]\s*|\s+and\s+|\s*&\s*", text) if p and p.strip()]
+    if len(pieces) < 2:
+        return None
+    authors, inverted = [], False
+    for piece in pieces:
+        single = _single_inverted(piece)
+        if single is not None:
+            authors.append(single)
+            inverted = True
+            continue
+        m = re.match(r"^(.*?[^\d\s,])\s*((?:\d{1,2}\s*,?\s*)*)$", piece)
+        if not m or "," in m.group(1) or len(m.group(1).split()) < 2:
+            return None
+        authors.append({"name": re.sub(r"\s+", " ", m.group(1)).strip(),
+                        "numbers": [int(n) for n in re.findall(r"\d{1,2}", m.group(2))]})
+    return authors if inverted else None
+
+
 def parse_authors(cell: str) -> list[dict]:
     """
     "John Do1, Ann Lee1,2, Bo Chen\u00b3" -> [{name, numbers}]. Authors are split
@@ -1039,7 +1065,10 @@ def parse_authors(cell: str) -> list[dict]:
     single = _single_inverted(text)
     if single is not None:
         return [single]
-    parts = [p.strip() for p in re.split(r"\s*[,;\n]\s*|\s+and\s+|\s*&\s*", text) if p and p.strip()]
+    mixed = _mixed_inverted(text)
+    if mixed is not None:
+        return mixed
+    parts =[p.strip() for p in re.split(r"\s*[,;\n]\s*|\s+and\s+|\s*&\s*", text) if p and p.strip()]
     authors: list[dict] = []
     for part in parts:
         if re.fullmatch(r"\d{1,2}", part) and authors:
