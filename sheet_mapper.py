@@ -552,7 +552,16 @@ def _read_rows(data: bytes, filename: str, budget: _Budget | None = None) -> lis
     if ext in (".csv", ".tsv", ".txt"):
         # A long abstract can pass the csv module's 128 KB default cell limit.
         csv.field_size_limit(max(csv.field_size_limit(), 10 * 1024 * 1024))
-        text = data.decode("utf-8-sig", errors="replace")
+        # Excel's plain "CSV" on Windows saves Windows-1252, not UTF-8. Anything
+        # else that doesn't decode keeps replacement characters, and the
+        # worksheet is refused as garbled.
+        try:
+            text = data.decode("utf-8-sig")
+        except UnicodeDecodeError:
+            try:
+                text = data.decode("cp1252")
+            except UnicodeDecodeError:
+                text = data.decode("utf-8-sig", errors="replace")
         if ext == ".tsv":
             delimiter = "\t"
         else:
@@ -1399,10 +1408,59 @@ def as_url(value: str) -> str:
 
 
 
-def _creator_rows(link: dict, authors_cell: str, affiliations_cell: str, warn) -> list[dict]:
+# Text read in the wrong encoding: the replacement character, UTF-8 read as
+# Windows-1252 ("Ã©" for é, "â€™" for ’) and stray control characters.
+_GARBLED = re.compile("\ufffd|[\u00c2\u00c3][\u0080-\u00bf]|\u00e2\u20ac|[\u0080-\u009f]")
+
+
+def garbled(text: str) -> str | None:
+    """The first garbled piece of text, or None when the text reads fine."""
+    m = _GARBLED.search(text or "")
+    return m.group(0) if m else None
+
+
+def _not_one_person(name: str) -> bool:
+    """
+    A parsed author that is not one person's name: no letters, an email or
+    link, digits inside the name, or more than five words (names run
+    together with only spaces between them). Particles like "van" or "de"
+    don't count toward the five.
+    """
+    if not re.search(r"[^\W\d_]", name):
+        return True
+    if re.search(r"@|https?://|www\.|\d", name):
+        return True
+    words = [w for w in name.replace(",", " ").split() if w.lower() not in _NAME_PARTICLES]
+    return len(words) > 5
+
+
+def _shorten(text: str, limit: int = 60) -> str:
+    text = re.sub(r"\s+", " ", text or "").strip()
+    return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
+
+
+# Value problems listed when a worksheet is refused; the rest are counted.
+MAX_VALUE_ISSUES = 20
+
+
+def _creator_rows(link: dict, authors_cell: str, affiliations_cell: str, warn, problem=None) -> list[dict]:
+    """
+    One creators row per author. problem(message) reports a value we can't
+    use (an author we can't split out, an affiliation number not in the
+    list); the worksheet is refused for those.
+    """
+    problem = problem or (lambda message: None)
     label = link["file_name"] or link["row_key"]
     authors = parse_authors(authors_cell)
     numbered, plain = parse_affiliations(affiliations_cell)
+    if not authors:
+        problem(f'We couldn\'t find any author names in "{_shorten(authors_cell)}".')
+    for a in authors:
+        if _not_one_person(a["name"]):
+            problem(
+                f'We couldn\'t split the authors into people ("{_shorten(a["name"])}"). '
+                "Separate authors with commas or semicolons."
+            )
     rows = []
     unassigned_numbered = False
     for a in authors:
@@ -1413,7 +1471,12 @@ def _creator_rows(link: dict, authors_cell: str, affiliations_cell: str, warn) -
             names = [numbered[n] for n in a["numbers"] if n in numbered]
             missing = [n for n in a["numbers"] if n not in numbered]
             if missing:
-                warn("affiliation_number_missing", f'{label}: {a["name"]} points to affiliation {missing}, which is not in the list.')
+                shown = ", ".join(str(n) for n in missing)
+                problem(
+                    f'{a["name"]} points to affiliation {shown}, but the affiliations list has no number {shown}.'
+                    if len(missing) == 1
+                    else f'{a["name"]} points to affiliations {shown}, but the affiliations list doesn\'t have those numbers.'
+                )
         elif numbered and not a["numbers"] and len(numbered) == 1:
             names = list(numbered.values())
         elif numbered and not a["numbers"]:
@@ -1718,8 +1781,42 @@ def map_sheet(
     hints: dict[str, dict] = {}
     used: dict[str, int] = {}
 
+    # Values we can't use (no title, authors we can't split, an affiliation
+    # number not in the list, garbled text) refuse the worksheet, each listed
+    # with its row so the organizer can fix the file.
+    where = {
+        "file": table.file_name or None,
+        "sheet": None if (table.file_name or "").lower().endswith(TEXT_EXTENSIONS) else table.sheet_name,
+    }
+    value_issues: list[dict] = []
+    checked_fields = ("title", "authors", "affiliations", "abstract", "keywords", "track")
+
     for i, ((row_no, cells, form), title) in enumerate(zip(kept, titles)):
         row_key = f"row-{row_no}"
+
+        def problem(message: str, row_no: int = row_no) -> None:
+            value_issues.append(sheet_issue(message, row=row_no, **where))
+
+        # A row with poster details but no title. A row with only a number or
+        # file name is template filler, or left for extraction to fill.
+        if by_field.get("title") and not title and any(
+            one(fld, cells) for fld in ("authors", "affiliations", "abstract", "keywords")
+        ):
+            problem("This poster has no title. Add its title, or remove the row if it isn't a poster.")
+        bad = [
+            (c.header, piece)
+            for fld in checked_fields
+            for c in by_field.get(fld, [])
+            if (piece := garbled(cells[c.index]))
+        ]
+        if bad:
+            columns_shown = ", ".join(f'"{h}"' for h, _ in bad)
+            problem(
+                f'The {columns_shown} column{"s have" if len(bad) > 1 else " has"} broken characters ("{bad[0][1]}"), '
+                "so the file was likely saved in another text encoding. Save it again as UTF-8 (in Excel: CSV UTF-8) "
+                "and add it again."
+            )
+
         file_name = links.get(i, "")
         if file_col is not None and not file_name:
             unmatched_rows.append({"row": row_no, "value": file_cells.get(i, ""), "title": title})
@@ -1744,6 +1841,13 @@ def map_sheet(
         names = [f'{p["given"]} {p["family"]}'.strip() for p in table_people] or [
             a["name"] for a in parse_authors(one("authors", cells))
         ]
+        if table_people:
+            broken = next((piece for p in table_people for v in p.values() if isinstance(v, str) and (piece := garbled(v))), None)
+            if broken:
+                problem(
+                    f'The authors table has broken characters for this poster ("{broken}"), so the file was likely '
+                    "saved in another text encoding. Save it again as UTF-8 (in Excel: CSV UTF-8) and add it again."
+                )
         if file_name:
             # Checked against the extracted title after extraction, however it paired.
             pairs.append({"row_key": row_key, "row": row_no, "file_name": file_name, "method": link_method[i],
@@ -1786,7 +1890,7 @@ def map_sheet(
         if table_people:
             sheets[SHEET_CREATORS] += _creator_rows_from_table(link, table_people)
         elif one("authors", cells):
-            sheets[SHEET_CREATORS] += _creator_rows(link, one("authors", cells), one("affiliations", cells), warn)
+            sheets[SHEET_CREATORS] += _creator_rows(link, one("authors", cells), one("affiliations", cells), warn, problem)
         elif one("affiliations", cells):
             warn("affiliations_without_authors", f"{file_name or row_key}: affiliations given but no authors; extraction will fill authors.")
 
@@ -1814,7 +1918,21 @@ def map_sheet(
         if form.get("project_license"):
             hints.setdefault(row_key, {})["project_license"] = form["project_license"]
 
-    unverified = [kept[i][0] for i, m in link_method.items() if m == "column_unverified"]
+    if value_issues:
+        rows_affected = len({issue["row"] for issue in value_issues})
+        shown = value_issues[:MAX_VALUE_ISSUES]
+        if len(value_issues) > MAX_VALUE_ISSUES:
+            more = len(value_issues) - MAX_VALUE_ISSUES
+            shown.append(sheet_issue(f"{more} more problem{'s' if more != 1 else ''} like these.", **where))
+        raise SheetFormatError(
+            f"{rows_affected} row{'s' if rows_affected != 1 else ''} in the worksheet "
+            f"{'have' if rows_affected != 1 else 'has'} values we can't use.",
+            [],
+            None,
+            shown,
+        )
+
+    unverified =[kept[i][0] for i, m in link_method.items() if m == "column_unverified"]
     if unverified:
         warn(
             "files_not_uploaded",
