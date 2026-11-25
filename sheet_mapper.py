@@ -1499,7 +1499,7 @@ def _creator_rows(link: dict, authors_cell: str, affiliations_cell: str, warn, p
     for a in authors:
         if _not_one_person(a["name"]):
             problem(
-                f'Authors run together ("{_shorten(a["name"])}"). '
+                f'We couldn\'t tell these authors apart ("{_shorten(a["name"])}"). '
                 "Separate them with commas or semicolons."
             )
     rows = []
