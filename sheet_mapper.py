@@ -391,11 +391,13 @@ def check_tables(files: list[tuple[bytes, str]], fmt: str) -> None:
     main_found = False
     issues: list[dict] = []
     unknown: list[str] = []
+    # Size and row limits count all the files together, as in read_tables.
+    budget = _Budget()
     for data, filename in files:
         is_csv = filename.lower().endswith(TEXT_EXTENSIONS)
         all_csv = all_csv and is_csv
         base = os.path.basename(filename)
-        for sheet_name, rows in read_sheet_file(data, filename):
+        for sheet_name, rows in read_sheet_file(data, filename, budget):
             name = stem(filename) if is_csv else _norm_header(sheet_name)
             row_no, header = _first_header_row(rows)
             present = {_norm_header(h) for h in header or []}
@@ -1268,7 +1270,14 @@ def parse_authors(cell: str) -> list[dict]:
     "Smith, John; Doe, Jane" (every author as "Family, Given", split by
     semicolons, lines or "and") is two authors, kept in that form.
     """
-    text = (cell or "").translate(_SUPERSCRIPTS).replace("*", "")
+    text = re.sub(r"[*†‡§¶]", "", (cell or "").translate(_SUPERSCRIPTS))
+    # Bracketed or caret marks ("Lee (1,2)", "Lee [2]", "Lee^1,2") read like
+    # trailing digits ("Lee 1,2"), not as part of the name.
+    text = re.sub(
+        r"\^|[(\[]\s*(\d{1,2}(?:\s*[,;]\s*\d{1,2})*)\s*[)\]]",
+        lambda m: f" {m.group(1).replace(';', ',')}" if m.group(1) else "",
+        text,
+    )
     inverted = _family_given_list(text)
     if inverted is not None:
         return inverted
@@ -1961,7 +1970,7 @@ def map_sheet(
             shown,
         )
 
-    unverified =[kept[i][0] for i, m in link_method.items() if m == "column_unverified"]
+    unverified = [kept[i][0] for i, m in link_method.items() if m == "column_unverified"]
     if unverified:
         warn(
             "files_not_uploaded",
