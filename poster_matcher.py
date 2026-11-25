@@ -408,26 +408,34 @@ def match_rows_to_posters(rows: list[dict], posters: list[dict], pairs: list[dic
     # (word_keys). Score only those whose shared words reach PREFILTER, and
     # for each row only its CANDIDATES_PER_ROW best by that share, so a batch
     # of near-identical titles cannot make the scoring quadratic.
+    # Ties on that share are broken by words shared exactly: "1001" is one
+    # slip from "101", "100" and "1011", and without the tie break the poster
+    # with the same title could rank past the cap behind those.
     index: dict[str, set[int]] = {}
+    exact_index: dict[str, set[int]] = {}
     for j, ws in enumerate(poster_content):
         for w in set(ws):
+            exact_index.setdefault(w, set()).add(j)
             for k in word_keys(w):
                 index.setdefault(k, set()).add(j)
     scores: dict[tuple[int, int], dict] = {}
     for i, ws in enumerate(row_content):
         shared: dict[int, int] = {}
+        exact: dict[int, int] = {}
         for w in set(ws):
             hit: set[int] = set()
             for k in word_keys(w):
                 hit |= index.get(k, set())
             for j in hit:
                 shared[j] = shared.get(j, 0) + 1
+            for j in exact_index.get(w, ()):
+                exact[j] = exact.get(j, 0) + 1
         rset = len(set(ws))
         ranked = sorted(
-            ((2 * n / (rset + len(set(poster_content[j]))), j) for j, n in shared.items()),
-            reverse=True,
+            ((2 * n / (rset + len(set(poster_content[j]))), exact.get(j, 0), j) for j, n in shared.items()),
+            key=lambda t: (-t[0], -t[1], t[2]),
         )
-        for dice, j in ranked[:CANDIDATES_PER_ROW]:
+        for dice, _, j in ranked[:CANDIDATES_PER_ROW]:
             if dice < PREFILTER:
                 break
             scores[(i, j)] = _pair_scores(rows[i], posters[j], row_words[i], poster_words[j], ws, poster_content[j])
