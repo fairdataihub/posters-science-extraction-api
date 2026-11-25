@@ -278,16 +278,7 @@ def check_files(filenames: list[str], fmt: str | None) -> None:
     other = [n for n in filenames if not n.lower().endswith(EXCEL_EXTENSIONS + TEXT_EXTENSIONS)]
     if other or excel > limits["excel"] or text > limits["text"]:
         message = f"The {tpl['name']} takes {_files_wording(tpl)}."
-        issues = [sheet_issue(message)]
-        issues += [sheet_issue("This file type is not a sheet this format takes.", file=os.path.basename(n))
-                   for n in other]
-        if not limits["text"]:
-            issues += [sheet_issue("CSV files are not accepted for this format.", file=os.path.basename(n))
-                       for n in filenames if n.lower().endswith(TEXT_EXTENSIONS)]
-        if not limits["excel"]:
-            issues += [sheet_issue("Excel files are not accepted for this format.", file=os.path.basename(n))
-                       for n in filenames if n.lower().endswith(EXCEL_EXTENSIONS)]
-        raise SheetFormatError(message, [], None, issues)
+        raise SheetFormatError(message, [], None, [sheet_issue(message, fixable=True)])
 
 
 class SheetFormatError(ValueError):
@@ -321,8 +312,15 @@ def sheet_issue(
     row: int | None = None,
     missing: list[str] | None = None,
     found: list[str] | None = None,
+    fixable: bool = False,
 ) -> dict:
-    """One rejection reason and where it is (row is 1-based, as in Excel)."""
+    """
+    One rejection reason and where it is (row is 1-based, as in Excel).
+    fixable: the organizer added the wrong files (a file type, an extra or
+    missing file), which they can fix without us; the app then doesn't offer
+    to send the worksheet to the team. Anything else may be a platform export
+    we don't read yet.
+    """
     return {
         "message": message,
         "file": file,
@@ -330,6 +328,7 @@ def sheet_issue(
         "row": row,
         "missing": missing or [],
         "found": [h for h in (found or []) if str(h).strip()],
+        "fixable": fixable,
     }
 
 
@@ -351,7 +350,7 @@ def check_format(headers: list[str], fmt: str, table: "Table | None" = None) -> 
     if detected:
         message += f" It looks like the {other['name']}; choose that format instead."
     issue = sheet_issue(
-        f"The header row has no {_columns_wording(missing)}.",
+        "These columns are missing:",
         file=table.file_name or None if table else None,
         sheet=table.sheet_name if table else None,
         row=table.header_row if table else None,
@@ -391,13 +390,13 @@ def check_tables(files: list[tuple[bytes, str]], fmt: str) -> None:
     all_csv = True
     main_found = False
     issues: list[dict] = []
+    unknown: list[str] = []
     for data, filename in files:
         is_csv = filename.lower().endswith(TEXT_EXTENSIONS)
         all_csv = all_csv and is_csv
         base = os.path.basename(filename)
         for sheet_name, rows in read_sheet_file(data, filename):
             name = stem(filename) if is_csv else _norm_header(sheet_name)
-            label = base if is_csv else f"The {sheet_name} sheet"
             row_no, header = _first_header_row(rows)
             present = {_norm_header(h) for h in header or []}
             if name in main_names or (present and main_headers <= present):
@@ -413,18 +412,22 @@ def check_tables(files: list[tuple[bytes, str]], fmt: str) -> None:
             if table:
                 missing = [h for h in table["headers"] if _norm_header(h) not in present]
                 issues.append(sheet_issue(
-                    f"{label} is not the {table['name']} table of the {tpl['name']}: it has no "
-                    f"{_columns_wording(missing)}.",
+                    f"The {table['name']} table is missing these columns:",
                     **where, row=row_no, missing=missing, found=header,
                 ))
             elif is_csv and tpl.get("multi_file"):
-                issues.append(sheet_issue(
-                    f"{label} is not one of the {tpl['name']} CSV files ({', '.join(csv_names)}).",
-                    **where, row=row_no, found=header,
-                ))
+                unknown.append(base)
             # Any other sheet in a workbook is left alone.
+    if unknown:
+        # One line for every file we don't know, not the list of names per file.
+        one = len(unknown) == 1
+        issues.append(sheet_issue(
+            f"{', '.join(unknown)} {'is' if one else 'are'} not part of the {tpl['name']}. Remove "
+            f"{'it' if one else 'them'}. Its CSV files are {', '.join(csv_names)}.",
+            fixable=True,
+        ))
     if all_csv and tpl.get("main_file") and not main_found:
-        issues.append(sheet_issue(f"Add {tpl['main_file']}: it is the one CSV file that is required."))
+        issues.append(sheet_issue(f"Add {tpl['main_file']}. It's the one CSV file that's required.", fixable=True))
     if issues:
         message = issues[0]["message"]
         if len(issues) > 1:
@@ -1454,12 +1457,12 @@ def _creator_rows(link: dict, authors_cell: str, affiliations_cell: str, warn, p
     authors = parse_authors(authors_cell)
     numbered, plain = parse_affiliations(affiliations_cell)
     if not authors:
-        problem(f'We couldn\'t find any author names in "{_shorten(authors_cell)}".')
+        problem(f'No author names in "{_shorten(authors_cell)}".')
     for a in authors:
         if _not_one_person(a["name"]):
             problem(
-                f'We couldn\'t split the authors into people ("{_shorten(a["name"])}"). '
-                "Separate authors with commas or semicolons."
+                f'Authors run together ("{_shorten(a["name"])}"). '
+                "Separate them with commas or semicolons."
             )
     rows = []
     unassigned_numbered = False
@@ -1473,9 +1476,9 @@ def _creator_rows(link: dict, authors_cell: str, affiliations_cell: str, warn, p
             if missing:
                 shown = ", ".join(str(n) for n in missing)
                 problem(
-                    f'{a["name"]} points to affiliation {shown}, but the affiliations list has no number {shown}.'
+                    f'Affiliation {shown} for {a["name"]} isn\'t in the affiliations list.'
                     if len(missing) == 1
-                    else f'{a["name"]} points to affiliations {shown}, but the affiliations list doesn\'t have those numbers.'
+                    else f'Affiliations {shown} for {a["name"]} aren\'t in the affiliations list.'
                 )
         elif numbered and not a["numbers"] and len(numbered) == 1:
             names = list(numbered.values())
@@ -1668,15 +1671,14 @@ def map_sheet(
             "sheet": None if (table.file_name or "").lower().endswith(TEXT_EXTENSIONS) else table.sheet_name,
         }
         if not data_rows:
-            message = "The worksheet is blank apart from the header row."
+            message = "There are no rows below the header."
             issue = message
         else:
             parts = [f"{v} {reasons[k]}" for k, v in skipped.items() if v]
             message = "The worksheet has no accepted posters: every row is skipped (" + ", ".join(parts) + ")."
             issue = (
-                f"All {len(data_rows)} row{'s' if len(data_rows) != 1 else ''} below the header are skipped ("
-                + ", ".join(parts)
-                + "). Mark the accepted posters, or export the worksheet again after decisions are made."
+                "No row is an accepted poster (" + ", ".join(parts) + "). "
+                "Mark the accepted posters, or export again after decisions are made."
             )
         raise SheetFormatError(message, [], None, [sheet_issue(issue, **where)])
 
@@ -1802,7 +1804,7 @@ def map_sheet(
         if by_field.get("title") and not title and any(
             one(fld, cells) for fld in ("authors", "affiliations", "abstract", "keywords")
         ):
-            problem("This poster has no title. Add its title, or remove the row if it isn't a poster.")
+            problem("No title. Add one, or remove the row.")
         bad = [
             (c.header, piece)
             for fld in checked_fields
@@ -1812,9 +1814,8 @@ def map_sheet(
         if bad:
             columns_shown = ", ".join(f'"{h}"' for h, _ in bad)
             problem(
-                f'The {columns_shown} column{"s have" if len(bad) > 1 else " has"} broken characters ("{bad[0][1]}"), '
-                "so the file was likely saved in another text encoding. Save it again as UTF-8 (in Excel: CSV UTF-8) "
-                "and add it again."
+                f'Broken characters ("{bad[0][1]}") in {columns_shown}. '
+                "Save the file as CSV UTF-8."
             )
 
         file_name = links.get(i, "")
@@ -1845,8 +1846,7 @@ def map_sheet(
             broken = next((piece for p in table_people for v in p.values() if isinstance(v, str) and (piece := garbled(v))), None)
             if broken:
                 problem(
-                    f'The authors table has broken characters for this poster ("{broken}"), so the file was likely '
-                    "saved in another text encoding. Save it again as UTF-8 (in Excel: CSV UTF-8) and add it again."
+                    f'Broken characters ("{broken}") in the authors table. Save the file as CSV UTF-8.'
                 )
         if file_name:
             # Checked against the extracted title after extraction, however it paired.
