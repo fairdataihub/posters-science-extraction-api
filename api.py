@@ -8,6 +8,7 @@ results to PosterMetadata. No file upload endpoint; the frontend
 uploads files to Bunny and creates jobs in the database.
 """
 
+import json
 import re
 import threading
 import tempfile
@@ -20,6 +21,8 @@ from flask_cors import CORS
 
 from poster2json.extract import log, load_json_model
 from feature_flags import features_for_environment
+from poster_matcher import match_rows_to_posters
+from sheet_mapper import FORMATS, MAX_ROWS, MAX_SHEET_FILES, SheetFormatError, SheetReadError, map_sheet, sheet_issue
 from job_worker import (
     run_worker_loop,
     generate_and_upload_thumbnail,
@@ -166,6 +169,136 @@ def thumbnails_generate():
 
     print(f"[status] api: thumbnail generated at {thumbnail_path}")
     return jsonify({"thumbnail_path": thumbnail_path}), 200
+
+
+# Organizer sheets are small; anything bigger is not a poster list.
+_SHEET_MAX_BYTES = 10 * 1024 * 1024
+_SHEET_MAX_REQUEST = _SHEET_MAX_BYTES + 1024 * 1024  # room for file_names and the form fields
+_MATCH_MAX_REQUEST = 32 * 1024 * 1024
+_MATCH_MAX_POSTERS = 5000
+
+
+def _limit_body(limit: int) -> None:
+    """Cap this request's body for werkzeug's parser too (chunked bodies have
+    no Content-Length). Flask 3.1 and later; older Flask keeps the check above."""
+    try:
+        request.max_content_length = limit
+    except AttributeError:
+        pass
+_SHEET_EXTENSIONS = (".xlsx", ".xlsm", ".xls", ".csv", ".tsv")
+
+
+@app.route("/sheets/map", methods=["POST"])
+def sheets_map():
+    """
+    Map an organizer's poster spreadsheet onto our bulk metadata format.
+
+    multipart/form-data:
+        sheet       the spreadsheet (.xlsx, .xls, .csv, .tsv). May be sent more
+                    than once for an export split over files (EasyChair
+                    submission.csv plus author.csv); 10 MB in total.
+        file_names  JSON array of the poster file names uploaded to the batch
+        mapping     optional JSON object {column header: field or null}, the
+                    user's confirmed choices from the confirm screen
+        format      optional, the format the organizer chose: easychair or
+                    curious. A sheet without that format's columns is refused
+                    with 422 and code format_mismatch.
+
+    Returns the detected template, the column mapping, the file column, the
+    rows in our format (sheet name -> rows keyed by fillKey, linked by
+    file_name), unmatched rows and files, and warnings. See docs/SHEET_MAPPING.md.
+
+    Touches no database and no GPU model, like /thumbnails/generate.
+    """
+    print("[status] api: POST /sheets/map")
+    # Refuse an oversized body before multipart parsing spools it to disk.
+    if (request.content_length or 0) > _SHEET_MAX_REQUEST:
+        return jsonify({"error": "sheet is larger than 10 MB"}), 413
+    _limit_body(_SHEET_MAX_REQUEST)
+    uploads = [u for u in request.files.getlist("sheet") if u and u.filename]
+    if len(uploads) > MAX_SHEET_FILES:
+        return jsonify({"error": f"upload at most {MAX_SHEET_FILES} sheet files"}), 400
+    if not uploads:
+        return jsonify({"error": "sheet is required"}), 400
+    if not all(u.filename.lower().endswith(_SHEET_EXTENSIONS) for u in uploads):
+        return jsonify({"error": "sheet must be .xlsx, .xls, .csv or .tsv"}), 400
+    files = []
+    total = 0
+    for u in uploads:
+        data = u.read(_SHEET_MAX_BYTES + 1)
+        total += len(data)
+        if total > _SHEET_MAX_BYTES:
+            return jsonify({"error": "sheet is larger than 10 MB"}), 413
+        files.append((data, u.filename))
+
+    try:
+        file_names = json.loads(request.form.get("file_names") or "[]")
+        overrides = json.loads(request.form.get("mapping") or "null")
+    except json.JSONDecodeError:
+        return jsonify({"error": "file_names and mapping must be JSON"}), 400
+    if not isinstance(file_names, list) or not all(isinstance(n, str) for n in file_names):
+        return jsonify({"error": "file_names must be a JSON array of strings"}), 400
+    if overrides is not None and not isinstance(overrides, dict):
+        return jsonify({"error": "mapping must be a JSON object"}), 400
+    sheet_format = (request.form.get("format") or "").strip().lower() or None
+    if sheet_format is not None and sheet_format not in FORMATS:
+        return jsonify({"error": f"format must be one of {', '.join(FORMATS)}"}), 400
+
+    try:
+        result = map_sheet(files[0][0], files[0][1], file_names, overrides, extra_files=files[1:],
+                           expected_format=sheet_format)
+    except SheetFormatError as e:
+        return jsonify({"error": str(e), "code": "format_mismatch", "format": sheet_format,
+                        "missing_columns": e.missing, "detected_format": e.detected, "issues": e.issues}), 422
+    except SheetReadError as e:
+        return jsonify({"error": str(e), "code": "unreadable",
+                        "issues": [sheet_issue(str(e), file=e.file)]}), 422
+    except ValueError as e:
+        return jsonify({"error": str(e), "issues": [sheet_issue(str(e))]}), 422
+    except Exception as e:
+        print(f"[status] api: sheet mapping error: {e}")
+        return jsonify({"error": "Could not read this spreadsheet"}), 422
+    return jsonify(result), 200
+
+
+@app.route("/sheets/match", methods=["POST"])
+def sheets_match():
+    """
+    Match sheet rows that have no file name to extracted posters, by title,
+    with the authors as a tiebreaker. Called once posters have extracted.
+
+    JSON body:
+        rows     [{row_key, title, authors: [names], suggested_file?}]  (match_rows from /sheets/map)
+        posters  [{file_name, title, authors: [names]}] (what extraction read)
+        pairs    [{row_key, file_name, title, authors, method}]  optional (pairs from /sheets/map)
+
+    Returns matches with method and confidence ("high" is automatic, "review"
+    needs the organizer's check), unmatched rows and files, and a title check
+    for every already paired row (pair_checks; disagreements also in flagged).
+    Stateless.
+    """
+    print("[status] api: POST /sheets/match")
+    if (request.content_length or 0) > _MATCH_MAX_REQUEST:
+        return jsonify({"error": "request is too large"}), 413
+    _limit_body(_MATCH_MAX_REQUEST)
+    body = request.get_json(silent=True)
+    if not isinstance(body, dict):
+        return jsonify({"error": "body must be a JSON object"}), 400
+    rows, posters, pairs = body.get("rows"), body.get("posters"), body.get("pairs", [])
+    if not isinstance(rows, list) or not isinstance(posters, list) or not isinstance(pairs, list):
+        return jsonify({"error": "rows, posters and pairs must be arrays"}), 400
+    # Rows and pairs come from a mapped sheet (up to MAX_ROWS); posters from
+    # one batch. Each row scores only its best few candidates, so this stays fast.
+    if len(rows) > MAX_ROWS or len(pairs) > MAX_ROWS or len(posters) > _MATCH_MAX_POSTERS:
+        return jsonify({"error": f"at most {MAX_ROWS} rows and pairs and {_MATCH_MAX_POSTERS} posters"}), 413
+    if not all(isinstance(x, dict) for x in rows + posters + pairs):
+        return jsonify({"error": "rows, posters and pairs must be arrays of objects"}), 400
+    try:
+        result = match_rows_to_posters(rows, posters, pairs)
+    except Exception as e:  # fields are type checked in the matcher; this is a last guard
+        print(f"[status] api: sheet match error: {e}")
+        return jsonify({"error": "Could not match these rows"}), 422
+    return jsonify(result), 200
 
 
 @app.route("/jobs/check", methods=["POST"])
